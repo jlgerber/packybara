@@ -14,6 +14,8 @@ pub mod packrat_db;
 pub use packrat_db::PackratDb;
 pub mod pin;
 pub use pin::Pin;
+pub mod version_pin;
+pub use version_pin::VersionPin;
 pub mod level;
 pub use level::Level;
 pub mod platform;
