@@ -48,3 +48,22 @@ impl Pin {
         self.site.as_str()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_construct_from_strs() {
+        let pin = Pin::new("dev01", "model", "cent7_64", "portland");
+        assert_eq!(
+            pin,
+            Pin {
+                level: "dev01".to_string(),
+                role: "model".to_string(),
+                platform: "cent7_64".to_string(),
+                site: "portland".to_string(),
+            }
+        );
+    }
+}
