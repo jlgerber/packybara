@@ -12,6 +12,7 @@ pub struct Distribution {
 }
 
 impl Distribution {
+    // todo: add error handling
     pub fn new<T: Into<String>>(name: T) -> Self {
         Distribution { name: name.into() }
     }
