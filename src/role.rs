@@ -43,7 +43,7 @@ impl IntoString for String {
 /// it on `_`, resulting in a hierarchy of Strings internally.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Role {
-    parts: Vec<String>,
+    name: String,
 }
 
 impl Role {
@@ -58,11 +58,15 @@ impl Role {
     /// ```
     /// use packybara::Role;
     ///
-    /// let role = Role::new(vec!["model", "beta"]);
+    /// let role = Role::from_parts(vec!["model", "beta"]);
     /// ```
-    pub fn new<I: IntoString + Copy>(parts: Vec<I>) -> Self {
-        let parts = parts.iter().map(|x| x.into_string()).collect::<Vec<_>>();
-        Role { parts }
+    pub fn from_parts<I: AsRef<str>>(parts: Vec<I>) -> Self {
+        let parts = parts
+            .iter()
+            .map(|x| x.as_ref())
+            .collect::<Vec<&str>>()
+            .join("_");
+        Role { name: parts }
     }
 
     // TODO: once i decide on error strategy, make this return Result<Self>
@@ -81,15 +85,19 @@ impl Role {
     ///
     /// let role = Role::from_str("model_beta");
     /// ```
-    pub fn from_str(role: &str) -> Self {
-        let parts = role.split("_").map(|x| x.to_string()).collect::<Vec<_>>();
-        Role { parts }
+    pub fn from_str<I: Into<String>>(role: I) -> Self {
+        //let parts = role.split("_").map(|x| x.to_string()).collect::<Vec<_>>();
+        let role = role.into();
+        assert_eq!(role.matches(" ").count(), 0);
+        assert_eq!(role.matches("__").count(), 0);
+        assert!(role.chars().next() != Some('_'));
+        Role { name: role.into() }
     }
 
     /// len returns the depth of the role hierarchy. Parent roles
     /// have a len of 1, and subroles have a len of 2 or greater.
     pub fn len(&self) -> usize {
-        self.parts.len()
+        self.name.matches("_").count() + 1
     }
 
     /// Indicates whether or not a role is a subrole or a parent role
@@ -110,18 +118,7 @@ impl Role {
     /// assert!(role_parent.is_ancestor_of(&role_child));
     /// ```
     pub fn is_ancestor_of(&self, other: &Role) -> bool {
-        if self.len() > other.len() {
-            return false;
-        }
-        if self
-            .parts
-            .iter()
-            .enumerate()
-            .any(|(idx, val)| *val.as_str() != other[idx])
-        {
-            return false;
-        }
-        true
+        other.name.starts_with(&self.name)
     }
 
     /// Test whether we are a child of another role
@@ -143,35 +140,13 @@ impl Role {
     /// assert!(role_child.is_child_of(&role_parent));
     /// ```
     pub fn is_child_of(&self, other: &Role) -> bool {
-        if self.len() < other.len() {
-            return false;
-        }
-        if other
-            .parts
-            .iter()
-            .enumerate()
-            .any(|(idx, val)| *val.as_str() != self[idx])
-        {
-            return false;
-        }
-        true
+        self.name.starts_with(&other.name)
     }
 }
 
 impl fmt::Display for Role {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match write!(f, "{}", self.parts[0]) {
-            Ok(_) => {}
-            Err(e) => {
-                return Err(e);
-            }
-        };
-        for part in self.parts.iter().skip(1) {
-            if let Err(e) = write!(f, "_{}", part) {
-                return Err(e);
-            }
-        }
-        Ok(())
+        write!(f, "{}", self.name)
     }
 }
 
@@ -179,7 +154,7 @@ impl Index<usize> for Role {
     type Output = str;
 
     fn index(&self, idx: usize) -> &Self::Output {
-        self.parts[idx].as_str()
+        &self.name.split("_").collect::<Vec<_>>()[idx]
     }
 }
 
@@ -188,9 +163,26 @@ mod tests {
     use super::*;
 
     #[test]
+    fn can_initialize_from_parts() {
+        let role = Role::from_parts(vec!["model", "beta"]);
+        assert_eq!(
+            role,
+            Role {
+                name: "model_beta".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn can_index_into() {
+        let role = Role::from_parts(vec!["model", "beta"]);
+        assert_eq!(&role[0], "model");
+    }
+
+    #[test]
     fn can_convert_to_string() {
         let role = Role {
-            parts: vec!["model".to_string(), "beta".to_string()],
+            name: "model_beta".to_string(),
         };
 
         let role_s = role.to_string();
