@@ -1,5 +1,6 @@
 use levelspec::{LSpecError, LevelSpec};
 
+/// Level encapsulates alternative locations for packages.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Level {
     Facility,
@@ -8,13 +9,35 @@ pub enum Level {
 
 impl Level {
     /// new up a Level from a &str
+    ///
+    /// # Arguments
+    ///
+    /// * `level` - The level in levelspec string form
+    ///
+    /// # Example
+    /// ```rust
+    /// use packybara::Level;
+    ///
+    /// let level = Level::from_str("facility");
+    /// assert_eq!(level.expect("cant convert to facility"), Level::Facility);
+    /// ```
     pub fn from_str(level: &str) -> Result<Level, LSpecError> {
         match level.to_lowercase().as_str() {
             "facility" => Ok(Level::Facility),
             _ => Ok(Level::LevelSpec(LevelSpec::new(level)?)),
         }
     }
-
+    /// Convert to a string.
+    /// Note: Level::Facility becomes "facility"
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use packybara::Level;
+    ///
+    /// let level = Level::from_str("dev01.rd.9999").expect("cant convert");
+    /// assert_eq!(level.to_string().as_str(), "dev01.rd.9999");
+    /// ```
     pub fn to_string(&self) -> String {
         match *self {
             Self::Facility => "facility".to_string(),
@@ -23,6 +46,20 @@ impl Level {
     }
     /// Retrieve the show from the Level. If the Level is
     /// facility, we return facility
+    ///
+    /// Note: we dont return an Option<&str> here because the underlying
+    /// postgres schema/api uses facility to denote the facility level
+    ///
+    /// # Example
+    /// ```rust
+    /// use packybara::Level;
+    ///
+    /// let level = Level::Facility;
+    /// assert_eq!(level.show(), "facility");
+    ///
+    /// let level = Level::from_str("dev01.rd.9999").expect("couldnt convert");
+    /// assert_eq!(level.show(), "dev01");
+    /// ```
     pub fn show(&self) -> &str {
         match *self {
             Self::Facility => "facility",
@@ -31,6 +68,16 @@ impl Level {
     }
 
     /// Test whether the instance of Level is Level::Facility
+    ///
+    /// # Example
+    /// ```rust
+    /// use packybara::Level;
+    ///
+    /// let level = Level::from_str("dev01.rd.9999").expect("unable to convert");
+    /// assert!(!level.is_facility());
+    ///
+    /// assert!(Level::Facility.is_facility());
+    /// ```
     pub fn is_facility(&self) -> bool {
         *self == Level::Facility
     }
