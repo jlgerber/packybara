@@ -69,7 +69,7 @@ impl PinBuilder {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Pin {
     level: String,
     role: String,
