@@ -84,4 +84,12 @@ mod tests {
         let pstr = format!("{}", platform);
         assert_eq!(pstr.as_str(), "cent7_64");
     }
+
+    #[test]
+    fn can_sort() {
+        assert!(Platform::WinXp < Platform::Win10);
+        assert!(Platform::Win10 < Platform::Cent5);
+        assert!(Platform::Cent5 < Platform::Cent6);
+        assert!(Platform::Cent6 < Platform::Cent7);
+    }
 }
