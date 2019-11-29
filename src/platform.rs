@@ -6,7 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::ctx_error::*;
+use crate::coords_error::*;
 use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::str::FromStr;
@@ -74,7 +74,7 @@ pub enum Platform {
 }
 
 impl TryFrom<&str> for Platform {
-    type Error = CtxError;
+    type Error = CoordsError;
 
     fn try_from(item: &str) -> Result<Self, Self::Error> {
         //fn from(item: &str) -> Self {
@@ -85,7 +85,7 @@ impl TryFrom<&str> for Platform {
 }
 
 impl TryFrom<String> for Platform {
-    type Error = CtxError;
+    type Error = CoordsError;
 
     fn try_from(item: String) -> Result<Self, Self::Error> {
         Ok(
