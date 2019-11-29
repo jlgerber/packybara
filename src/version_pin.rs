@@ -104,14 +104,14 @@ pub struct VersionPin {
 
 impl VersionPin {
     /// Construct a VersionPin from a Distribution and a Pin
-    fn from_parts(distribution: Distribution, pin: Pin) -> Self {
+    pub fn from_parts(distribution: Distribution, pin: Pin) -> Self {
         VersionPin { distribution, pin }
     }
 
     /// Construct a new VersionPinBuilder, which has
     /// various setter methods as well as a build method
     /// which must be used to construct the final VersionPin
-    fn new(distribution: Distribution) -> VersionPinBuilder {
+    pub fn new(distribution: Distribution) -> VersionPinBuilder {
         VersionPinBuilder::new(distribution)
     }
 }
@@ -120,22 +120,41 @@ impl VersionPin {
 mod tests {
     use super::*;
 
+    // #[test]
+    // fn can_construct_versionpin_from_builder() {
+    //     let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
+    //         .role("model")
+    //         .unwrap()
+    //         .level("dev01")
+    //         .unwrap()
+    //         .site("portland")
+    //         .unwrap()
+    //         .platform("cent7_64")
+    //         .unwrap()
+    //         .build();
+    //     let expect = VersionPin {
+    //         distribution: Distribution::new("maya-2018.sp3"),
+    //         pin: Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap(),
+    //     };
+    //     assert_eq!(vp, expect);
+    // }
+
     #[test]
     fn can_construct_versionpin_from_builder() {
-        let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
-            .role("model")
-            .unwrap()
-            .level("dev01")
-            .unwrap()
-            .site("portland")
-            .unwrap()
-            .platform("cent7_64")
-            .unwrap()
-            .build();
-        let expect = VersionPin {
-            distribution: Distribution::new("maya-2018.sp3"),
-            pin: Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap(),
-        };
+        let (vp, expect) = || -> PinResult<(VersionPin, VersionPin)> {
+            let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
+                .role("model")?
+                .level("dev01")?
+                .site("portland")?
+                .platform("cent7_64")?
+                .build();
+            let expect = VersionPin {
+                distribution: Distribution::new("maya-2018.sp3"),
+                pin: Pin::try_from_parts("dev01", "model", "cent7_64", "portland")?,
+            };
+            Ok((vp, expect))
+        }()
+        .unwrap();
         assert_eq!(vp, expect);
     }
 }
