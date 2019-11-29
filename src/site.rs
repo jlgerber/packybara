@@ -53,7 +53,12 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// ```
 #[derive(Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Site {
-    #[strum(serialize = "any", to_string = "any")]
+    #[strum(
+        serialize = "any",
+        serialize = "Any",
+        serialize = "ANY",
+        to_string = "any"
+    )]
     Any,
     #[strum(
         serialize = "playa",
