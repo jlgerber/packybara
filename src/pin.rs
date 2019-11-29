@@ -96,11 +96,11 @@ impl Pin {
     }
 
     /// Construct a new Pin instance
-    pub fn from_parts<R, P, L, S>(level: L, role: R, platform: P, site: S) -> Self
+    pub fn from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> Self
     where
+        L: Into<Level>,
         R: Into<Role>,
         P: Into<Platform>,
-        L: Into<Level>,
         S: Into<Site>,
     {
         Pin {
