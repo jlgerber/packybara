@@ -6,9 +6,13 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use crate::pin_error::*;
+use snafu::ResultExt;
 use std::convert::From;
+use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Index;
+use std::str::FromStr;
 
 /// This trait is specifically designed to get around the issue
 /// with &String not implementing into for String
@@ -48,23 +52,44 @@ pub enum Role {
     Named { name: String },
 }
 
-impl From<&str> for Role {
-    fn from(item: &str) -> Self {
-        Role::Named {
-            name: item.to_string(),
+// test to make sure the role is ok
+fn role_ok(name: &str) -> bool {
+    name.matches(" ").count() == 0
+        && name.matches("__").count() == 0
+        && name.chars().next() != Some('_')
+}
+
+impl TryFrom<&str> for Role {
+    type Error = PinError;
+
+    fn try_from(item: &str) -> Result<Self, Self::Error> {
+        if !role_ok(item) {
+            return Err(PinError::FromStrToRoleError {
+                input: item.to_string(),
+            });
         }
+        if item == "any" || item == "Any" {
+            return Ok(Role::Any);
+        }
+        Ok(Role::Named {
+            name: item.to_string(),
+        })
     }
 }
 
-impl From<String> for Role {
-    fn from(item: String) -> Self {
-        Role::Named { name: item }
-    }
-}
+impl TryFrom<String> for Role {
+    type Error = PinError;
 
-impl From<&String> for Role {
-    fn from(item: &String) -> Self {
-        Role::Named { name: item.clone() }
+    fn try_from(item: String) -> Result<Self, Self::Error> {
+        if !role_ok(&item) {
+            return Err(PinError::FromStrToRoleError {
+                input: item.to_string(),
+            });
+        }
+        if item == "any" || item == "Any" {
+            return Ok(Role::Any);
+        }
+        Ok(Role::Named { name: item })
     }
 }
 
@@ -107,9 +132,11 @@ impl Role {
     ///
     /// let role = Role::from_str("model_beta");
     /// ```
-    pub fn from_str<I: Into<String>>(role: I) -> Self {
-        //let parts = role.split("_").map(|x| x.to_string()).collect::<Vec<_>>();
-        Role::Named { name: role.into() }
+    pub fn from_str<I>(role: I) -> PinResult<Self>
+    where
+        I: Into<String>,
+    {
+        Role::try_from(role.into())
     }
 
     /// len returns the depth of the role hierarchy. Parent roles
@@ -143,11 +170,12 @@ impl Role {
     /// ```rust
     /// use packybara::Role;
     ///
-    /// let role_child = Role::from_str("model_beta");
-    /// let role_parent = Role::from_str("model");
+    /// let role_child = Role::from_str("model_beta").unwrap();
+    /// let role_parent = Role::from_str("model").unwrap();
     /// assert!(role_parent.is_ancestor_of(&role_child));
     /// ```
     pub fn is_ancestor_of(&self, other: &Role) -> bool {
+        // should this be true if both are any?
         if self.is_any() || other.is_any() {
             return false;
         }
@@ -179,12 +207,12 @@ impl Role {
     /// ```rust
     /// use packybara::Role;
     ///
-    /// let role_child = Role::from_str("model_beta");
-    /// let role_parent = Role::from_str("model");
+    /// let role_child = Role::from_str("model_beta").unwrap();
+    /// let role_parent = Role::from_str("model").unwrap();
     /// assert!(role_child.is_child_of(&role_parent));
     /// ```
     pub fn is_child_of(&self, other: &Role) -> bool {
-        //self.name.starts_with(&other.name)
+        // should this be true if both are any?
         if self.is_any() || other.is_any() {
             return false;
         }
@@ -199,19 +227,6 @@ impl Role {
             panic!("should not get here");
         };
         me.starts_with(other)
-    }
-
-    /// Test the validity of the role
-    ///
-    pub fn is_valid(&self) -> bool {
-        match self {
-            Role::Any => true,
-            Role::Named { ref name } => {
-                name.matches(" ").count() == 0
-                    && name.matches("__").count() == 0
-                    && name.chars().next() != Some('_')
-            }
-        }
     }
 }
 
@@ -268,15 +283,15 @@ mod tests {
 
     #[test]
     fn can_identify_ancestor() {
-        let role_child = Role::from_str("model_beta");
-        let role_parent = Role::from_str("model");
+        let role_child = Role::from_str("model_beta").unwrap();
+        let role_parent = Role::from_str("model").unwrap();
         assert!(role_parent.is_ancestor_of(&role_child));
     }
 
     #[test]
     fn can_identify_parent() {
-        let role_child = Role::from_str("model_beta");
-        let role_parent = Role::from_str("model");
+        let role_child = Role::from_str("model_beta").unwrap();
+        let role_parent = Role::from_str("model").unwrap();
         assert!(role_child.is_child_of(&role_parent));
     }
 }

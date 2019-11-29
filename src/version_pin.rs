@@ -46,9 +46,13 @@ impl VersionPinBuilder {
         Ok(self)
     }
 
-    pub fn role<I: Into<Role>>(&mut self, role: I) -> &mut Self {
-        self.role = Some(role.into());
-        self
+    pub fn role<I>(&mut self, role: I) -> PinResult<&mut Self>
+    where
+        I: TryInto<Role>,
+        PinError: From<<I as TryInto<Role>>::Error>,
+    {
+        self.role = Some(role.try_into()?);
+        Ok(self)
     }
 
     pub fn platform<I: Into<Platform>>(&mut self, platform: I) -> &mut Self {
@@ -116,6 +120,7 @@ mod tests {
     fn can_construct_versionpin_from_builder() {
         let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
             .role("model")
+            .unwrap()
             .level("dev01")
             .unwrap()
             .site("portland")

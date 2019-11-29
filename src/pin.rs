@@ -27,17 +27,22 @@ impl PinBuilder {
         }
     }
 
-    pub fn level<I: TryInto<Level>>(&mut self, level: I) -> PinResult<&mut Self>
+    pub fn level<I>(&mut self, level: I) -> PinResult<&mut Self>
     where
+        I: TryInto<Level>,
         PinError: From<<I as TryInto<Level>>::Error>,
     {
         self.level = Some(level.try_into()?);
         Ok(self)
     }
 
-    pub fn role<I: Into<Role>>(&mut self, role: I) -> &mut Self {
-        self.role = Some(role.into());
-        self
+    pub fn role<I>(&mut self, role: I) -> PinResult<&mut Self>
+    where
+        I: TryInto<Role>,
+        PinError: From<<I as TryInto<Role>>::Error>,
+    {
+        self.role = Some(role.try_into()?);
+        Ok(self)
     }
 
     pub fn platform<I: Into<Platform>>(&mut self, platform: I) -> &mut Self {
@@ -97,7 +102,10 @@ impl Pin {
     /// ```
     /// use packybara::Pin;
     ///
-    /// let pin = Pin::new().level("dev01").unwrap().role("model").build();
+    /// let pin = Pin::new()
+    ///                 .level("dev01").unwrap()
+    ///                 .role("model").unwrap()
+    ///                 .build();
     /// ```
     pub fn new() -> PinBuilder {
         PinBuilder::new()
@@ -107,14 +115,16 @@ impl Pin {
     pub fn try_from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> PinResult<Self>
     where
         L: TryInto<Level>,
-        R: Into<Role>,
+        R: TryInto<Role>,
         P: Into<Platform>,
         S: TryInto<Site>,
-        PinError: From<<L as TryInto<Level>>::Error> + From<<S as TryInto<Site>>::Error>,
+        PinError: From<<L as TryInto<Level>>::Error>
+            + From<<S as TryInto<Site>>::Error>
+            + From<<R as TryInto<Role>>::Error>,
     {
         Ok(Pin {
             level: level.try_into()?,
-            role: role.into(),
+            role: role.try_into()?,
             platform: platform.into(),
             site: site.try_into()?,
         })
@@ -160,7 +170,7 @@ mod tests {
             pin,
             Pin {
                 level: Level::from_str("dev01").unwrap(),
-                role: Role::from_str("model"),
+                role: Role::from_str("model").unwrap(),
                 platform: Platform::from_str("cent7_64"),
                 site: Site::from_str("portland").unwrap(),
             }
@@ -169,12 +179,17 @@ mod tests {
 
     #[test]
     fn can_construct_from_builder() {
-        let pin = Pin::new().level("dev01").unwrap().role("model").build();
+        let pin = Pin::new()
+            .level("dev01")
+            .unwrap()
+            .role("model")
+            .unwrap()
+            .build();
         assert_eq!(
             pin,
             Pin {
                 level: Level::from_str("dev01").unwrap(),
-                role: Role::from_str("model"),
+                role: Role::from_str("model").unwrap(),
                 platform: Platform::from_str("any"),
                 site: Site::from_str("any").unwrap(),
             }
@@ -186,7 +201,9 @@ mod tests {
             .level("dev01")
             .unwrap()
             .role("model")
+            .unwrap()
             .platform("cent7_64")
+            //.unwrap()
             .site("portland")
             .unwrap()
             .build();
@@ -194,7 +211,7 @@ mod tests {
             pin,
             Pin {
                 level: Level::from_str("dev01").unwrap(),
-                role: Role::from_str("model"),
+                role: Role::from_str("model").unwrap(),
                 platform: Platform::from_str("cent7_64"),
                 site: Site::from_str("portland").unwrap(),
             }

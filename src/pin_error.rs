@@ -18,6 +18,8 @@ pub enum PinError {
         input: String,
         source: strum::ParseError,
     },
+    #[snafu(display("Problem with input string for Role conversion: {}.", input,))]
+    FromStrToRoleError { input: String },
 }
 
 pub type PinResult<T, E = PinError> = std::result::Result<T, E>;
