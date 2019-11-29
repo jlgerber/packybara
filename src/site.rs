@@ -19,7 +19,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// use packybara::Site;
 /// use std::str::FromStr;
 ///
-/// let site = Site::from_str("playa").expect("cant convert");
+/// let site = Site::from_str("playa");
 /// assert_eq!(site, Site::Playa);
 /// ```
 ///

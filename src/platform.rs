@@ -20,7 +20,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// use packybara::Platform;
 /// use std::str::FromStr;
 ///
-/// let platform = Platform::from_str("cent6_64").expect("cant convert");
+/// let platform = Platform::from_str("cent6_64");
 /// assert_eq!(platform, Platform::Cent6);
 /// ```
 ///
