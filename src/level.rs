@@ -7,12 +7,38 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use levelspec::{LSpecError, LevelSpec};
+use std::convert::From;
 
 /// Level encapsulates alternative locations for packages.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Level {
     Facility,
     LevelSpec(LevelSpec),
+    Unknown(String),
+}
+
+impl From<&str> for Level {
+    fn from(item: &str) -> Self {
+        if item.to_lowercase() == "facility" {
+            return Level::Facility;
+        }
+        match LevelSpec::new(item) {
+            Ok(val) => Level::LevelSpec(val),
+            Err(_) => Level::Unknown(item.to_string()),
+        }
+    }
+}
+
+impl From<String> for Level {
+    fn from(item: String) -> Self {
+        if item.to_lowercase() == "facility" {
+            return Level::Facility;
+        }
+        match LevelSpec::new(item.clone()) {
+            Ok(val) => Level::LevelSpec(val),
+            Err(_) => Level::Unknown(item.to_string()),
+        }
+    }
 }
 
 impl Level {
@@ -50,6 +76,7 @@ impl Level {
         match *self {
             Self::Facility => "facility".to_string(),
             Self::LevelSpec(ref ls) => ls.to_vec_str().join("."),
+            Self::Unknown(ref l) => format!("UNKNOWN LEVEL {}", l),
         }
     }
     /// Retrieve the show from the Level. If the Level is
@@ -72,6 +99,7 @@ impl Level {
         match *self {
             Self::Facility => "facility",
             Self::LevelSpec(ref ls) => ls.show().unwrap(),
+            Self::Unknown(_) => "UNKNOWN",
         }
     }
 

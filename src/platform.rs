@@ -6,6 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use std::convert::From;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 /// Platform models the os variants available to us.
@@ -50,6 +51,9 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// ```
 #[derive(Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Platform {
+    Unknown(String),
+    #[strum(serialize = "any", to_string = "any")]
+    Any,
     #[strum(serialize = "win_xp", to_string = "win_xp")]
     WinXp,
     #[strum(serialize = "win_10", to_string = "win_10")]
@@ -62,20 +66,40 @@ pub enum Platform {
     Cent7,
 }
 
+impl From<&str> for Platform {
+    fn from(item: &str) -> Self {
+        Platform::from_str(item)
+    }
+}
+
+impl From<String> for Platform {
+    fn from(item: String) -> Self {
+        Platform::from_str(item.as_ref())
+    }
+}
+
+impl Platform {
+    pub fn from_str(input: &str) -> Self {
+        match <Platform as std::str::FromStr>::from_str(input) {
+            Ok(plat) => plat,
+            Err(_) => Platform::Unknown(input.to_string()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
 
     #[test]
     fn can_construct_from_str() {
-        let platform = Platform::from_str("cent6_64").unwrap();
+        let platform = Platform::from_str("cent6_64");
         assert_eq!(platform, Platform::Cent6);
     }
 
     #[test]
     fn can_convert_into_static_str() {
-        let platform: Platform = Platform::from_str("cent6_64").unwrap();
+        let platform: Platform = Platform::from_str("cent6_64");
         let pstr: &'static str = platform.into();
         assert_eq!(pstr, "cent6_64");
     }

@@ -6,11 +6,13 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use crate::{Level, Platform, Role, Site};
+
 pub struct PinBuilder {
-    level: Option<String>,
-    role: Option<String>,
-    platform: Option<String>,
-    site: Option<String>,
+    level: Option<Level>,
+    role: Option<Role>,
+    platform: Option<Platform>,
+    site: Option<Site>,
 }
 
 impl PinBuilder {
@@ -23,22 +25,22 @@ impl PinBuilder {
         }
     }
 
-    pub fn level<I: Into<String>>(&mut self, level: I) -> &mut Self {
+    pub fn level<I: Into<Level>>(&mut self, level: I) -> &mut Self {
         self.level = Some(level.into());
         self
     }
 
-    pub fn role<I: Into<String>>(&mut self, role: I) -> &mut Self {
+    pub fn role<I: Into<Role>>(&mut self, role: I) -> &mut Self {
         self.role = Some(role.into());
         self
     }
 
-    pub fn platform<I: Into<String>>(&mut self, platform: I) -> &mut Self {
+    pub fn platform<I: Into<Platform>>(&mut self, platform: I) -> &mut Self {
         self.platform = Some(platform.into());
         self
     }
 
-    pub fn site<I: Into<String>>(&mut self, site: I) -> &mut Self {
+    pub fn site<I: Into<Site>>(&mut self, site: I) -> &mut Self {
         self.site = Some(site.into());
         self
     }
@@ -56,10 +58,10 @@ impl PinBuilder {
             platform,
             site,
         } = tmp;
-        let level = level.unwrap_or("facility".to_string());
-        let role = role.unwrap_or("any".to_string());
-        let platform = platform.unwrap_or("any".to_string());
-        let site = site.unwrap_or("any".to_string());
+        let level = level.unwrap_or(Level::Facility);
+        let role = role.unwrap_or(Role::Any);
+        let platform = platform.unwrap_or(Platform::Any);
+        let site = site.unwrap_or(Site::Any);
         Pin {
             level,
             role,
@@ -71,10 +73,10 @@ impl PinBuilder {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Pin {
-    level: String,
-    role: String,
-    platform: String,
-    site: String,
+    level: Level,
+    role: Role,
+    platform: Platform,
+    site: Site,
 }
 
 impl Pin {
@@ -94,9 +96,12 @@ impl Pin {
     }
 
     /// Construct a new Pin instance
-    pub fn from_parts<I>(level: I, role: I, platform: I, site: I) -> Self
+    pub fn from_parts<R, P, L, S>(level: L, role: R, platform: P, site: S) -> Self
     where
-        I: Into<String>,
+        R: Into<Role>,
+        P: Into<Platform>,
+        L: Into<Level>,
+        S: Into<Site>,
     {
         Pin {
             level: level.into(),
@@ -107,23 +112,23 @@ impl Pin {
     }
 
     /// Get the level from teh Pin
-    pub fn level(&self) -> &str {
-        self.level.as_str()
+    pub fn level(&self) -> &Level {
+        &self.level
     }
 
     /// Get the role from th Pin
-    pub fn role(&self) -> &str {
-        self.role.as_str()
+    pub fn role(&self) -> &Role {
+        &self.role
     }
 
     /// Get the Platform from the Pin
-    pub fn platform(&self) -> &str {
-        self.platform.as_str()
+    pub fn platform(&self) -> &Platform {
+        &self.platform
     }
 
     /// Get the site from the Pin
-    pub fn site(&self) -> &str {
-        self.site.as_str()
+    pub fn site(&self) -> &Site {
+        &self.site
     }
 }
 
@@ -137,10 +142,10 @@ mod tests {
         assert_eq!(
             pin,
             Pin {
-                level: "dev01".to_string(),
-                role: "model".to_string(),
-                platform: "cent7_64".to_string(),
-                site: "portland".to_string(),
+                level: Level::from_str("dev01").unwrap(),
+                role: Role::from_str("model"),
+                platform: Platform::from_str("cent7_64"),
+                site: Site::from_str("portland"),
             }
         );
     }
@@ -151,10 +156,10 @@ mod tests {
         assert_eq!(
             pin,
             Pin {
-                level: "dev01".to_string(),
-                role: "model".to_string(),
-                platform: "any".to_string(),
-                site: "any".to_string(),
+                level: Level::from_str("dev01").unwrap(),
+                role: Role::from_str("model"),
+                platform: Platform::from_str("any"),
+                site: Site::from_str("any"),
             }
         );
     }
@@ -169,10 +174,10 @@ mod tests {
         assert_eq!(
             pin,
             Pin {
-                level: "dev01".to_string(),
-                role: "model".to_string(),
-                platform: "cent7_64".to_string(),
-                site: "portland".to_string(),
+                level: Level::from_str("dev01").unwrap(),
+                role: Role::from_str("model"),
+                platform: Platform::from_str("cent7_64"),
+                site: Site::from_str("portland"),
             }
         );
     }

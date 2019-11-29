@@ -6,6 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use std::convert::From;
 use std::fmt;
 use std::ops::Index;
 
@@ -42,8 +43,29 @@ impl IntoString for String {
 /// ```from_str``` constructor function. This takes an input and splits
 /// it on `_`, resulting in a hierarchy of Strings internally.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Role {
-    name: String,
+pub enum Role {
+    Any,
+    Named { name: String },
+}
+
+impl From<&str> for Role {
+    fn from(item: &str) -> Self {
+        Role::Named {
+            name: item.to_string(),
+        }
+    }
+}
+
+impl From<String> for Role {
+    fn from(item: String) -> Self {
+        Role::Named { name: item }
+    }
+}
+
+impl From<&String> for Role {
+    fn from(item: &String) -> Self {
+        Role::Named { name: item.clone() }
+    }
 }
 
 impl Role {
@@ -66,7 +88,7 @@ impl Role {
             .map(|x| x.as_ref())
             .collect::<Vec<&str>>()
             .join("_");
-        Role { name: parts }
+        Role::Named { name: parts }
     }
 
     // TODO: once i decide on error strategy, make this return Result<Self>
@@ -87,22 +109,30 @@ impl Role {
     /// ```
     pub fn from_str<I: Into<String>>(role: I) -> Self {
         //let parts = role.split("_").map(|x| x.to_string()).collect::<Vec<_>>();
-        let role = role.into();
-        assert_eq!(role.matches(" ").count(), 0);
-        assert_eq!(role.matches("__").count(), 0);
-        assert!(role.chars().next() != Some('_'));
-        Role { name: role.into() }
+        Role::Named { name: role.into() }
     }
 
     /// len returns the depth of the role hierarchy. Parent roles
     /// have a len of 1, and subroles have a len of 2 or greater.
     pub fn len(&self) -> usize {
-        self.name.matches("_").count() + 1
+        match self {
+            Role::Any => 0,
+            Role::Named { ref name } => name.matches("_").count() + 1,
+        }
     }
 
     /// Indicates whether or not a role is a subrole or a parent role
     pub fn is_subrole(&self) -> bool {
-        self.len() > 1
+        match self {
+            Role::Any => false,
+            Role::Named { ref name } => name.len() > 1,
+        }
+    }
+    pub fn is_any(&self) -> bool {
+        match self {
+            Role::Any => true,
+            _ => false,
+        }
     }
     /// Test whether this role is an ancestor of another role.
     /// For instance, model is an ancestor of model_beta. For
@@ -118,7 +148,21 @@ impl Role {
     /// assert!(role_parent.is_ancestor_of(&role_child));
     /// ```
     pub fn is_ancestor_of(&self, other: &Role) -> bool {
-        other.name.starts_with(&self.name)
+        if self.is_any() || other.is_any() {
+            return false;
+        }
+        let me = if let Role::Named { ref name } = self {
+            name
+        } else {
+            panic!("should not get here");
+        };
+        let other = if let Role::Named { ref name } = other {
+            name
+        } else {
+            panic!("should not get here");
+        };
+
+        other.starts_with(me)
     }
 
     /// Test whether we are a child of another role
@@ -140,13 +184,43 @@ impl Role {
     /// assert!(role_child.is_child_of(&role_parent));
     /// ```
     pub fn is_child_of(&self, other: &Role) -> bool {
-        self.name.starts_with(&other.name)
+        //self.name.starts_with(&other.name)
+        if self.is_any() || other.is_any() {
+            return false;
+        }
+        let me = if let Role::Named { ref name } = self {
+            name
+        } else {
+            panic!("should not get here");
+        };
+        let other = if let Role::Named { ref name } = other {
+            name
+        } else {
+            panic!("should not get here");
+        };
+        me.starts_with(other)
+    }
+
+    /// Test the validity of the role
+    ///
+    pub fn is_valid(&self) -> bool {
+        match self {
+            Role::Any => true,
+            Role::Named { ref name } => {
+                name.matches(" ").count() == 0
+                    && name.matches("__").count() == 0
+                    && name.chars().next() != Some('_')
+            }
+        }
     }
 }
 
 impl fmt::Display for Role {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        match self {
+            Role::Any => write!(f, "any"),
+            Role::Named { ref name } => write!(f, "{}", name),
+        }
     }
 }
 
@@ -154,7 +228,10 @@ impl Index<usize> for Role {
     type Output = str;
 
     fn index(&self, idx: usize) -> &Self::Output {
-        &self.name.split("_").collect::<Vec<_>>()[idx]
+        match self {
+            Role::Any => "any",
+            Role::Named { ref name } => &name.split("_").collect::<Vec<_>>()[idx],
+        }
     }
 }
 
@@ -167,7 +244,7 @@ mod tests {
         let role = Role::from_parts(vec!["model", "beta"]);
         assert_eq!(
             role,
-            Role {
+            Role::Named {
                 name: "model_beta".to_string()
             }
         );
@@ -181,7 +258,7 @@ mod tests {
 
     #[test]
     fn can_convert_to_string() {
-        let role = Role {
+        let role = Role::Named {
             name: "model_beta".to_string(),
         };
 
