@@ -45,9 +45,13 @@ impl PinBuilder {
         Ok(self)
     }
 
-    pub fn platform<I: Into<Platform>>(&mut self, platform: I) -> &mut Self {
-        self.platform = Some(platform.into());
-        self
+    pub fn platform<I>(&mut self, platform: I) -> PinResult<&mut Self>
+    where
+        I: TryInto<Platform>,
+        PinError: From<<I as TryInto<Platform>>::Error>,
+    {
+        self.platform = Some(platform.try_into()?);
+        Ok(self)
     }
 
     pub fn site<I: TryInto<Site>>(&mut self, site: I) -> PinResult<&mut Self>
@@ -116,16 +120,17 @@ impl Pin {
     where
         L: TryInto<Level>,
         R: TryInto<Role>,
-        P: Into<Platform>,
+        P: TryInto<Platform>,
         S: TryInto<Site>,
         PinError: From<<L as TryInto<Level>>::Error>
             + From<<S as TryInto<Site>>::Error>
+            + From<<P as TryInto<Platform>>::Error>
             + From<<R as TryInto<Role>>::Error>,
     {
         Ok(Pin {
             level: level.try_into()?,
             role: role.try_into()?,
-            platform: platform.into(),
+            platform: platform.try_into()?,
             site: site.try_into()?,
         })
     }
@@ -171,7 +176,7 @@ mod tests {
             Pin {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model").unwrap(),
-                platform: Platform::from_str("cent7_64"),
+                platform: Platform::from_str("cent7_64").unwrap(),
                 site: Site::from_str("portland").unwrap(),
             }
         );
@@ -190,7 +195,7 @@ mod tests {
             Pin {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model").unwrap(),
-                platform: Platform::from_str("any"),
+                platform: Platform::from_str("any").unwrap(),
                 site: Site::from_str("any").unwrap(),
             }
         );
@@ -203,7 +208,7 @@ mod tests {
             .role("model")
             .unwrap()
             .platform("cent7_64")
-            //.unwrap()
+            .unwrap()
             .site("portland")
             .unwrap()
             .build();
@@ -212,7 +217,7 @@ mod tests {
             Pin {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model").unwrap(),
-                platform: Platform::from_str("cent7_64"),
+                platform: Platform::from_str("cent7_64").unwrap(),
                 site: Site::from_str("portland").unwrap(),
             }
         );

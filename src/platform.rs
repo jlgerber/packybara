@@ -6,7 +6,11 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use crate::pin_error::*;
+use snafu::ResultExt;
 use std::convert::From;
+use std::convert::TryFrom;
+use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 /// Platform models the os variants available to us.
@@ -20,7 +24,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// use packybara::Platform;
 /// use std::str::FromStr;
 ///
-/// let platform = Platform::from_str("cent6_64");
+/// let platform = Platform::from_str("cent6_64").unwrap();
 /// assert_eq!(platform, Platform::Cent6);
 /// ```
 ///
@@ -51,7 +55,6 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// ```
 #[derive(Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Platform {
-    Unknown(String),
     #[strum(serialize = "any", to_string = "any")]
     Any,
     #[strum(serialize = "win_xp", to_string = "win_xp")]
@@ -66,26 +69,38 @@ pub enum Platform {
     Cent7,
 }
 
-impl From<&str> for Platform {
-    fn from(item: &str) -> Self {
-        Platform::from_str(item)
+impl TryFrom<&str> for Platform {
+    type Error = PinError;
+
+    fn try_from(item: &str) -> Result<Self, Self::Error> {
+        //fn from(item: &str) -> Self {
+        Ok(Platform::from_str(item).context(FromStrToPlatformError {
+            input: item.to_string(),
+        })?)
     }
 }
 
-impl From<String> for Platform {
-    fn from(item: String) -> Self {
-        Platform::from_str(item.as_ref())
+impl TryFrom<String> for Platform {
+    type Error = PinError;
+
+    fn try_from(item: String) -> Result<Self, Self::Error> {
+        Ok(
+            Platform::from_str(item.as_ref()).context(FromStrToPlatformError {
+                input: item.to_string(),
+            })?,
+        )
     }
 }
 
-impl Platform {
-    pub fn from_str(input: &str) -> Self {
-        match <Platform as std::str::FromStr>::from_str(input) {
-            Ok(plat) => plat,
-            Err(_) => Platform::Unknown(input.to_string()),
-        }
-    }
-}
+// no longer needed
+// impl Platform {
+//     pub fn from_str(input: &str) -> Self {
+//         match <Platform as std::str::FromStr>::from_str(input) {
+//             Ok(plat) => plat,
+//             Err(_) => Platform::Unknown(input.to_string()),
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -93,13 +108,13 @@ mod tests {
 
     #[test]
     fn can_construct_from_str() {
-        let platform = Platform::from_str("cent6_64");
+        let platform = Platform::from_str("cent6_64").unwrap();
         assert_eq!(platform, Platform::Cent6);
     }
 
     #[test]
     fn can_convert_into_static_str() {
-        let platform: Platform = Platform::from_str("cent6_64");
+        let platform: Platform = Platform::from_str("cent6_64").unwrap();
         let pstr: &'static str = platform.into();
         assert_eq!(pstr, "cent6_64");
     }

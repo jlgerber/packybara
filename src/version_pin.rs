@@ -55,9 +55,13 @@ impl VersionPinBuilder {
         Ok(self)
     }
 
-    pub fn platform<I: Into<Platform>>(&mut self, platform: I) -> &mut Self {
-        self.platform = Some(platform.into());
-        self
+    pub fn platform<I>(&mut self, platform: I) -> PinResult<&mut Self>
+    where
+        I: TryInto<Platform>,
+        PinError: From<<I as TryInto<Platform>>::Error>,
+    {
+        self.platform = Some(platform.try_into()?);
+        Ok(self)
     }
 
     pub fn site<I>(&mut self, site: I) -> PinResult<&mut Self>
@@ -126,6 +130,7 @@ mod tests {
             .site("portland")
             .unwrap()
             .platform("cent7_64")
+            .unwrap()
             .build();
         let expect = VersionPin {
             distribution: Distribution::new("maya-2018.sp3"),
