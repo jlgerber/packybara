@@ -12,13 +12,14 @@
 
 use crate::distribution::Distribution;
 use crate::pin::Pin;
+use crate::{Level, Platform, Role, Site};
 
 pub struct VersionPinBuilder {
     distribution: Distribution,
-    level: Option<String>,
-    role: Option<String>,
-    platform: Option<String>,
-    site: Option<String>,
+    level: Option<Level>,
+    role: Option<Role>,
+    platform: Option<Platform>,
+    site: Option<Site>,
 }
 
 impl VersionPinBuilder {
@@ -34,22 +35,22 @@ impl VersionPinBuilder {
     }
 
     /// set the level
-    pub fn level<I: Into<String>>(&mut self, level: I) -> &mut Self {
+    pub fn level<I: Into<Level>>(&mut self, level: I) -> &mut Self {
         self.level = Some(level.into());
         self
     }
 
-    pub fn role<I: Into<String>>(&mut self, role: I) -> &mut Self {
+    pub fn role<I: Into<Role>>(&mut self, role: I) -> &mut Self {
         self.role = Some(role.into());
         self
     }
 
-    pub fn platform<I: Into<String>>(&mut self, platform: I) -> &mut Self {
+    pub fn platform<I: Into<Platform>>(&mut self, platform: I) -> &mut Self {
         self.platform = Some(platform.into());
         self
     }
 
-    pub fn site<I: Into<String>>(&mut self, site: I) -> &mut Self {
+    pub fn site<I: Into<Site>>(&mut self, site: I) -> &mut Self {
         self.site = Some(site.into());
         self
     }
@@ -68,10 +69,10 @@ impl VersionPinBuilder {
             platform,
             site,
         } = tmp;
-        let level = level.unwrap_or("facility".to_string());
-        let role = role.unwrap_or("any".to_string());
-        let platform = platform.unwrap_or("any".to_string());
-        let site = site.unwrap_or("any".to_string());
+        let level = level.unwrap_or(Level::Facility);
+        let role = role.unwrap_or(Role::Any);
+        let platform = platform.unwrap_or(Platform::Any);
+        let site = site.unwrap_or(Site::Any);
         VersionPin {
             distribution,
             pin: Pin::from_parts(level, role, platform, site),
