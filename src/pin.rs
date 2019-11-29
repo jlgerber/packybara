@@ -6,8 +6,9 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use crate::level::{LevelError, LevelResult};
 use crate::{Level, Platform, Role, Site};
-
+use std::convert::{From, TryInto};
 pub struct PinBuilder {
     level: Option<Level>,
     role: Option<Role>,
@@ -25,9 +26,12 @@ impl PinBuilder {
         }
     }
 
-    pub fn level<I: Into<Level>>(&mut self, level: I) -> &mut Self {
-        self.level = Some(level.into());
-        self
+    pub fn level<I: TryInto<Level>>(&mut self, level: I) -> LevelResult<&mut Self>
+    where
+        LevelError: From<<I as TryInto<Level>>::Error>,
+    {
+        self.level = Some(level.try_into()?);
+        Ok(self)
     }
 
     pub fn role<I: Into<Role>>(&mut self, role: I) -> &mut Self {
@@ -96,19 +100,20 @@ impl Pin {
     }
 
     /// Construct a new Pin instance
-    pub fn from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> Self
+    pub fn from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> LevelResult<Self>
     where
-        L: Into<Level>,
+        L: TryInto<Level>,
         R: Into<Role>,
         P: Into<Platform>,
         S: Into<Site>,
+        LevelError: From<<L as TryInto<Level>>::Error>,
     {
-        Pin {
-            level: level.into(),
+        Ok(Pin {
+            level: level.try_into()?,
             role: role.into(),
             platform: platform.into(),
             site: site.into(),
-        }
+        })
     }
 
     /// Get the level from teh Pin
@@ -138,7 +143,7 @@ mod tests {
 
     #[test]
     fn can_construct_from_strs() {
-        let pin = Pin::from_parts("dev01", "model", "cent7_64", "portland");
+        let pin = Pin::from_parts("dev01", "model", "cent7_64", "portland").unwrap();
         assert_eq!(
             pin,
             Pin {
@@ -152,7 +157,7 @@ mod tests {
 
     #[test]
     fn can_construct_from_builder() {
-        let pin = Pin::new().level("dev01").role("model").build();
+        let pin = Pin::new().level("dev01").unwrap().role("model").build();
         assert_eq!(
             pin,
             Pin {
@@ -167,6 +172,7 @@ mod tests {
     fn can_construct_all_from_builder() {
         let pin = Pin::new()
             .level("dev01")
+            .unwrap()
             .role("model")
             .platform("cent7_64")
             .site("portland")
