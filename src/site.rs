@@ -6,7 +6,13 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use std::convert::From;
+use crate::pin_error::*;
+//use failure::Fail;
+//use levelspec::LevelSpec;
+use snafu::ResultExt;
+//use std::convert::From;
+use std::convert::TryFrom;
+use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 /// Site models our facility locations recognized by package management
@@ -19,7 +25,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// use packybara::Site;
 /// use std::str::FromStr;
 ///
-/// let site = Site::from_str("playa");
+/// let site = Site::from_str("playa").unwrap();
 /// assert_eq!(site, Site::Playa);
 /// ```
 ///
@@ -50,7 +56,6 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// ```
 #[derive(Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Site {
-    Unknown(String),
     #[strum(serialize = "any", to_string = "any")]
     Any,
     #[strum(
@@ -92,24 +97,24 @@ pub enum Site {
     Montreal,
 }
 
-impl From<&str> for Site {
-    fn from(item: &str) -> Self {
-        Site::from_str(item)
+impl TryFrom<&str> for Site {
+    type Error = PinError;
+
+    fn try_from(item: &str) -> Result<Self, Self::Error> {
+        //fn from(item: &str) -> Self {
+        let site = Site::from_str(item).context(FromStrToSiteError {
+            input: item.to_string(),
+        })?;
+        Ok(site)
     }
 }
 
-impl From<String> for Site {
-    fn from(item: String) -> Self {
-        Site::from_str(item.as_ref())
-    }
-}
+impl TryFrom<String> for Site {
+    type Error = PinError;
 
-impl Site {
-    pub fn from_str(input: &str) -> Self {
-        match <Site as std::str::FromStr>::from_str(input) {
-            Ok(site) => site,
-            Err(_) => Site::Unknown(input.to_string()),
-        }
+    fn try_from(item: String) -> Result<Self, Self::Error> {
+        let site = Site::from_str(item.as_ref()).context(FromStrToSiteError { input: item })?;
+        Ok(site)
     }
 }
 
@@ -120,108 +125,108 @@ mod tests {
 
     #[test]
     fn can_construct_from_site_str_playa() {
-        let site = Site::from_str("playa");
+        let site = Site::from_str("playa").unwrap();
         assert_eq!(site, Site::Playa);
     }
 
     #[test]
     fn can_construct_from_site_str_title_playa() {
-        let site = Site::from_str("Playa");
+        let site = Site::from_str("Playa").unwrap();
         assert_eq!(site, Site::Playa);
     }
 
     #[test]
     fn can_construct_from_site_str_venice() {
-        let site = Site::from_str("venice");
+        let site = Site::from_str("venice").unwrap();
         assert_eq!(site, Site::Playa);
     }
 
     #[test]
     fn can_construct_from_site_str_title_venice() {
-        let site = Site::from_str("Venice");
+        let site = Site::from_str("Venice").unwrap();
         assert_eq!(site, Site::Playa);
     }
 
     #[test]
     fn can_construct_from_prefix_str_playa() {
-        let site = Site::from_str("pv");
+        let site = Site::from_str("pv").unwrap();
         assert_eq!(site, Site::Playa);
     }
 
     #[test]
     fn can_construct_from_site_str_vancouver() {
-        let site = Site::from_str("vancouver");
+        let site = Site::from_str("vancouver").unwrap();
         assert_eq!(site, Site::Vancouver);
     }
 
     #[test]
     fn can_construct_from_site_str_title_vancouver() {
-        let site = Site::from_str("Vancouver");
+        let site = Site::from_str("Vancouver").unwrap();
         assert_eq!(site, Site::Vancouver);
     }
 
     #[test]
     fn can_construct_from_prefix_str_vancouver() {
-        let site = Site::from_str("bc");
+        let site = Site::from_str("bc").unwrap();
         assert_eq!(site, Site::Vancouver);
     }
 
     #[test]
     fn can_construct_from_site_str_portland() {
-        let site = Site::from_str("portland");
+        let site = Site::from_str("portland").unwrap();
         assert_eq!(site, Site::Portland);
     }
 
     #[test]
     fn can_construct_from_site_str_title_portland() {
-        let site = Site::from_str("Portland");
+        let site = Site::from_str("Portland").unwrap();
         assert_eq!(site, Site::Portland);
     }
 
     #[test]
     fn can_construct_from_prefix_str_portland() {
-        let site = Site::from_str("pd");
+        let site = Site::from_str("pd").unwrap();
         assert_eq!(site, Site::Portland);
     }
 
     #[test]
     fn can_construct_from_site_str_hyderabad() {
-        let site = Site::from_str("hyderabad");
+        let site = Site::from_str("hyderabad").unwrap();
         assert_eq!(site, Site::Hyderabad);
     }
 
     #[test]
     fn can_construct_from_site_str_title_hyderabad() {
-        let site = Site::from_str("Hyderabad");
+        let site = Site::from_str("Hyderabad").unwrap();
         assert_eq!(site, Site::Hyderabad);
     }
 
     #[test]
     fn can_construct_from_prefix_str_hyderabad() {
-        let site = Site::from_str("hb");
+        let site = Site::from_str("hb").unwrap();
         assert_eq!(site, Site::Hyderabad);
     }
 
     #[test]
     fn can_construct_from_site_str_montreal() {
-        let site = Site::from_str("montreal");
+        let site = Site::from_str("montreal").unwrap();
         assert_eq!(site, Site::Montreal);
     }
 
     #[test]
     fn can_construct_from_site_str_title_montreal() {
-        let site = Site::from_str("Montreal");
+        let site = Site::from_str("Montreal").unwrap();
         assert_eq!(site, Site::Montreal);
     }
 
     #[test]
     fn can_construct_from_prefix_str_montreal() {
-        let site = Site::from_str("mt");
+        let site = Site::from_str("mt").unwrap();
         assert_eq!(site, Site::Montreal);
     }
     #[test]
     fn can_convert_into_static_str() {
-        let site: Site = Site::from_str("montreal");
+        let site: Site = Site::from_str("montreal").unwrap();
         let pstr: &'static str = site.into();
         assert_eq!(pstr, "montreal");
     }

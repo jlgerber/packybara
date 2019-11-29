@@ -56,9 +56,13 @@ impl VersionPinBuilder {
         self
     }
 
-    pub fn site<I: Into<Site>>(&mut self, site: I) -> &mut Self {
-        self.site = Some(site.into());
-        self
+    pub fn site<I>(&mut self, site: I) -> PinResult<&mut Self>
+    where
+        I: TryInto<Site>,
+        PinError: From<<I as TryInto<Site>>::Error>,
+    {
+        self.site = Some(site.try_into()?);
+        Ok(self)
     }
 
     pub fn build(&mut self) -> VersionPin {
@@ -115,6 +119,7 @@ mod tests {
             .level("dev01")
             .unwrap()
             .site("portland")
+            .unwrap()
             .platform("cent7_64")
             .build();
         let expect = VersionPin {

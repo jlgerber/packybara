@@ -1,6 +1,7 @@
 use failure::Compat;
 use levelspec::LSpecError;
 use snafu::{ResultExt, Snafu};
+use strum;
 
 #[derive(Debug, Snafu)]
 #[snafu(visibility = "pub(crate)")]
@@ -11,6 +12,11 @@ pub enum PinError {
     NewLevelspecError {
         level: String,
         source: Compat<LSpecError>,
+    },
+    #[snafu(display("Error converting string to Site for {}. Error: {}", input, source))]
+    FromStrToSiteError {
+        input: String,
+        source: strum::ParseError,
     },
 }
 

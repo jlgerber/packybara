@@ -45,9 +45,12 @@ impl PinBuilder {
         self
     }
 
-    pub fn site<I: Into<Site>>(&mut self, site: I) -> &mut Self {
-        self.site = Some(site.into());
-        self
+    pub fn site<I: TryInto<Site>>(&mut self, site: I) -> PinResult<&mut Self>
+    where
+        PinError: From<<I as TryInto<Site>>::Error>,
+    {
+        self.site = Some(site.try_into()?);
+        Ok(self)
     }
 
     pub fn build(&mut self) -> Pin {
@@ -106,14 +109,14 @@ impl Pin {
         L: TryInto<Level>,
         R: Into<Role>,
         P: Into<Platform>,
-        S: Into<Site>,
-        PinError: From<<L as TryInto<Level>>::Error>,
+        S: TryInto<Site>,
+        PinError: From<<L as TryInto<Level>>::Error> + From<<S as TryInto<Site>>::Error>,
     {
         Ok(Pin {
             level: level.try_into()?,
             role: role.into(),
             platform: platform.into(),
-            site: site.into(),
+            site: site.try_into()?,
         })
     }
     /// Construct a new Pin instance
@@ -149,7 +152,7 @@ impl Pin {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use std::str::FromStr;
     #[test]
     fn can_construct_from_strs() {
         let pin = Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap();
@@ -159,7 +162,7 @@ mod tests {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model"),
                 platform: Platform::from_str("cent7_64"),
-                site: Site::from_str("portland"),
+                site: Site::from_str("portland").unwrap(),
             }
         );
     }
@@ -173,7 +176,7 @@ mod tests {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model"),
                 platform: Platform::from_str("any"),
-                site: Site::from_str("any"),
+                site: Site::from_str("any").unwrap(),
             }
         );
     }
@@ -185,6 +188,7 @@ mod tests {
             .role("model")
             .platform("cent7_64")
             .site("portland")
+            .unwrap()
             .build();
         assert_eq!(
             pin,
@@ -192,7 +196,7 @@ mod tests {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model"),
                 platform: Platform::from_str("cent7_64"),
-                site: Site::from_str("portland"),
+                site: Site::from_str("portland").unwrap(),
             }
         );
     }
