@@ -6,20 +6,20 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::pin_error::*;
+use crate::ctx_error::*;
 use crate::{Level, Platform, Role, Site};
 use std::convert::{From, TryInto};
 
-pub struct PinBuilder {
+pub struct CtxBuilder {
     level: Option<Level>,
     role: Option<Role>,
     platform: Option<Platform>,
     site: Option<Site>,
 }
 
-impl PinBuilder {
-    fn new() -> PinBuilder {
-        PinBuilder {
+impl CtxBuilder {
+    fn new() -> CtxBuilder {
+        CtxBuilder {
             level: None,
             role: None,
             platform: None,
@@ -27,49 +27,49 @@ impl PinBuilder {
         }
     }
 
-    pub fn level<I>(&mut self, level: I) -> PinResult<&mut Self>
+    pub fn level<I>(&mut self, level: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Level>,
-        PinError: From<<I as TryInto<Level>>::Error>,
+        CtxError: From<<I as TryInto<Level>>::Error>,
     {
         self.level = Some(level.try_into()?);
         Ok(self)
     }
 
-    pub fn role<I>(&mut self, role: I) -> PinResult<&mut Self>
+    pub fn role<I>(&mut self, role: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Role>,
-        PinError: From<<I as TryInto<Role>>::Error>,
+        CtxError: From<<I as TryInto<Role>>::Error>,
     {
         self.role = Some(role.try_into()?);
         Ok(self)
     }
 
-    pub fn platform<I>(&mut self, platform: I) -> PinResult<&mut Self>
+    pub fn platform<I>(&mut self, platform: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Platform>,
-        PinError: From<<I as TryInto<Platform>>::Error>,
+        CtxError: From<<I as TryInto<Platform>>::Error>,
     {
         self.platform = Some(platform.try_into()?);
         Ok(self)
     }
 
-    pub fn site<I: TryInto<Site>>(&mut self, site: I) -> PinResult<&mut Self>
+    pub fn site<I: TryInto<Site>>(&mut self, site: I) -> CtxResult<&mut Self>
     where
-        PinError: From<<I as TryInto<Site>>::Error>,
+        CtxError: From<<I as TryInto<Site>>::Error>,
     {
         self.site = Some(site.try_into()?);
         Ok(self)
     }
 
-    pub fn build(&mut self) -> Pin {
+    pub fn build(&mut self) -> Ctx {
         // slight optimization so we dont have to clone all of
-        // those strings. We create a single PinBuilder
+        // those strings. We create a single CtxBuilder
         // and swap references
         use std::mem;
-        let mut tmp = PinBuilder::new();
+        let mut tmp = CtxBuilder::new();
         mem::swap(&mut tmp, self);
-        let PinBuilder {
+        let CtxBuilder {
             level,
             role,
             platform,
@@ -79,7 +79,7 @@ impl PinBuilder {
         let role = role.unwrap_or(Role::Any);
         let platform = platform.unwrap_or(Platform::Any);
         let site = site.unwrap_or(Site::Any);
-        Pin {
+        Ctx {
             level,
             role,
             platform,
@@ -89,76 +89,76 @@ impl PinBuilder {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Pin {
+pub struct Ctx {
     level: Level,
     role: Role,
     platform: Platform,
     site: Site,
 }
 
-impl Pin {
-    /// Construct a PinBuilder that you may set properties on
+impl Ctx {
+    /// Construct a CtxBuilder that you may set properties on
     /// with individual setters. Once done, you must call `build()`
-    /// to construct the final Pin.
+    /// to construct the final Ctx.
     ///
     /// # Example
     ///
     /// ```
-    /// use packybara::Pin;
+    /// use packybara::Ctx;
     ///
-    /// let pin = Pin::new()
+    /// let pin = Ctx::new()
     ///                 .level("dev01").unwrap()
     ///                 .role("model").unwrap()
     ///                 .build();
     /// ```
-    pub fn new() -> PinBuilder {
-        PinBuilder::new()
+    pub fn new() -> CtxBuilder {
+        CtxBuilder::new()
     }
 
-    /// Construct a new Pin instance
-    pub fn try_from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> PinResult<Self>
+    /// Construct a new Ctx instance
+    pub fn try_from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> CtxResult<Self>
     where
         L: TryInto<Level>,
         R: TryInto<Role>,
         P: TryInto<Platform>,
         S: TryInto<Site>,
-        PinError: From<<L as TryInto<Level>>::Error>
+        CtxError: From<<L as TryInto<Level>>::Error>
             + From<<S as TryInto<Site>>::Error>
             + From<<P as TryInto<Platform>>::Error>
             + From<<R as TryInto<Role>>::Error>,
     {
-        Ok(Pin {
+        Ok(Ctx {
             level: level.try_into()?,
             role: role.try_into()?,
             platform: platform.try_into()?,
             site: site.try_into()?,
         })
     }
-    /// Construct a new Pin instance
+    /// Construct a new Ctx instance
     pub fn from_parts(level: Level, role: Role, platform: Platform, site: Site) -> Self {
-        Pin {
+        Ctx {
             level,
             role,
             platform,
             site,
         }
     }
-    /// Get the level from teh Pin
+    /// Get the level from teh Ctx
     pub fn level(&self) -> &Level {
         &self.level
     }
 
-    /// Get the role from th Pin
+    /// Get the role from th Ctx
     pub fn role(&self) -> &Role {
         &self.role
     }
 
-    /// Get the Platform from the Pin
+    /// Get the Platform from the Ctx
     pub fn platform(&self) -> &Platform {
         &self.platform
     }
 
-    /// Get the site from the Pin
+    /// Get the site from the Ctx
     pub fn site(&self) -> &Site {
         &self.site
     }
@@ -170,10 +170,10 @@ mod tests {
     use std::str::FromStr;
     #[test]
     fn can_construct_from_strs() {
-        let pin = Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap();
+        let pin = Ctx::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap();
         assert_eq!(
             pin,
-            Pin {
+            Ctx {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model").unwrap(),
                 platform: Platform::from_str("cent7_64").unwrap(),
@@ -184,7 +184,7 @@ mod tests {
 
     #[test]
     fn can_construct_from_builder() {
-        let pin = Pin::new()
+        let pin = Ctx::new()
             .level("dev01")
             .unwrap()
             .role("model")
@@ -192,7 +192,7 @@ mod tests {
             .build();
         assert_eq!(
             pin,
-            Pin {
+            Ctx {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model").unwrap(),
                 platform: Platform::from_str("any").unwrap(),
@@ -202,7 +202,7 @@ mod tests {
     }
     #[test]
     fn can_construct_all_from_builder() {
-        let pin = Pin::new()
+        let pin = Ctx::new()
             .level("dev01")
             .unwrap()
             .role("model")
@@ -214,7 +214,7 @@ mod tests {
             .build();
         assert_eq!(
             pin,
-            Pin {
+            Ctx {
                 level: Level::from_str("dev01").unwrap(),
                 role: Role::from_str("model").unwrap(),
                 platform: Platform::from_str("cent7_64").unwrap(),

@@ -6,7 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::pin_error::*;
+use crate::ctx_error::*;
 use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Index;
@@ -57,11 +57,11 @@ fn role_ok(name: &str) -> bool {
 }
 
 impl TryFrom<&str> for Role {
-    type Error = PinError;
+    type Error = CtxError;
 
     fn try_from(item: &str) -> Result<Self, Self::Error> {
         if !role_ok(item) {
-            return Err(PinError::FromStrToRoleError {
+            return Err(CtxError::FromStrToRoleError {
                 input: item.to_string(),
             });
         }
@@ -75,11 +75,11 @@ impl TryFrom<&str> for Role {
 }
 
 impl TryFrom<String> for Role {
-    type Error = PinError;
+    type Error = CtxError;
 
     fn try_from(item: String) -> Result<Self, Self::Error> {
         if !role_ok(&item) {
-            return Err(PinError::FromStrToRoleError {
+            return Err(CtxError::FromStrToRoleError {
                 input: item.to_string(),
             });
         }
@@ -129,7 +129,7 @@ impl Role {
     ///
     /// let role = Role::from_str("model_beta");
     /// ```
-    pub fn from_str<I>(role: I) -> PinResult<Self>
+    pub fn from_str<I>(role: I) -> CtxResult<Self>
     where
         I: Into<String>,
     {

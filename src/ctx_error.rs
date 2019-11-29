@@ -5,7 +5,7 @@ use strum;
 
 #[derive(Debug, Snafu)]
 #[snafu(visibility = "pub(crate)")]
-pub enum PinError {
+pub enum CtxError {
     #[snafu(display("Could construct Level from {}", input))]
     InvalidLevel { input: String },
     #[snafu(display("Error constructing LevelSpec {}: {}", level, source))]
@@ -27,4 +27,4 @@ pub enum PinError {
     },
 }
 
-pub type PinResult<T, E = PinError> = std::result::Result<T, E>;
+pub type CtxResult<T, E = CtxError> = std::result::Result<T, E>;

@@ -6,13 +6,13 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-//! The VersionPin combines a Pin and a Distribution,
+//! The VersionPin combines a Ctx and a Distribution,
 //! locating the Distribution in the higher order
 //! pin space.
 
+use crate::ctx::Ctx;
+use crate::ctx_error::*;
 use crate::distribution::Distribution;
-use crate::pin::Pin;
-use crate::pin_error::*;
 use crate::{Level, Platform, Role, Site};
 use std::convert::{From, TryInto};
 
@@ -37,37 +37,37 @@ impl VersionPinBuilder {
     }
 
     /// set the level
-    pub fn level<I>(&mut self, level: I) -> PinResult<&mut Self>
+    pub fn level<I>(&mut self, level: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Level>,
-        PinError: From<<I as TryInto<Level>>::Error>,
+        CtxError: From<<I as TryInto<Level>>::Error>,
     {
         self.level = Some(level.try_into()?);
         Ok(self)
     }
 
-    pub fn role<I>(&mut self, role: I) -> PinResult<&mut Self>
+    pub fn role<I>(&mut self, role: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Role>,
-        PinError: From<<I as TryInto<Role>>::Error>,
+        CtxError: From<<I as TryInto<Role>>::Error>,
     {
         self.role = Some(role.try_into()?);
         Ok(self)
     }
 
-    pub fn platform<I>(&mut self, platform: I) -> PinResult<&mut Self>
+    pub fn platform<I>(&mut self, platform: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Platform>,
-        PinError: From<<I as TryInto<Platform>>::Error>,
+        CtxError: From<<I as TryInto<Platform>>::Error>,
     {
         self.platform = Some(platform.try_into()?);
         Ok(self)
     }
 
-    pub fn site<I>(&mut self, site: I) -> PinResult<&mut Self>
+    pub fn site<I>(&mut self, site: I) -> CtxResult<&mut Self>
     where
         I: TryInto<Site>,
-        PinError: From<<I as TryInto<Site>>::Error>,
+        CtxError: From<<I as TryInto<Site>>::Error>,
     {
         self.site = Some(site.try_into()?);
         Ok(self)
@@ -91,21 +91,21 @@ impl VersionPinBuilder {
         let role = role.unwrap_or(Role::Any);
         let platform = platform.unwrap_or(Platform::Any);
         let site = site.unwrap_or(Site::Any);
-        let pin = Pin::from_parts(level, role, platform, site);
-        VersionPin { distribution, pin }
+        let ctx = Ctx::from_parts(level, role, platform, site);
+        VersionPin { distribution, ctx }
     }
 }
-/// Struct that pairs a Distribution with a Pin
+/// Struct that pairs a Distribution with a  Ctx
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VersionPin {
     pub distribution: Distribution,
-    pub pin: Pin,
+    pub ctx: Ctx,
 }
 
 impl VersionPin {
-    /// Construct a VersionPin from a Distribution and a Pin
-    pub fn from_parts(distribution: Distribution, pin: Pin) -> Self {
-        VersionPin { distribution, pin }
+    /// Construct a VersionPin from a Distribution and a  Ctx
+    pub fn from_parts(distribution: Distribution, ctx: Ctx) -> Self {
+        VersionPin { distribution, ctx }
     }
 
     /// Construct a new VersionPinBuilder, which has
@@ -121,7 +121,7 @@ mod tests {
     use super::*;
 
     // #[test]
-    // fn can_construct_versionpin_from_builder() {
+    // fn can_construct_versionctx_from_builder() {
     //     let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
     //         .role("model")
     //         .unwrap()
@@ -134,14 +134,14 @@ mod tests {
     //         .build();
     //     let expect = VersionPin {
     //         distribution: Distribution::new("maya-2018.sp3"),
-    //         pin: Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap(),
+    //         ctx:  Ctx::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap(),
     //     };
     //     assert_eq!(vp, expect);
     // }
 
     #[test]
-    fn can_construct_versionpin_from_builder() {
-        let (vp, expect) = || -> PinResult<(VersionPin, VersionPin)> {
+    fn can_construct_versionctx_from_builder() {
+        let (vp, expect) = || -> CtxResult<(VersionPin, VersionPin)> {
             let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
                 .role("model")?
                 .level("dev01")?
@@ -150,7 +150,7 @@ mod tests {
                 .build();
             let expect = VersionPin {
                 distribution: Distribution::new("maya-2018.sp3"),
-                pin: Pin::try_from_parts("dev01", "model", "cent7_64", "portland")?,
+                ctx: Ctx::try_from_parts("dev01", "model", "cent7_64", "portland")?,
             };
             Ok((vp, expect))
         }()
