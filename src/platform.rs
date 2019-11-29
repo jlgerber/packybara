@@ -8,7 +8,6 @@
  *******************************************************/
 use crate::pin_error::*;
 use snafu::ResultExt;
-use std::convert::From;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};

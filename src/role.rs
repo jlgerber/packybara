@@ -7,12 +7,9 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::pin_error::*;
-use snafu::ResultExt;
-use std::convert::From;
 use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Index;
-use std::str::FromStr;
 
 /// This trait is specifically designed to get around the issue
 /// with &String not implementing into for String

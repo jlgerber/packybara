@@ -1,6 +1,6 @@
 use failure::Compat;
 use levelspec::LSpecError;
-use snafu::{ResultExt, Snafu};
+use snafu::Snafu;
 use strum;
 
 #[derive(Debug, Snafu)]
