@@ -24,3 +24,4 @@ pub mod site;
 pub use site::Site;
 pub mod role;
 pub use role::Role;
+pub mod pin_error;

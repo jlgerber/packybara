@@ -6,25 +6,11 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use failure::Compat;
+use crate::pin_error::*;
 use failure::Fail;
-use levelspec::LSpecError;
 use levelspec::LevelSpec;
-use snafu::{ensure, Backtrace, ErrorCompat, ResultExt, Snafu};
+use snafu::ResultExt;
 use std::convert::TryFrom;
-
-#[derive(Debug, Snafu)]
-pub enum LevelError {
-    #[snafu(display("Could construct Level from {}", input))]
-    InvalidLevel { input: String },
-    #[snafu(display("Error constructing LevelSpec {}: {}", level, source))]
-    NewLevelspecError {
-        level: String,
-        source: Compat<LSpecError>,
-    },
-}
-
-pub type LevelResult<T, E = LevelError> = std::result::Result<T, E>;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Level {
@@ -33,7 +19,7 @@ pub enum Level {
 }
 
 impl TryFrom<&str> for Level {
-    type Error = LevelError;
+    type Error = PinError;
 
     fn try_from(item: &str) -> Result<Self, Self::Error> {
         if item.to_lowercase() == "facility" {
@@ -41,7 +27,7 @@ impl TryFrom<&str> for Level {
         }
         match LevelSpec::new(item) {
             Ok(val) => Ok(Level::LevelSpec(val)),
-            Err(_) => Err(LevelError::InvalidLevel {
+            Err(_) => Err(PinError::InvalidLevel {
                 input: item.to_string(),
             }),
         }
@@ -49,7 +35,7 @@ impl TryFrom<&str> for Level {
 }
 
 impl TryFrom<String> for Level {
-    type Error = LevelError;
+    type Error = PinError;
 
     fn try_from(item: String) -> Result<Self, Self::Error> {
         if item.to_lowercase() == "facility" {
@@ -58,7 +44,7 @@ impl TryFrom<String> for Level {
         let item_copy = item.clone();
         match LevelSpec::new(item) {
             Ok(val) => Ok(Level::LevelSpec(val)),
-            Err(_) => Err(LevelError::InvalidLevel { input: item_copy }),
+            Err(_) => Err(PinError::InvalidLevel { input: item_copy }),
         }
     }
 }
@@ -77,7 +63,7 @@ impl Level {
     /// let level = Level::from_str("facility");
     /// assert_eq!(level.expect("cant convert to facility"), Level::Facility);
     /// ```
-    pub fn from_str(level: &str) -> LevelResult<Level> {
+    pub fn from_str(level: &str) -> PinResult<Level> {
         match level.to_lowercase().as_str() {
             "facility" => Ok(Level::Facility),
             _ => {

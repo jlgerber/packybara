@@ -12,7 +12,9 @@
 
 use crate::distribution::Distribution;
 use crate::pin::Pin;
+use crate::pin_error::*;
 use crate::{Level, Platform, Role, Site};
+use std::convert::{From, TryInto};
 
 pub struct VersionPinBuilder {
     distribution: Distribution,
@@ -35,9 +37,13 @@ impl VersionPinBuilder {
     }
 
     /// set the level
-    pub fn level<I: Into<Level>>(&mut self, level: I) -> &mut Self {
-        self.level = Some(level.into());
-        self
+    pub fn level<I>(&mut self, level: I) -> PinResult<&mut Self>
+    where
+        I: TryInto<Level>,
+        PinError: From<<I as TryInto<Level>>::Error>,
+    {
+        self.level = Some(level.try_into()?);
+        Ok(self)
     }
 
     pub fn role<I: Into<Role>>(&mut self, role: I) -> &mut Self {
@@ -73,10 +79,8 @@ impl VersionPinBuilder {
         let role = role.unwrap_or(Role::Any);
         let platform = platform.unwrap_or(Platform::Any);
         let site = site.unwrap_or(Site::Any);
-        VersionPin {
-            distribution,
-            pin: Pin::from_parts(level, role, platform, site),
-        }
+        let pin = Pin::from_parts(level, role, platform, site);
+        VersionPin { distribution, pin }
     }
 }
 /// Struct that pairs a Distribution with a Pin
@@ -109,12 +113,13 @@ mod tests {
         let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
             .role("model")
             .level("dev01")
+            .unwrap()
             .site("portland")
             .platform("cent7_64")
             .build();
         let expect = VersionPin {
             distribution: Distribution::new("maya-2018.sp3"),
-            pin: Pin::from_parts("dev01", "model", "cent7_64", "portland"),
+            pin: Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap(),
         };
         assert_eq!(vp, expect);
     }

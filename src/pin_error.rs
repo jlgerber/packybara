@@ -1,12 +1,10 @@
 use failure::Compat;
-use failure::Fail;
 use levelspec::LSpecError;
-use levelspec::LevelSpec;
-use snafu::{ensure, Backtrace, ErrorCompat, ResultExt, Snafu};
-use std::convert::TryFrom;
+use snafu::{ResultExt, Snafu};
 
 #[derive(Debug, Snafu)]
-pub enum LevelError {
+#[snafu(visibility = "pub(crate)")]
+pub enum PinError {
     #[snafu(display("Could construct Level from {}", input))]
     InvalidLevel { input: String },
     #[snafu(display("Error constructing LevelSpec {}: {}", level, source))]
@@ -16,4 +14,4 @@ pub enum LevelError {
     },
 }
 
-pub type LevelResult<T, E = LevelError> = std::result::Result<T, E>;
+pub type PinResult<T, E = PinError> = std::result::Result<T, E>;

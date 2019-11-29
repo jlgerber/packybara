@@ -6,9 +6,10 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::level::{LevelError, LevelResult};
+use crate::pin_error::*;
 use crate::{Level, Platform, Role, Site};
 use std::convert::{From, TryInto};
+
 pub struct PinBuilder {
     level: Option<Level>,
     role: Option<Role>,
@@ -26,9 +27,9 @@ impl PinBuilder {
         }
     }
 
-    pub fn level<I: TryInto<Level>>(&mut self, level: I) -> LevelResult<&mut Self>
+    pub fn level<I: TryInto<Level>>(&mut self, level: I) -> PinResult<&mut Self>
     where
-        LevelError: From<<I as TryInto<Level>>::Error>,
+        PinError: From<<I as TryInto<Level>>::Error>,
     {
         self.level = Some(level.try_into()?);
         Ok(self)
@@ -93,20 +94,20 @@ impl Pin {
     /// ```
     /// use packybara::Pin;
     ///
-    /// let pin = Pin::new().level("dev01").role("model").build();
+    /// let pin = Pin::new().level("dev01").unwrap().role("model").build();
     /// ```
     pub fn new() -> PinBuilder {
         PinBuilder::new()
     }
 
     /// Construct a new Pin instance
-    pub fn from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> LevelResult<Self>
+    pub fn try_from_parts<L, R, P, S>(level: L, role: R, platform: P, site: S) -> PinResult<Self>
     where
         L: TryInto<Level>,
         R: Into<Role>,
         P: Into<Platform>,
         S: Into<Site>,
-        LevelError: From<<L as TryInto<Level>>::Error>,
+        PinError: From<<L as TryInto<Level>>::Error>,
     {
         Ok(Pin {
             level: level.try_into()?,
@@ -115,7 +116,15 @@ impl Pin {
             site: site.into(),
         })
     }
-
+    /// Construct a new Pin instance
+    pub fn from_parts(level: Level, role: Role, platform: Platform, site: Site) -> Self {
+        Pin {
+            level,
+            role,
+            platform,
+            site,
+        }
+    }
     /// Get the level from teh Pin
     pub fn level(&self) -> &Level {
         &self.level
@@ -143,7 +152,7 @@ mod tests {
 
     #[test]
     fn can_construct_from_strs() {
-        let pin = Pin::from_parts("dev01", "model", "cent7_64", "portland").unwrap();
+        let pin = Pin::try_from_parts("dev01", "model", "cent7_64", "portland").unwrap();
         assert_eq!(
             pin,
             Pin {
