@@ -31,11 +31,11 @@ pub enum CoordsError {
         source: strum::ParseError,
     },
     /// DistributionConstructionError
-    #[snafu(display("Error distribution. Problem: {}", problem))]
-    DistributionConstructionError { problem: &'static str },
+    // #[snafu(display("Error distribution. Problem: {}", problem))]
+    // DistributionConstructionError { problem: &'static str },
     /// DistributionConstructionError
     #[snafu(display("Error distribution. Problem: {}", problem))]
-    DistributionConstructionError2 { problem: String },
+    DistributionConstructionError { problem: String },
 }
 
 pub type CoordsResult<T, E = CoordsError> = std::result::Result<T, E>;
