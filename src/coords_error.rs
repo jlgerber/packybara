@@ -33,6 +33,9 @@ pub enum CoordsError {
     /// DistributionConstructionError
     #[snafu(display("Error distribution. Problem: {}", problem))]
     DistributionConstructionError { problem: &'static str },
+    /// DistributionConstructionError
+    #[snafu(display("Error distribution. Problem: {}", problem))]
+    DistributionConstructionError2 { problem: String },
 }
 
 pub type CoordsResult<T, E = CoordsError> = std::result::Result<T, E>;

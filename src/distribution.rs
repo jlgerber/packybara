@@ -12,36 +12,48 @@ pub struct Distribution {
     name: String,
 }
 
+fn validate(name: String) -> CoordsResult<String> {
+    if name.len() == 0 {
+        return Err(CoordsError::DistributionConstructionError {
+            problem: "name is blank",
+        });
+    }
+    let cnt = name.matches("-").count();
+    if cnt != 1 {
+        return Err(CoordsError::DistributionConstructionError2 {
+            problem: format!(
+                "distribution name: '{}' must have a single dash in it ",
+                name
+            ),
+        });
+    }
+    if name.matches(" ").count() > 0 {
+        return Err(CoordsError::DistributionConstructionError {
+            problem: "Contains space in name",
+        });
+    }
+    if name.matches("__").count() > 0 {
+        return Err(CoordsError::DistributionConstructionError {
+            problem: "double underscore in name not permitted",
+        });
+    }
+    let first_char = name.chars().next();
+    if first_char == Some('_') {
+        return Err(CoordsError::DistributionConstructionError {
+            problem: "name not allowed to start with underscore",
+        });
+    }
+    Ok(name)
+}
 impl Distribution {
     pub fn new<T: Into<String>>(name: T) -> CoordsResult<Self> {
         let name = name.into();
-        Distribution::validate(name.as_ref())?;
+        let name = validate(name)?;
         Ok(Distribution { name })
     }
-
-    fn validate(name: &str) -> CoordsResult<()> {
-        if name.matches(" ").count() > 0 {
-            return Err(CoordsError::DistributionConstructionError {
-                problem: "Contains space in name",
-            });
-        }
-        if name.matches("__").count() > 0 {
-            return Err(CoordsError::DistributionConstructionError {
-                problem: "double underscore in name not permitted",
-            });
-        }
-        let first_char = name.chars().next();
-        if first_char == Some('_') {
-            return Err(CoordsError::DistributionConstructionError {
-                problem: "name not allowed to start with underscore",
-            });
-        }
-        if name.matches("-").count() != 1 {
-            return Err(CoordsError::DistributionConstructionError {
-                problem: "distribution name must have a single dash in it",
-            });
-        }
-        Ok(())
+    pub(crate) fn new_unchecked<T: Into<String>>(name: T) -> Self {
+        let name = name.into();
+        Distribution { name }
     }
     /// Retrieve the name of the package
     pub fn package(&self) -> &str {
@@ -61,6 +73,23 @@ impl Distribution {
 mod tests {
     use super::*;
 
+    #[test]
+    fn can_return_dist_name() {
+        let distribution = Distribution::new("maya-2018.sp3").unwrap();
+        let name = distribution.package();
+        assert_eq!(name, "maya");
+    }
+
+    #[test]
+    fn can_return_dist_namec() {
+        fn inner() -> CoordsResult<String> {
+            let distribution = Distribution::new("maya-2018.sp3")?;
+            let name = distribution.package();
+            Ok(name.to_string())
+        }
+        let name = inner().unwrap();
+        assert_eq!(name, "maya");
+    }
     #[test]
     fn validation_should_catch_spaces() {
         let d = Distribution::new("foo bar-1.0.0");

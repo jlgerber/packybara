@@ -78,8 +78,10 @@ impl VersionPinBuilder {
         // those strings. We create a single PinBuilder
         // and swap references
         use std::mem;
-        let mut tmp = VersionPinBuilder::new(Distribution::new("")?);
+        let mut tmp = VersionPinBuilder::new(Distribution::new_unchecked(""));
+        //let old_self = mem::replace(self, tmp);
         mem::swap(&mut tmp, self);
+
         let VersionPinBuilder {
             distribution,
             level,
@@ -147,20 +149,30 @@ mod tests {
 
     #[test]
     fn can_construct_versioncoords_from_builder() {
-        let (vp, expect) = || -> CoordsResult<(VersionPin, VersionPin)> {
-            let vp = VersionPin::new(Distribution::new("maya-2018.sp3")?)
+        fn dist(distribution: Distribution) -> CoordsResult<VersionPin> {
+            let vp = VersionPin::new(distribution)
                 .role("model")?
                 .level("dev01")?
                 .site("portland")?
                 .platform("cent7_64")?
                 .build()?;
+            Ok(vp)
+        };
+        fn exp() -> CoordsResult<VersionPin> {
+            let expected_distribution = Distribution::new("maya-2018.sp3")?;
             let expect = VersionPin {
-                distribution: Distribution::new("maya-2018.sp3")?,
+                distribution: expected_distribution,
                 coords: Coords::try_from_parts("dev01", "model", "cent7_64", "portland")?,
             };
-            Ok((vp, expect))
-        }()
-        .unwrap();
+            Ok(expect)
+        }
+        let distribution = Distribution::new("maya-2018.sp3");
+        assert!(distribution.is_ok());
+        let distribution = distribution.unwrap();
+        let vp = dist(distribution);
+        assert!(vp.is_ok());
+        let vp = vp.unwrap();
+        let expect = exp().unwrap();
         assert_eq!(vp, expect);
     }
 }
