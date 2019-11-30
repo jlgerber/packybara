@@ -54,5 +54,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for result in results {
         println!("{}", result);
     }
+
+    let results = pb
+        .find_distribution_withs("maya")
+        .level("bayou")
+        .role("fx_beta")
+        .platform("cent7_64")
+        .site("portland")
+        .query()?;
+
+    for result in results {
+        println!("{}", result);
+    }
     Ok(())
 }

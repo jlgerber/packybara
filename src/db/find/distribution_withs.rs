@@ -5,11 +5,11 @@ use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
-pub type FindDistributionsResult<T, E = FindDistributionsError> = std::result::Result<T, E>;
+pub type FindDistributionWithsResult<T, E = FindDistributionWithsError> = std::result::Result<T, E>;
 
 /// Error type returned from FindDistributionsError
 #[derive(Debug, Snafu)]
-pub enum FindDistributionsError {
+pub enum FindDistributionWithsError {
     ///  DistributionNewError - failure to new up a distribution.
     #[snafu(display("Error constructing Distribution from {}: {}", msg, source))]
     DistributionNewError { msg: String, source: CoordsError },
@@ -20,26 +20,20 @@ pub enum FindDistributionsError {
 
 /// A row returned from the FindDistributions.query
 #[derive(Debug, PartialEq, Eq)]
-pub struct FindDistributionsRow {
+pub struct FindDistributionWithsRow {
     /// the id of result in the VersionPin table
-    pub versionpin_id: i32,
+    //pub versionpin_id: i32,
     pub distribution: Distribution,
     pub coords: Coords,
-    pub withs: Option<Vec<String>>,
 }
 
-impl fmt::Display for FindDistributionsRow {
+impl fmt::Display for FindDistributionWithsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut result = write!(f, "{} {}", self.distribution, self.coords);
-        match self.withs {
-            Some(ref w) => result = write!(f, " [{}]", w.join(", ")),
-            None => result = write!(f, " []"),
-        }
-        result
+        write!(f, "{} {}", self.distribution, self.coords)
     }
 }
 
-impl FindDistributionsRow {
+impl FindDistributionWithsRow {
     /// New up a FindDistributionsRow instance
     ///
     /// # Arguments
@@ -47,16 +41,14 @@ impl FindDistributionsRow {
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
     pub fn new(
-        versionpin_id: i32,
+        //versionpin_id: i32,
         distribution: Distribution,
         coords: Coords,
-        withs: Option<Vec<String>>,
     ) -> Self {
-        FindDistributionsRow {
-            versionpin_id,
+        FindDistributionWithsRow {
+            //versionpin_id,
             distribution,
             coords,
-            withs,
         }
     }
     /// Try to attempt to construct a distribution from &strs. This is a fallible operation
@@ -64,14 +56,13 @@ impl FindDistributionsRow {
     ///
     /// Args
     pub fn try_from_parts(
-        id: i32,
+        //id: i32,
         distribution: &str,
         level: &str,
         role: &str,
         platform: &str,
         site: &str,
-        withs: Option<Vec<String>>,
-    ) -> FindDistributionsResult<FindDistributionsRow> {
+    ) -> FindDistributionWithsResult<FindDistributionWithsRow> {
         let new_distribution = Distribution::new(distribution).context(DistributionNewError {
             msg: distribution.to_string(),
         })?;
@@ -85,26 +76,25 @@ impl FindDistributionsRow {
             },
         )?;
 
-        Ok(Self::new(id, new_distribution, coords, withs))
+        Ok(Self::new(/*id,*/ new_distribution, coords))
     }
 
     pub fn from_parts(
-        id: i32,
+        //id: i32,
         distribution: &str,
         level: &str,
         role: &str,
         platform: &str,
         site: &str,
-        withs: Option<Vec<String>>,
-    ) -> FindDistributionsRow {
+    ) -> FindDistributionWithsRow {
         let distribution = Distribution::new_unchecked(distribution);
         let coords = Coords::try_from_parts(level, role, platform, site).unwrap();
 
-        Self::new(id, distribution, coords, withs)
+        Self::new(/*id,*/ distribution, coords)
     }
 }
 /// Responsible for finding a distribution
-pub struct FindDistributions<'a> {
+pub struct FindDistributionWiths<'a> {
     client: &'a mut Client,
     package: &'a str,
     level: Option<&'a str>,
@@ -113,9 +103,9 @@ pub struct FindDistributions<'a> {
     site: Option<&'a str>,
 }
 
-impl<'a> FindDistributions<'a> {
+impl<'a> FindDistributionWiths<'a> {
     pub fn new(client: &'a mut Client, package: &'a str) -> Self {
-        FindDistributions {
+        FindDistributionWiths {
             client,
             package,
             level: None,
@@ -144,43 +134,39 @@ impl<'a> FindDistributions<'a> {
         self.site = Some(site_n);
         self
     }
-    pub fn query(&mut self) -> Result<Vec<FindDistributionsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> Result<Vec<FindDistributionWithsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
         let site = self.site.unwrap_or("any");
         let mut result = Vec::new();
         for row in self.client.query(
-            "SELECT versionpin_id, 
-                    distribution, 
+            "SELECT distribution, 
                     level_name, 
                     role_name, 
                     site_name, 
-                    platform_name,
-                    withs
-            FROM search_distributions(
-                $1, 
+                    platform_name
+            FROM find_distribution_withs(
+                $1,
                 role => $2, 
                 platform => $3, 
-                level=>$4, 
+                level=> $4, 
                 site => $5)",
             &[&self.package, &role, &platform, &level, &site],
         )? {
-            let id: i32 = row.get(0);
-            let distribution: &str = row.get(1);
-            let level_name: &str = row.get(2);
-            let role_name: &str = row.get(3);
-            let site_name: &str = row.get(4);
-            let platform_name: &str = row.get(5);
-            let withs: Option<Vec<String>> = row.get(6);
-            result.push(FindDistributionsRow::try_from_parts(
-                id,
+            //let id: i32 = row.get(0);
+            let distribution: &str = row.get(0);
+            let level_name: &str = row.get(1);
+            let role_name: &str = row.get(2);
+            let site_name: &str = row.get(3);
+            let platform_name: &str = row.get(4);
+            result.push(FindDistributionWithsRow::try_from_parts(
+                //id,
                 distribution,
                 level_name,
                 role_name,
                 platform_name,
                 site_name,
-                withs,
             )?);
         }
         Ok(result)

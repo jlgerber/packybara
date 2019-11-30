@@ -61,4 +61,11 @@ impl PackratDb {
     ) -> find::distributions::FindDistributions {
         find::distributions::FindDistributions::new(&mut self.client, package)
     }
+
+    pub fn find_distribution_withs<'b>(
+        &'b mut self,
+        package: &'b str,
+    ) -> find::distribution_withs::FindDistributionWiths {
+        find::distribution_withs::FindDistributionWiths::new(&mut self.client, package)
+    }
 }
