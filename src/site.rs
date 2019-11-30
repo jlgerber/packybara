@@ -11,7 +11,6 @@ use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
-
 /// Site models our facility locations recognized by package management
 // # Converting from &str
 /// Site implements the std::str::FromStr trait

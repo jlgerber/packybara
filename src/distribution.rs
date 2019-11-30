@@ -7,9 +7,16 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::{CoordsError, CoordsResult};
+use std::fmt;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Distribution {
     name: String,
+}
+
+impl fmt::Display for Distribution {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
 }
 
 fn validate(name: String) -> CoordsResult<String> {
@@ -45,6 +52,7 @@ fn validate(name: String) -> CoordsResult<String> {
     }
     Ok(name)
 }
+
 impl Distribution {
     pub fn new<T: Into<String>>(name: T) -> CoordsResult<Self> {
         let name = name.into();

@@ -49,6 +49,15 @@ pub enum Role {
     Named { name: String },
 }
 
+impl fmt::Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::Any => write!(f, "any"),
+            Self::Named { ref name } => write!(f, "{}", name),
+        }
+    }
+}
+
 // test to make sure the role is ok
 fn role_ok(name: &str) -> bool {
     name.matches(" ").count() == 0
@@ -224,15 +233,6 @@ impl Role {
             panic!("should not get here");
         };
         me.starts_with(other)
-    }
-}
-
-impl fmt::Display for Role {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Role::Any => write!(f, "any"),
-            Role::Named { ref name } => write!(f, "{}", name),
-        }
     }
 }
 

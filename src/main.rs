@@ -6,8 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use packybara::PackratDb;
-use postgres::{Client, NoTls};
+use packybara::packrat::{Client, NoTls, PackratDb};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::connect(
@@ -43,5 +42,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         result.package(),
         result.version()
     );
+
+    let results = pb
+        .find_distributions("maya")
+        .level("bayou")
+        .role("fx_beta")
+        .platform("cent7_64")
+        .site("portland")
+        .query()?;
+
+    for result in results {
+        println!("{}", result);
+    }
     Ok(())
 }

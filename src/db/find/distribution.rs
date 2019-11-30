@@ -1,14 +1,5 @@
-/*******************************************************
- * Copyright (C) 2019 Jonathan Gerber <jlgerber@gmail.com>
- *
- * This file is part of packybara.
- *
- * packybara can not be copied and/or distributed without the express
- * permission of Jonathan Gerber
- *******************************************************/
-use crate::distribution::Distribution;
+pub use crate::Distribution;
 use postgres::Client;
-
 /// Responsible for finding a distribution
 pub struct FindDistribution<'a> {
     client: &'a mut Client,
@@ -71,19 +62,5 @@ impl<'a> FindDistribution<'a> {
             result.push(Distribution::new(distribution)?);
         }
         Ok(result.pop().unwrap())
-    }
-}
-
-pub struct PackratDb {
-    client: Client,
-}
-
-impl PackratDb {
-    pub fn new(client: Client) -> Self {
-        PackratDb { client }
-    }
-
-    pub fn find_distribution<'b>(&'b mut self, package: &'b str) -> FindDistribution {
-        FindDistribution::new(&mut self.client, package)
     }
 }

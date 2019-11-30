@@ -10,8 +10,9 @@ pub mod prelude;
 pub use prelude::*;
 pub mod distribution;
 pub use distribution::Distribution;
-pub mod packrat_db;
-pub use packrat_db::PackratDb;
+pub mod db;
+pub use db::packrat;
+
 pub mod coords;
 pub use coords::Coords;
 pub mod version_pin;

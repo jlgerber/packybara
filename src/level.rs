@@ -11,11 +11,21 @@ use failure::Fail;
 use levelspec::LevelSpec;
 use snafu::ResultExt;
 use std::convert::TryFrom;
+use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Level {
     Facility,
     LevelSpec(LevelSpec),
+}
+
+impl fmt::Display for Level {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::Facility => write!(f, "facility"),
+            Self::LevelSpec(ref lspec) => write!(f, "{}", lspec),
+        }
+    }
 }
 
 impl TryFrom<&str> for Level {

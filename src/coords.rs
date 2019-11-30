@@ -16,7 +16,7 @@
 use crate::coords_error::*;
 use crate::{Level, Platform, Role, Site};
 use std::convert::{From, TryInto};
-
+use std::fmt;
 /// CoordsBuilder follows the builder pattern to allow
 /// a fluent style api for setting the coordinates on a
 /// per component basis.
@@ -154,6 +154,15 @@ pub struct Coords {
     site: Site,
 }
 
+impl fmt::Display for Coords {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "(level:'{}' role:'{}' platform:'{}' site:'{}')",
+            self.level, self.role, self.platform, self.site
+        )
+    }
+}
 impl Coords {
     /// Construct a CoordsBuilder that you may set properties on
     /// with individual setters. Once done, you call `build()`
