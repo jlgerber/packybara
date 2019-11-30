@@ -9,12 +9,11 @@ pub type FindDistributionsResult<T, E = FindDistributionsError> = std::result::R
 
 /// Error type returned from FindDistributionsError
 #[derive(Debug, Snafu)]
-//#[snafu(visibility = "pub(crate)")]
 pub enum FindDistributionsError {
-    /// NewLevelspecError
+    ///  DistributionNewError - failure to new up a distribution.
     #[snafu(display("Error constructing Distribution from {}: {}", msg, source))]
-    DistributionInitError { msg: String, source: CoordsError },
-
+    DistributionNewError { msg: String, source: CoordsError },
+    /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
 }
@@ -60,7 +59,7 @@ impl FindDistributionsRow {
         platform: &str,
         site: &str,
     ) -> FindDistributionsResult<FindDistributionsRow> {
-        let new_distribution = Distribution::new(distribution).context(DistributionInitError {
+        let new_distribution = Distribution::new(distribution).context(DistributionNewError {
             msg: distribution.to_string(),
         })?;
 
