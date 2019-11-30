@@ -15,32 +15,32 @@ pub struct Distribution {
 fn validate(name: String) -> CoordsResult<String> {
     if name.len() == 0 {
         return Err(CoordsError::DistributionConstructionError {
-            problem: "name is blank",
+            problem: "name is blank".to_string(),
         });
     }
     let cnt = name.matches("-").count();
     if cnt != 1 {
-        return Err(CoordsError::DistributionConstructionError2 {
+        return Err(CoordsError::DistributionConstructionError {
             problem: format!(
-                "distribution name: '{}' must have a single dash in it ",
+                "distribution name must have a single dash in it: '{}'",
                 name
             ),
         });
     }
     if name.matches(" ").count() > 0 {
         return Err(CoordsError::DistributionConstructionError {
-            problem: "Contains space in name",
+            problem: format!("Contains space in name: '{}'", name),
         });
     }
     if name.matches("__").count() > 0 {
         return Err(CoordsError::DistributionConstructionError {
-            problem: "double underscore in name not permitted",
+            problem: format!("double underscore in name not permitted: '{}'", name),
         });
     }
     let first_char = name.chars().next();
     if first_char == Some('_') {
         return Err(CoordsError::DistributionConstructionError {
-            problem: "name not allowed to start with underscore",
+            problem: format!("name not allowed to start with underscore: '{}'", name),
         });
     }
     Ok(name)
@@ -95,7 +95,7 @@ mod tests {
         let d = Distribution::new("foo bar-1.0.0");
         assert_eq!(d.is_err(), true);
         if let CoordsError::DistributionConstructionError { ref problem } = d.unwrap_err() {
-            assert_eq!(problem, &"Contains space in name");
+            assert_eq!(problem, &"Contains space in name: 'foo bar-1.0.0'");
         } else {
             panic!("error not of type CoordsError::DistributionConstructionError");
         }
@@ -106,7 +106,10 @@ mod tests {
         let d = Distribution::new("foobar-1.0__0");
         assert_eq!(d.is_err(), true);
         if let CoordsError::DistributionConstructionError { ref problem } = d.unwrap_err() {
-            assert_eq!(problem, &"double underscore in name not permitted");
+            assert_eq!(
+                problem,
+                &"double underscore in name not permitted: 'foobar-1.0__0'"
+            );
         } else {
             panic!("error not of type CoordsError::DistributionConstructionError");
         }
@@ -117,7 +120,10 @@ mod tests {
         let d = Distribution::new("_foobar-1.0.0");
         assert_eq!(d.is_err(), true);
         if let CoordsError::DistributionConstructionError { ref problem } = d.unwrap_err() {
-            assert_eq!(problem, &"name not allowed to start with underscore");
+            assert_eq!(
+                problem,
+                &"name not allowed to start with underscore: '_foobar-1.0.0'"
+            );
         } else {
             panic!("error not of type CoordsError::DistributionConstructionError");
         }
@@ -128,7 +134,10 @@ mod tests {
         let d = Distribution::new("foobar--1.0.0");
         assert_eq!(d.is_err(), true);
         if let CoordsError::DistributionConstructionError { ref problem } = d.unwrap_err() {
-            assert_eq!(problem, &"distribution name must have a single dash in it");
+            assert_eq!(
+                problem,
+                &"distribution name must have a single dash in it: 'foobar--1.0.0'"
+            );
         } else {
             panic!("error not of type CoordsError::DistributionConstructionError");
         }
@@ -139,7 +148,10 @@ mod tests {
         let d = Distribution::new("foobar.1.0.0");
         assert_eq!(d.is_err(), true);
         if let CoordsError::DistributionConstructionError { ref problem } = d.unwrap_err() {
-            assert_eq!(problem, &"distribution name must have a single dash in it");
+            assert_eq!(
+                problem,
+                &"distribution name must have a single dash in it: 'foobar.1.0.0'"
+            );
         } else {
             panic!("error not of type CoordsError::DistributionConstructionError");
         }
