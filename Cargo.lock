@@ -472,7 +472,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "packybara"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "levelspec 0.6.0 (git+https://github.com/jlgerber/rust-lspec.git?tag=v0.6.0)",
