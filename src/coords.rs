@@ -126,7 +126,7 @@ impl CoordsBuilder {
 
 /// Struct representing the coordinates of a location
 /// in "Package Space". The space is spanned by the
-/// Level, Role, Platform, and Site axis.
+/// Level, Role, Platform, and Site axes.
 /// Distributions are "pinned" to a location in Package Space,
 /// and these "pins" may be located using a Coords instance.
 ///

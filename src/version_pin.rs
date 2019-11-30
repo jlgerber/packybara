@@ -73,12 +73,12 @@ impl VersionPinBuilder {
         Ok(self)
     }
 
-    pub fn build(&mut self) -> VersionPin {
+    pub fn build(&mut self) -> CoordsResult<VersionPin> {
         // slight optimization so we dont have to clone all of
         // those strings. We create a single PinBuilder
         // and swap references
         use std::mem;
-        let mut tmp = VersionPinBuilder::new(Distribution::new(""));
+        let mut tmp = VersionPinBuilder::new(Distribution::new("")?);
         mem::swap(&mut tmp, self);
         let VersionPinBuilder {
             distribution,
@@ -92,10 +92,10 @@ impl VersionPinBuilder {
         let platform = platform.unwrap_or(Platform::Any);
         let site = site.unwrap_or(Site::Any);
         let coords = Coords::from_parts(level, role, platform, site);
-        VersionPin {
+        Ok(VersionPin {
             distribution,
             coords,
-        }
+        })
     }
 }
 /// Struct that pairs a Distribution with a  Coords
@@ -148,14 +148,14 @@ mod tests {
     #[test]
     fn can_construct_versioncoords_from_builder() {
         let (vp, expect) = || -> CoordsResult<(VersionPin, VersionPin)> {
-            let vp = VersionPin::new(Distribution::new("maya-2018.sp3"))
+            let vp = VersionPin::new(Distribution::new("maya-2018.sp3")?)
                 .role("model")?
                 .level("dev01")?
                 .site("portland")?
                 .platform("cent7_64")?
-                .build();
+                .build()?;
             let expect = VersionPin {
-                distribution: Distribution::new("maya-2018.sp3"),
+                distribution: Distribution::new("maya-2018.sp3")?,
                 coords: Coords::try_from_parts("dev01", "model", "cent7_64", "portland")?,
             };
             Ok((vp, expect))

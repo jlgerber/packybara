@@ -25,6 +25,8 @@ pub enum CoordsError {
         input: String,
         source: strum::ParseError,
     },
+    #[snafu(display("Error distribution. Problem: {}", problem))]
+    DistributionConstructionError { problem: &'static str },
 }
 
 pub type CoordsResult<T, E = CoordsError> = std::result::Result<T, E>;

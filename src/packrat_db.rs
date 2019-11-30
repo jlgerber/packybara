@@ -68,7 +68,7 @@ impl<'a> FindDistribution<'a> {
             &[&self.package, &role, &platform, &level, &site],
         )? {
             let distribution: &str = row.get(0);
-            result.push(Distribution::new(distribution));
+            result.push(Distribution::new(distribution)?);
         }
         Ok(result.pop().unwrap())
     }
