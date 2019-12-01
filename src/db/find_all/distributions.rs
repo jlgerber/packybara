@@ -15,6 +15,7 @@ fn match_attrib(search_by: &SearchAttribute) -> &'static str {
         SearchAttribute::Role => "role_name",
         SearchAttribute::Site => "site_name",
         SearchAttribute::Package => "distribution",
+        _ => "unknown",
     }
 }
 /// Error type returned from  FindAllDistributionsError
