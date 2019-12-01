@@ -42,6 +42,9 @@ pub struct FindAllDistributionsRow {
 impl fmt::Display for FindAllDistributionsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut result = write!(f, "{} {}", self.distribution, self.coords);
+        if result.is_err() {
+            return result;
+        }
         match self.withs {
             Some(ref w) => result = write!(f, " [{}]", w.join(", ")),
             None => result = write!(f, " []"),
