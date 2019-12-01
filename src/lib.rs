@@ -12,7 +12,7 @@ pub mod distribution;
 pub use distribution::Distribution;
 pub mod db;
 pub use db::packrat;
-
+pub use db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
 pub mod coords;
 pub use coords::Coords;
 pub mod version_pin;

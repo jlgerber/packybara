@@ -6,7 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::db::find;
+use crate::db::{find, find_all};
 //use postgres::Client;
 pub use postgres::{Client, NoTls};
 
@@ -60,6 +60,12 @@ impl PackratDb {
         package: &'b str,
     ) -> find::distributions::FindDistributions {
         find::distributions::FindDistributions::new(&mut self.client, package)
+    }
+
+    pub fn find_all_distributions<'b>(
+        &'b mut self,
+    ) -> find_all::distributions::FindAllDistributions {
+        find_all::distributions::FindAllDistributions::new(&mut self.client)
     }
 
     pub fn find_distribution_withs<'b>(

@@ -7,6 +7,7 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use packybara::packrat::{Client, NoTls, PackratDb};
+use packybara::SearchMode;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::connect(
@@ -28,6 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         result.package(),
         result.version()
     );
+    println!("\n\nFIND THE DISTRIBUTION");
 
     pb.find_distribution("maya")
         .level("bayou")
@@ -43,6 +45,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         result.version()
     );
 
+    println!("\n\nFIND DISTRIBUTIONS");
+
     let results = pb
         .find_distributions("maya")
         .level("bayou")
@@ -55,6 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{}", result);
     }
 
+    println!("\n\nFIND WITHS");
     let results = pb
         .find_distribution_withs("maya")
         .level("bayou")
@@ -63,6 +68,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .site("portland")
         .query()?;
 
+    for result in results {
+        println!("{}", result);
+    }
+
+    println!("\n\nFIND ALL DISTRIBUTIONS");
+    let results = pb
+        .find_all_distributions()
+        .level("facility")
+        .role("any")
+        .platform("any")
+        .site("any")
+        .order_by(vec![
+            //packybara::SearchAttribute::Level,
+            packybara::SearchAttribute::Package,
+        ])
+        .limit(15)
+        .search_mode(SearchMode::Descendant)
+        .query()?;
     for result in results {
         println!("{}", result);
     }
