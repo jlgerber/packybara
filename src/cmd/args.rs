@@ -83,5 +83,28 @@ pub enum PbSub {
         #[structopt(long = "order-by")]
         order_by: Option<String>,
     },
+    Roles {
+        /// The role (eg model or anim_beta). Defaults to 'any'.
+        #[structopt(short, long)]
+        role: Option<String>,
+        /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
+        #[structopt(short, long)]
+        level: Option<String>,
+        /// OS - (eg cent7_64)
+        #[structopt(long)]
+        platform: Option<String>,
+        /// The site - defaults to 'any'
+        #[structopt(short, long)]
+        site: Option<String>,
+        /// Search mode - ancestor, exact,
+        #[structopt(long = "search-mode")]
+        search_mode: Option<String>,
+        /// limit the number of returned items
+        #[structopt(long)]
+        limit: Option<i32>,
+        /// provide one or more comma separated items to order the return by.
+        #[structopt(long = "order-by")]
+        order_by: Option<String>,
+    },
     Platforms {},
 }

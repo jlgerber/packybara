@@ -145,13 +145,13 @@ impl CoordsBuilder {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Coords {
     /// The Facility, or Show, Sequence, or Shot
-    level: Level,
+    pub level: Level,
     /// Either parent or subrole
-    role: Role,
+    pub role: Role,
     /// The OS variant
-    platform: Platform,
+    pub platform: Platform,
     /// The physical location
-    site: Site,
+    pub site: Site,
 }
 
 impl fmt::Display for Coords {

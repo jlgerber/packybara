@@ -12,7 +12,6 @@ use packybara::packrat::{Client, NoTls}; // PackratDb};
 use structopt::StructOpt;
 mod cmd;
 use cmd::args::*;
-//use cmd::utils::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Pb::from_args();
@@ -29,6 +28,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         PbSub::Distributions { .. } => {
             cmd::distributions::process(client, cmd)?;
+        }
+        PbSub::Roles { .. } => {
+            cmd::roles::process(client, cmd)?;
         }
         _ => println!("not supported"),
     }

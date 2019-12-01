@@ -68,6 +68,10 @@ impl PackratDb {
         find_all::distributions::FindAllDistributions::new(&mut self.client)
     }
 
+    pub fn find_all_roles<'b>(&'b mut self) -> find_all::roles::FindAllRoles {
+        find_all::roles::FindAllRoles::new(&mut self.client)
+    }
+
     pub fn find_distribution_withs<'b>(
         &'b mut self,
         package: &'b str,

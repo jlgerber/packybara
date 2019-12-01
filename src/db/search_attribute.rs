@@ -93,3 +93,13 @@ pub enum SearchMode {
     )]
     Exact,
 }
+
+impl SearchMode {
+    pub fn to_symbol(&self) -> &'static str {
+        match *self {
+            Self::Ancestor => "<@",
+            Self::Descendant => "@>",
+            Self::Exact => "=",
+        }
+    }
+}
