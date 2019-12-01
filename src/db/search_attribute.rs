@@ -66,6 +66,7 @@ pub enum SearchAttribute {
         to_string = "site"
     )]
     Site,
+    Unknown,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
