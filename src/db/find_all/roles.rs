@@ -9,6 +9,7 @@ use std::fmt;
 
 pub type FindAllRolesResult<T, E = FindAllRolesError> = std::result::Result<T, E>;
 
+// Helper function to convert a SearchAttribute to a column nme
 fn match_attrib(search_by: &SearchAttribute) -> &'static str {
     match *search_by {
         SearchAttribute::Level => "level",
@@ -19,6 +20,7 @@ fn match_attrib(search_by: &SearchAttribute) -> &'static str {
         _ => "unknown",
     }
 }
+
 /// Error type returned from  FindAllRolesError
 #[derive(Debug, Snafu)]
 pub enum FindAllRolesError {
@@ -44,7 +46,7 @@ impl fmt::Display for FindAllRolesRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}@(level:{} platform:{} site:{})",
+            "{} @ (level:{} platform:{} site:{})",
             self.role, self.level, self.platform, self.site
         )
     }
@@ -54,7 +56,13 @@ impl FindAllRolesRow {
     /// New up a  FindAllRolesRow instance
     ///
     /// # Arguments
-    /// * `coords`: The location in package space that the distribution resides at
+    /// * `role`  - the role name
+    /// * `level` - the level name
+    /// * `platform` - The platform name
+    /// * `site` - The site name
+    ///
+    /// # Returns
+    /// - FindAllRolesRow instance
     pub fn new(role: String, level: String, platform: String, site: String) -> Self {
         FindAllRolesRow {
             role,
@@ -63,10 +71,20 @@ impl FindAllRolesRow {
             site,
         }
     }
-    /// Try to attempt to construct a distribution from &strs. This is a fallible operation
+    /// Attempt to construct a distribution from &strs. This is a fallible operation
     /// returning a result.
     ///
-    /// Args
+    /// # Arguments
+    ///
+    /// * `role`
+    /// * `level`
+    /// * `platform`
+    /// * `site`
+    ///
+    /// # Returns
+    /// Result
+    /// - Ok - FindAllRolesRow instance
+    /// - Err - FindAllRolesError
     pub fn try_from_parts(
         role: &str,
         level: &str,
@@ -95,12 +113,21 @@ impl FindAllRolesRow {
         ))
     }
 
+    /// Infallible counterpart to try_from_parts. Will panic if there is a problem
+    ///
+    /// # Arguments
+    /// * `role`
+    /// * `level`
+    /// * `platform`
+    /// * `site`
+    ///
+    /// # Returns
+    /// - FindAllRolesRow instance
     pub fn from_parts(role: &str, level: &str, platform: &str, site: &str) -> FindAllRolesRow {
         Self::try_from_parts(role, level, platform, site).unwrap()
     }
 }
 /// Responsible for finding a distribution
-
 pub struct FindAllRoles<'a> {
     client: &'a mut Client,
     role: Option<&'a str>,
@@ -122,8 +149,17 @@ impl fmt::Debug for FindAllRoles<'_> {
         )
     }
 }
+// helper function to simplify handing different types of queries
+fn prep_query(extension: &str, op: &str, params_cnt: i32, is_like: bool) -> String {
+    if is_like {
+        format!(" LIKE ${}", params_cnt)
+    } else {
+        format!("{} {} text2ltree(${})", extension, op, params_cnt)
+    }
+}
 
 impl<'a> FindAllRoles<'a> {
+    /// new up a FIndAllRoles instance.
     pub fn new(client: &'a mut Client) -> Self {
         FindAllRoles {
             client,
@@ -158,21 +194,30 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
+    /// Set an optional level.
+    ///
+    /// This is generally accomplished by calling
+    /// ```ignore
+    /// .as_ref().map(Deref::deref)
+    /// ```
+    /// on an `Option<String>` to convert it into an `Option<&str>`
     pub fn level_opt(&mut self, level: Option<&'a str>) -> &mut Self {
         self.level = level;
         self
     }
 
+    /// Set an optional role
     pub fn role_opt(&mut self, role: Option<&'a str>) -> &mut Self {
         self.role = role;
         self
     }
 
+    /// Set an optional platform
     pub fn platform_opt(&mut self, platform: Option<&'a str>) -> &mut Self {
         self.platform = platform;
         self
     }
-
+    /// Set an optional Site
     pub fn site_opt(&mut self, site: Option<&'a str>) -> &mut Self {
         self.site = site;
         self
@@ -197,69 +242,167 @@ impl<'a> FindAllRoles<'a> {
         self.search_mode = mode;
         self
     }
+    /// Initiate the query based on the current state of self and return a
+    /// vector of results
     pub fn query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
-        println!("{:#?}", self);
-        let level = self
-            .level
-            .map_or("facility".to_string(), |x| format!("facility.{}", x));
-        let role = self
-            .role
-            .map_or("any".to_string(), |x| format!("any.{}", x));
-        let platform = self
-            .platform
-            .map_or("any".to_string(), |x| format!("any.{}", x));
-        let site = self
-            .site
-            .map_or("any".to_string(), |x| format!("any.{}", x));
+        //println!("{:#?}", self);
+        fn process_map(root: &str, value: &str) -> String {
+            if value != root {
+                if !value.contains("%") {
+                    format!("{}.{}", root, value)
+                } else {
+                    value.to_string()
+                }
+            } else {
+                root.to_string()
+            }
+        }
+        let level = self.level.map_or("facility".to_string(), |x| {
+            // if x != "facility" {
+            //     if !x.contains("%") {
+            //         format!("facility.{}", x)
+            //     } else {
+            //         x.to_string()
+            //     }
+            // } else {
+            //     "facility".to_string()
+            // }
+            process_map("facility", x)
+        });
+        let role = self.role.map_or("any".to_string(), |x| {
+            // if x != "any" {
+            //     if !x.contains("%") {
+            //         format!("any.{}", x)
+            //     } else {
+            //         x.to_string()
+            //     }
+            // } else {
+            //     "any".to_string()
+            // }
+            process_map("any", x)
+        });
+        let platform = self.platform.map_or("any".to_string(), |x| {
+            // if x != "any" {
+            //     format!("any.{}", x)
+            // } else {
+            //     "any".to_string()
+            // }
+            process_map("any", x)
+        });
+        let site = self.site.map_or("any".to_string(), |x| {
+            // if x != "any" {
+            //     format!("any.{}", x)
+            // } else {
+            //     "any".to_string()
+            // }
+            process_map("any", x)
+        });
         let mut result = Vec::new();
+        // build up a vector of parameters for the prepared search
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
+
+        // Parameter Count used to supply prepared statement
+        // with correct index. It is 1's based.
         let mut params_cnt = 1;
+
+        // used to join optional queries. will be set to " AND "
+        // after first optional parameter is used
         let mut join = "";
+        let mut join_b = false;
+        // extension
+        let extension = "_path";
+        // The op is the operator symbol used in the search
         let op = self.search_mode.to_symbol();
-        let mut query_str =
-            "SELECT DISTINCT role,level,platform,site from versionpin_view".to_string();
-        // build up query to handle
+        let mut query_str = "SELECT DISTINCT 
+                role,
+                level,
+                platform,
+                site 
+            FROM 
+                versionpin_view"
+            .to_string();
+
+        // build up query to handle optional parameters
         if self.level.is_some()
             || self.role.is_some()
             || self.platform.is_some()
             || self.site.is_some()
         {
+            fn prep_coord(
+                mut query_str: &mut String,
+                coord: &str,
+                mut join_b: &mut bool,
+                op: &str,
+                params_cnt: &mut i32,
+            ) {
+                let is_like = coord.contains("%");
+                let join = if *join_b { " AND " } else { "" };
+                *query_str = format!(
+                    "{}{} level{}",
+                    query_str,
+                    join,
+                    prep_query("_path", op, *params_cnt, is_like)
+                );
+                *join_b = true;
+                //params.push(&coord);
+                //*join =  &" AND ";
+                *params_cnt = *params_cnt + 1;
+            }
             query_str.push_str(" WHERE ");
             if self.level.is_some() {
                 // just including join here in case i reorder or add an additional
                 // item above
-                println!("HERE {:?}", self.level);
-
+                //
+                prep_coord(&mut query_str, &level, &mut join_b, &op, &mut params_cnt);
+                params.push(&level);
+                if join_b {
+                    join = " AND ";
+                }
+                println!("join_b {} cnt {}", join_b, params_cnt);
+                /*
+                let is_like = level.contains("%");
                 query_str = format!(
-                    "{}{} level_path {} text2ltree(${})",
-                    query_str, join, op, params_cnt
+                    "{}{} level{}",
+                    query_str,
+                    join,
+                    prep_query(extension, op, params_cnt, is_like)
                 );
                 params.push(&level);
                 join = " AND ";
                 params_cnt += 1;
+                */
             }
             if self.role.is_some() {
+                let is_like = role.contains("%");
                 query_str = format!(
-                    "{}{} role_path {} text2ltree(${})",
-                    query_str, join, op, params_cnt
+                    "{}{} role{}",
+                    query_str,
+                    join,
+                    prep_query(extension, op, params_cnt, is_like)
                 );
                 params.push(&role);
                 join = " AND ";
                 params_cnt += 1;
             }
             if self.platform.is_some() {
+                let is_like = platform.contains("%");
                 query_str = format!(
-                    "{}{} platform_path {} text2ltree(${})",
-                    query_str, join, op, params_cnt
+                    "{}{} platform{}",
+                    query_str,
+                    join,
+                    prep_query(extension, op, params_cnt, is_like)
                 );
                 params.push(&platform);
                 join = " AND ";
                 params_cnt += 1;
             }
             if self.site.is_some() {
+                let is_like = platform.contains("%");
                 query_str = format!(
-                    "{}{} site_path {} text2ltree(${})",
-                    query_str, join, op, params_cnt
+                    "{}{} site{}",
+                    query_str,
+                    join,
+                    prep_query(extension, op, params_cnt, is_like)
                 );
                 params.push(&site);
                 join = " AND ";
@@ -280,6 +423,7 @@ impl<'a> FindAllRoles<'a> {
 
         let qstr = query_str.as_str();
         println!("QUERY {}", qstr);
+        println!("PREPARED {:?}", &params);
         for row in self.client.query(qstr, &params[..])? {
             let role_name: &str = row.get(0);
             let level_name: &str = row.get(1);
