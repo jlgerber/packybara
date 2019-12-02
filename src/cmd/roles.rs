@@ -2,6 +2,7 @@ use super::args::PbSub;
 use super::utils::extract_coords;
 use packybara::packrat::{Client, PackratDb};
 use packybara::{SearchAttribute, SearchMode};
+use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -38,9 +39,27 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
         let results = results.query()?;
         // For now I do this. I need to add packge handling into the query
         // either by switching functions or handling the sql on this end
+        /*
+         let mut table = table!([bFg => "PLATFORM", "PACKAGE"]);
+               for (platform, packagelist) in contents {
+                   for p in &packagelist.names {
+                       table.add_row(row![platform.as_str(), p]);
+                   }
+               }
+               table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR); //FORMAT_NO_LINESEP_WITH_TITLE FORMAT_CLEAN
+               table.printstd();
+        */
+        let mut table = table!([bFg => "ROLE", "LEVEL", "PLATFORM", "SITE"]);
         for result in results {
-            println!("{}", result);
+            table.add_row(row![
+                result.role,
+                result.level,
+                result.platform,
+                result.site
+            ]);
         }
+        table.set_format(*format::consts::FORMAT_CLEAN); //FORMAT_NO_LINESEP_WITH_TITLE  FORMAT_NO_BORDER_LINE_SEPARATOR
+        table.printstd();
     };
 
     Ok(())
