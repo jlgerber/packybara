@@ -1,5 +1,4 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
-pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -8,21 +7,11 @@ use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
-pub type FindAllDistributionsResult<T, E = FindAllDistributionsError> = std::result::Result<T, E>;
+pub type FindVersionPinsResult<T, E = FindVersionPinsError> = std::result::Result<T, E>;
 
-fn match_attrib(search_by: &SearchAttribute) -> &'static str {
-    match *search_by {
-        SearchAttribute::Level => "level_name",
-        SearchAttribute::Platform => "platform_name",
-        SearchAttribute::Role => "role_name",
-        SearchAttribute::Site => "site_name",
-        SearchAttribute::Package => "distribution",
-        _ => "unknown",
-    }
-}
-/// Error type returned from  FindAllDistributionsError
+/// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
-pub enum FindAllDistributionsError {
+pub enum FindVersionPinsError {
     ///  DistributionNewError - failure to new up a distribution.
     #[snafu(display("Error constructing Distribution from {}: {}", msg, source))]
     DistributionNewError { msg: String, source: CoordsError },
@@ -31,9 +20,9 @@ pub enum FindAllDistributionsError {
     CoordsTryFromPartsError { coords: String, source: CoordsError },
 }
 
-/// A row returned from the  FindAllDistributions.query
+/// A row returned from the FindVersionPins.query
 #[derive(Debug, PartialEq, Eq)]
-pub struct FindAllDistributionsRow {
+pub struct FindVersionPinsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: i32,
     pub distribution: Distribution,
@@ -41,9 +30,10 @@ pub struct FindAllDistributionsRow {
     pub withs: Option<Vec<String>>,
 }
 
-impl fmt::Display for FindAllDistributionsRow {
+impl fmt::Display for FindVersionPinsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut result = write!(f, "{} {}", self.distribution, self.coords);
+        // just to get the compiler to stop complaining about an unused var
         if result.is_err() {
             return result;
         }
@@ -55,8 +45,8 @@ impl fmt::Display for FindAllDistributionsRow {
     }
 }
 
-impl FindAllDistributionsRow {
-    /// New up a  FindAllDistributionsRow instance
+impl FindVersionPinsRow {
+    /// New up a FindVersionPinsRow instance
     ///
     /// # Arguments
     /// * `versionpin_id`: The id of the relevant row in the versionpin table
@@ -68,7 +58,7 @@ impl FindAllDistributionsRow {
         coords: Coords,
         withs: Option<Vec<String>>,
     ) -> Self {
-        FindAllDistributionsRow {
+        FindVersionPinsRow {
             versionpin_id,
             distribution,
             coords,
@@ -87,7 +77,7 @@ impl FindAllDistributionsRow {
         platform: &str,
         site: &str,
         withs: Option<Vec<String>>,
-    ) -> FindAllDistributionsResult<FindAllDistributionsRow> {
+    ) -> FindVersionPinsResult<FindVersionPinsRow> {
         let new_distribution = Distribution::new(distribution).context(DistributionNewError {
             msg: distribution.to_string(),
         })?;
@@ -112,7 +102,7 @@ impl FindAllDistributionsRow {
         platform: &str,
         site: &str,
         withs: Option<Vec<String>>,
-    ) -> FindAllDistributionsRow {
+    ) -> FindVersionPinsRow {
         let distribution = Distribution::new_unchecked(distribution);
         let coords = Coords::try_from_parts(level, role, platform, site).unwrap();
 
@@ -120,30 +110,24 @@ impl FindAllDistributionsRow {
     }
 }
 /// Responsible for finding a distribution
-pub struct FindAllDistributions<'a> {
+pub struct FindVersionPins<'a> {
     client: &'a mut Client,
+    package: &'a str,
     level: Option<&'a str>,
     role: Option<&'a str>,
     platform: Option<&'a str>,
     site: Option<&'a str>,
-    order_by: Option<Vec<SearchAttribute>>,
-    order_direction: Option<OrderDirection>,
-    limit: Option<i32>,
-    search_mode: SearchMode,
 }
 
-impl<'a> FindAllDistributions<'a> {
-    pub fn new(client: &'a mut Client) -> Self {
-        FindAllDistributions {
+impl<'a> FindVersionPins<'a> {
+    pub fn new(client: &'a mut Client, package: &'a str) -> Self {
+        FindVersionPins {
             client,
+            package,
             level: None,
             role: None,
             platform: None,
             site: None,
-            order_by: None,
-            order_direction: None,
-            limit: None,
-            search_mode: SearchMode::Ancestor,
         }
     }
 
@@ -166,66 +150,30 @@ impl<'a> FindAllDistributions<'a> {
         self.site = Some(site_n);
         self
     }
-
-    pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
-        self.order_by = Some(attributes);
-        self
-    }
-
-    pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
-        self.order_direction = Some(direction);
-        self
-    }
-
-    pub fn limit(&mut self, limit: i32) -> &mut Self {
-        self.limit = Some(limit);
-        self
-    }
-
-    pub fn search_mode(&mut self, mode: SearchMode) -> &mut Self {
-        self.search_mode = mode;
-        self
-    }
-
-    pub fn query(&mut self) -> Result<Vec<FindAllDistributionsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
         let site = self.site.unwrap_or("any");
         let mut result = Vec::new();
-        let mut query_str = "SELECT id, 
-        distribution, 
-        level_name, 
-        role_name, 
-        site_name, 
-        platform_name,
-        withs
-    FROM findall_versionpins(
-        role => $1, 
-        platform => $2, 
-        level=>$3, 
-        site => $4,
-        search_mode => $5)"
-            .to_string();
-
-        if let Some(ref orderby) = self.order_by {
-            let orderby = orderby.iter().map(|x| match_attrib(x)).collect::<Vec<_>>();
-            query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
-        }
-        if let Some(ref orderdir) = self.order_direction {
-            query_str.push_str(&[" ", orderdir.as_ref(), " "].concat());
-        }
-
-        if let Some(limit) = self.limit {
-            query_str.push_str(format!(" LIMIT {}", limit).as_str());
-        }
-
-        let qstr = query_str.as_str();
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
-            &[&role, &platform, &level, &site, &self.search_mode.as_ref()];
-        log::info!("SQL {}", qstr);
-        log::info!("Prepared Arguents: {:?}", prepared_args);
-        for row in self.client.query(qstr, prepared_args)? {
+            &[&self.package, &role, &platform, &level, &site];
+        let query_str = "SELECT versionpin_id, 
+                        distribution, 
+                        level_name, 
+                        role_name, 
+                        site_name, 
+                        platform_name,
+                        withs
+                    FROM search_distributions(
+                        $1, 
+                        role => $2, 
+                        platform => $3, 
+                        level=>$4, 
+                        site => $5)";
+        log::info!("SQL {}", query_str);
+        log::info!("Prepared Arguments: {:?}", prepared_args);
+        for row in self.client.query(query_str, prepared_args)? {
             let id: i32 = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);
@@ -233,7 +181,7 @@ impl<'a> FindAllDistributions<'a> {
             let site_name: &str = row.get(4);
             let platform_name: &str = row.get(5);
             let withs: Option<Vec<String>> = row.get(6);
-            result.push(FindAllDistributionsRow::try_from_parts(
+            result.push(FindVersionPinsRow::try_from_parts(
                 id,
                 distribution,
                 level_name,

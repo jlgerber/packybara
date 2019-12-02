@@ -19,19 +19,19 @@ impl PackratDb {
         PackratDb { client }
     }
 
-    /// Find the most appropriate distribution for a request. `find_distribution`
-    /// returns an instance of `FindDistributionBuilder`, which provides
+    /// Find the most appropriate versionpin for a request. `find_versionpin`
+    /// returns an instance of `FindVersionPinBuilder`, which provides
     /// setter methods providing a fluent api.
     ///
     /// # Arguments
     ///
     /// *`package` - The name of the package that we are interested in finding
-    ///              a distribution for
+    ///              a versionpin for
     ///
     /// # Returns
     ///
-    /// - `FindDistributionBuilder` - construct and execute the query to find
-    /// the distribution. (see documentation for `FindDistributionBuilder`)
+    /// - `FindVersionPinBuilder` - construct and execute the query to find
+    /// the versionpin. (see documentation for `FindVersionPinBuilder`)
     ///
     /// # Example
     /// ```rust
@@ -41,41 +41,33 @@ impl PackratDb {
     ///    NoTls,
     ///    ).unwrap();
     /// let mut db = PackratDb::new(client);
-    /// let dist = db.find_distribution("maya")
+    /// let dist = db.find_versionpin("maya")
     ///                     .level("dev01")
     ///                     .role("model")
     ///                     .platform("cent7_64")
     ///                     .site("portland")
     ///                     .query().unwrap();
     /// ```
-    pub fn find_distribution<'b>(
-        &'b mut self,
-        package: &'b str,
-    ) -> find::distribution::FindDistribution {
-        find::distribution::FindDistribution::new(&mut self.client, package)
+    pub fn find_versionpin<'b>(&'b mut self, package: &'b str) -> find::versionpin::FindVersionPin {
+        find::versionpin::FindVersionPin::new(&mut self.client, package)
     }
 
-    pub fn find_distributions<'b>(
+    pub fn find_versionpins<'b>(
         &'b mut self,
         package: &'b str,
-    ) -> find::distributions::FindDistributions {
-        find::distributions::FindDistributions::new(&mut self.client, package)
+    ) -> find::versionpins::FindVersionPins {
+        find::versionpins::FindVersionPins::new(&mut self.client, package)
     }
 
-    pub fn find_all_distributions<'b>(
-        &'b mut self,
-    ) -> find_all::distributions::FindAllDistributions {
-        find_all::distributions::FindAllDistributions::new(&mut self.client)
+    pub fn find_all_versionpins<'b>(&'b mut self) -> find_all::versionpins::FindAllVersionPins {
+        find_all::versionpins::FindAllVersionPins::new(&mut self.client)
     }
 
     pub fn find_all_roles<'b>(&'b mut self) -> find_all::roles::FindAllRoles {
         find_all::roles::FindAllRoles::new(&mut self.client)
     }
 
-    pub fn find_distribution_withs<'b>(
-        &'b mut self,
-        package: &'b str,
-    ) -> find::distribution_withs::FindDistributionWiths {
-        find::distribution_withs::FindDistributionWiths::new(&mut self.client, package)
+    pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
+        find::withs::FindWiths::new(&mut self.client, package)
     }
 }

@@ -1,13 +1,13 @@
-use super::distributions::{FindDistributionsError, FindDistributionsRow};
+use super::versionpins::{FindVersionPinsError, FindVersionPinsRow};
 use crate::coords_error::CoordsError;
 pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
-/// Error type returned from FindDistributionsError
+/// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
-pub enum FindDistributionError {
+pub enum FindVersionPinError {
     /// No Query results obtained
     #[snafu(display("No Results were obtained by search"))]
     NoQueryResults,
@@ -20,12 +20,12 @@ pub enum FindDistributionError {
         msg: &'static str,
         source: tokio_postgres::error::Error,
     },
-    #[snafu(display("Error Constructing FindDistributionsRow {}", source))]
-    FindDistributionsRowError { source: FindDistributionsError },
+    #[snafu(display("Error Constructing FindVersionPinsRow {}", source))]
+    FindVersionPinsRowError { source: FindVersionPinsError },
 }
 
 /// Responsible for finding a distribution
-pub struct FindDistribution<'a> {
+pub struct FindVersionPin<'a> {
     client: &'a mut Client,
     package: &'a str,
     level: Option<&'a str>,
@@ -34,9 +34,9 @@ pub struct FindDistribution<'a> {
     site: Option<&'a str>,
 }
 
-impl<'a> FindDistribution<'a> {
+impl<'a> FindVersionPin<'a> {
     pub fn new(client: &'a mut Client, package: &'a str) -> Self {
-        FindDistribution {
+        FindVersionPin {
             client,
             package,
             level: None,
@@ -66,7 +66,7 @@ impl<'a> FindDistribution<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<FindDistributionsRow, FindDistributionError> {
+    pub fn query(&mut self) -> Result<FindVersionPinsRow, FindVersionPinError> {
         let query_str = "SELECT 
             versionpin_id, 
             distribution, 
@@ -97,7 +97,7 @@ impl<'a> FindDistribution<'a> {
                 msg: "problem with select from find_distribution",
             })?
             .pop()
-            .ok_or(FindDistributionError::NoQueryResults)?;
+            .ok_or(FindVersionPinError::NoQueryResults)?;
         let id: i32 = row.get(0);
         let distribution: &str = row.get(1);
         let level_name: &str = row.get(2);
@@ -105,7 +105,7 @@ impl<'a> FindDistribution<'a> {
         let site_name: &str = row.get(4);
         let platform_name: &str = row.get(5);
         let withs: Option<Vec<String>> = row.get(6);
-        FindDistributionsRow::try_from_parts(
+        FindVersionPinsRow::try_from_parts(
             id,
             distribution,
             level_name,
@@ -114,6 +114,6 @@ impl<'a> FindDistribution<'a> {
             site_name,
             withs,
         )
-        .context(FindDistributionsRowError)
+        .context(FindVersionPinsRowError)
     }
 }

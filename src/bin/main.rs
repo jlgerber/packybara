@@ -36,17 +36,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Pb { cmd, .. } = opt;
     //println!("{:#?}", cmd);
     match cmd {
-        PbSub::Distribution { .. } => {
-            cmd::distribution::process(client, cmd)?;
+        PbSub::VersionPin { .. } => {
+            cmd::versionpin::process(client, cmd)?;
         }
-        PbSub::Distributions { .. } => {
-            cmd::distributions::process(client, cmd)?;
+        PbSub::VersionPins { .. } => {
+            cmd::versionpins::process(client, cmd)?;
         }
         PbSub::Roles { .. } => {
             cmd::roles::process(client, cmd)?;
         }
-        PbSub::DistributionWiths { .. } => {
-            cmd::distribution_withs::process(client, cmd)?;
+        PbSub::Withs { .. } => {
+            cmd::withs::process(client, cmd)?;
         }
         _ => println!("not supported"),
     }
