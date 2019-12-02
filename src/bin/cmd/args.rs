@@ -7,20 +7,7 @@ pub struct Pb {
     /// (levels: trace, debug, info, warn, error)
     #[structopt(long)]
     pub loglevel: Option<String>,
-
-    /// Set the query location. Defaults to localhost if
-    /// mode is test. otherwise it attempts to get from environment
-    // #[structopt(short, long)]
-    // pub location: Option<String>,
-
-    // ///path to preference file
-    // #[structopt(short, long)]
-    // pub file: Option<String>,
-
-    // /// Set the mode (production, development)
-    // #[structopt(short, long)]
-    // mode: Option<String>,
-
+    /// Subcommand
     #[structopt(subcommand)] // Note that we mark a field as a subcommand
     pub cmd: PbSub,
 }
@@ -46,7 +33,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact, descendant.
+        /// Search mode - ancestor (or down), exact, descendant (or up)
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -55,6 +42,9 @@ pub enum PbSub {
         /// provide one or more comma separated items to order the return by.
         #[structopt(long = "order-by")]
         order_by: Option<String>,
+        /// do not truncate the withs if true. defaults to false
+        #[structopt(short = "w", long = "withs")]
+        full_withs: bool,
     },
     /// Find all distributions that meet criteria.
     Distributions {
@@ -73,7 +63,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact, descendant
+        /// Search mode - ancestor (or down), exact, descendant (or up)
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -82,9 +72,13 @@ pub enum PbSub {
         /// provide one or more comma separated items to order the return by.
         #[structopt(long = "order-by")]
         order_by: Option<String>,
+        /// do not truncate the withs if true. defaults to false
+        #[structopt(short = "w", long = "withs")]
+        full_withs: bool,
     },
-    /// Find the specific distribution whose coords are closest to
-    /// the supplied coords (level,role,platform,site)
+    /// Find the specific distribution's specific withs,
+    /// whose coords are closest to the supplied coords
+    /// (level,role,platform,site)
     DistributionWiths {
         /// The name of the package to search for
         #[structopt()]
@@ -101,7 +95,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact, descendant
+        /// Search mode - ancestor (or down), exact, descendant (or up)
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -111,6 +105,8 @@ pub enum PbSub {
         #[structopt(long = "order-by")]
         order_by: Option<String>,
     },
+    /// Search for roles. Discover what roles are being used
+    /// in relation to other coordinates. Or just get a list.
     Roles {
         /// The role (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short, long)]
@@ -124,7 +120,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact, descendant
+        /// Search mode - ancestor (or down), exact, descendant (or up)
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -133,6 +129,9 @@ pub enum PbSub {
         /// provide one or more comma separated items to order the return by.
         #[structopt(long = "order-by")]
         order_by: Option<String>,
+        /// Simple query. Just provide a list.
+        #[structopt(long = "simple")]
+        simple: bool,
     },
     Platforms {},
 }

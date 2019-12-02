@@ -72,6 +72,7 @@ pub enum SearchAttribute {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
 pub enum SearchMode {
     #[strum(
+        serialize = "down",
         serialize = "ancestor",
         serialize = "Ancestor",
         serialize = "ANCESTOR",
@@ -79,6 +80,7 @@ pub enum SearchMode {
     )]
     Ancestor,
     #[strum(
+        serialize = "up",
         serialize = "descendant",
         serialize = "Descendant",
         serialize = "DESCENDANT",

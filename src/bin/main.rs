@@ -14,11 +14,20 @@ mod cmd;
 use cmd::args::*;
 use env_logger;
 use env_logger::Env;
+use std::env;
+
 //use log;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //env_logger::init();
-    env_logger::from_env(Env::default().default_filter_or("warn")).init();
     let opt = Pb::from_args();
+    if let Pb {
+        loglevel: Some(ref level),
+        ..
+    } = opt
+    {
+        env::set_var("RUST_LOG", level);
+    }
+    env_logger::from_env(Env::default().default_filter_or("warn")).init();
     //println!("{:#?}", opt);
     let client = Client::connect(
         "host=127.0.0.1 user=postgres dbname=packrat password=example port=5432",

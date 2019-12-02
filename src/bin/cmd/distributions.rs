@@ -15,6 +15,7 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
         site,
         search_mode,
         order_by,
+        full_withs,
         ..
     } = cmd
     {
@@ -55,7 +56,11 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
         for result in results {
             let withs = result.withs.unwrap_or(Vec::new());
             let withs = if withs.len() > 0 {
-                format!("[{}...]", truncate(withs.join(",").as_ref(), 40))
+                if full_withs {
+                    format!("[{}]", withs.join(","))
+                } else {
+                    format!("[{}...]", truncate(withs.join(",").as_ref(), 40))
+                }
             } else {
                 "[]".to_string()
             };

@@ -13,6 +13,7 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
         site,
         search_mode,
         order_by,
+        simple,
         ..
     } = cmd
     {
@@ -24,7 +25,8 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
             .role_opt(role.as_ref().map(Deref::deref))
             .level_opt(level.as_ref().map(Deref::deref))
             .platform_opt(platform.as_ref().map(Deref::deref))
-            .site_opt(site.as_ref().map(Deref::deref));
+            .site_opt(site.as_ref().map(Deref::deref))
+            .simple(simple);
         if let Some(ref mode) = search_mode {
             results.search_mode(SearchMode::from_str(mode)?);
         }
@@ -38,17 +40,26 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
         let results = results.query()?;
         // For now I do this. I need to add packge handling into the query
         // either by switching functions or handling the sql on this end
-        let mut table = table!([bFg => "ROLE", "LEVEL", "PLATFORM", "SITE"]);
-        for result in results {
-            table.add_row(row![
-                result.role,
-                result.level,
-                result.platform,
-                result.site
-            ]);
+        if simple {
+            let mut table = table!([bFg => "ROLE"]);
+            for result in results {
+                table.add_row(row![result.role,]);
+            }
+            table.set_format(*format::consts::FORMAT_CLEAN); //FORMAT_NO_LINESEP_WITH_TITLE  FORMAT_NO_BORDER_LINE_SEPARATOR
+            table.printstd();
+        } else {
+            let mut table = table!([bFg => "ROLE", "LEVEL", "PLATFORM", "SITE"]);
+            for result in results {
+                table.add_row(row![
+                    result.role,
+                    result.level,
+                    result.platform,
+                    result.site
+                ]);
+            }
+            table.set_format(*format::consts::FORMAT_CLEAN); //FORMAT_NO_LINESEP_WITH_TITLE  FORMAT_NO_BORDER_LINE_SEPARATOR
+            table.printstd();
         }
-        table.set_format(*format::consts::FORMAT_CLEAN); //FORMAT_NO_LINESEP_WITH_TITLE  FORMAT_NO_BORDER_LINE_SEPARATOR
-        table.printstd();
     };
 
     Ok(())

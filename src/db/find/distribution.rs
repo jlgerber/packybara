@@ -65,6 +65,7 @@ impl<'a> FindDistribution<'a> {
         self.site = Some(site_n);
         self
     }
+
     pub fn query(&mut self) -> Result<FindDistributionsRow, FindDistributionError> {
         let query_str = "SELECT 
             versionpin_id, 

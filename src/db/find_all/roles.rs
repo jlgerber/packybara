@@ -139,6 +139,7 @@ pub struct FindAllRoles<'a> {
     order_direction: Option<OrderDirection>,
     limit: Option<i32>,
     search_mode: SearchMode,
+    simple: bool,
 }
 
 impl fmt::Debug for FindAllRoles<'_> {
@@ -172,6 +173,7 @@ impl<'a> FindAllRoles<'a> {
             order_direction: None,
             limit: None,
             search_mode: SearchMode::Ancestor,
+            simple: false,
         }
     }
 
@@ -195,6 +197,10 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
+    pub fn simple(&mut self, simple: bool) -> &mut Self {
+        self.simple = simple;
+        self
+    }
     /// Set an optional level.
     ///
     /// This is generally accomplished by calling
@@ -243,6 +249,23 @@ impl<'a> FindAllRoles<'a> {
         self.search_mode = mode;
         self
     }
+
+    fn simple_query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
+        let query_str = "SELECT DISTINCT 
+                name
+            FROM 
+                role_view ORDER BY name";
+        let mut result = Vec::new();
+        log::info!("SQL {}", query_str);
+        for row in self.client.query(query_str, &[])? {
+            let role_name = row.get(0);
+            result.push(FindAllRolesRow::try_from_parts(
+                role_name, "facility", "any", "any",
+            )?);
+        }
+        Ok(result)
+    }
+
     /// Initiate the query based on the current state of self and return a
     /// vector of results
     pub fn query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
@@ -256,6 +279,9 @@ impl<'a> FindAllRoles<'a> {
             } else {
                 root.to_string()
             }
+        }
+        if self.simple {
+            return self.simple_query();
         }
         let level = self
             .level
