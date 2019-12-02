@@ -1,6 +1,8 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::Coords;
 pub use crate::Distribution;
+use log;
+use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
@@ -154,22 +156,24 @@ impl<'a> FindDistributions<'a> {
         let platform = self.platform.unwrap_or("any");
         let site = self.site.unwrap_or("any");
         let mut result = Vec::new();
-        for row in self.client.query(
-            "SELECT versionpin_id, 
-                    distribution, 
-                    level_name, 
-                    role_name, 
-                    site_name, 
-                    platform_name,
-                    withs
-            FROM search_distributions(
-                $1, 
-                role => $2, 
-                platform => $3, 
-                level=>$4, 
-                site => $5)",
-            &[&self.package, &role, &platform, &level, &site],
-        )? {
+        let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
+            &[&self.package, &role, &platform, &level, &site];
+        let query_str = "SELECT versionpin_id, 
+                        distribution, 
+                        level_name, 
+                        role_name, 
+                        site_name, 
+                        platform_name,
+                        withs
+                    FROM search_distributions(
+                        $1, 
+                        role => $2, 
+                        platform => $3, 
+                        level=>$4, 
+                        site => $5)";
+        log::info!("SQL {}", query_str);
+        log::info!("Prepared Arguments: {:?}", prepared_args);
+        for row in self.client.query(query_str, prepared_args)? {
             let id: i32 = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);

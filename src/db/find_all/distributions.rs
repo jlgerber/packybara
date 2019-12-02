@@ -2,6 +2,8 @@ pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
 pub use crate::Coords;
 pub use crate::Distribution;
+use log;
+use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
@@ -219,10 +221,11 @@ impl<'a> FindAllDistributions<'a> {
         }
 
         let qstr = query_str.as_str();
-        for row in self.client.query(
-            qstr,
-            &[&role, &platform, &level, &site, &self.search_mode.as_ref()],
-        )? {
+        let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
+            &[&role, &platform, &level, &site, &self.search_mode.as_ref()];
+        log::info!("SQL {}", qstr);
+        log::info!("Prepared Arguents: {:?}", prepared_args);
+        for row in self.client.query(qstr, prepared_args)? {
             let id: i32 = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);

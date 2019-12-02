@@ -2,6 +2,8 @@ pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
 pub use crate::Coords;
 pub use crate::Distribution;
+use log;
+use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
@@ -187,10 +189,13 @@ impl<'a> FindDistributionWiths<'a> {
                 .collect::<Vec<_>>();
             query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
         }
-        for row in self.client.query(
-            query_str.as_str(),
-            &[&self.package, &role, &platform, &level, &site],
-        )? {
+
+        let prep_vals: &[&(dyn ToSql + std::marker::Sync)] =
+            &[&self.package, &role, &platform, &level, &site];
+        log::info!("Prepared Statement: {}", query_str.as_str());
+        log::info!("Prepared Statement values: {:?}", prep_vals);
+
+        for row in self.client.query(query_str.as_str(), prep_vals)? {
             let id: i32 = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);

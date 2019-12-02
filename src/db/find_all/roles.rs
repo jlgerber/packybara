@@ -2,6 +2,7 @@ pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
 pub use crate::Coords;
 pub use crate::Distribution;
+use log;
 use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
@@ -376,10 +377,9 @@ impl<'a> FindAllRoles<'a> {
         if let Some(limit) = self.limit {
             query_str.push_str(format!(" LIMIT {}", limit).as_str());
         }
-
         let qstr = query_str.as_str();
-        println!("QUERY {}", qstr);
-        println!("PREPARED {:?}", &params);
+        log::info!("SQL {}", qstr);
+        log::info!("Prepared Arguments: {:?}", &params);
         for row in self.client.query(qstr, &params[..])? {
             let role_name: &str = row.get(0);
             let level_name: &str = row.get(1);

@@ -1,6 +1,8 @@
 use super::distributions::{FindDistributionsError, FindDistributionsRow};
 use crate::coords_error::CoordsError;
 pub use crate::Distribution;
+use log;
+use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
 /// Error type returned from FindDistributionsError
@@ -64,29 +66,32 @@ impl<'a> FindDistribution<'a> {
         self
     }
     pub fn query(&mut self) -> Result<FindDistributionsRow, FindDistributionError> {
+        let query_str = "SELECT 
+            versionpin_id, 
+            distribution, 
+            level_name, 
+            role_name, 
+            site_name, 
+            platform_name,
+            withs
+        FROM find_distribution(
+            $1, 
+            role => $2, 
+            platform => $3, 
+            level=>$4, 
+            site => $5)";
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
         let site = self.site.unwrap_or("any");
+
+        let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
+            &[&self.package, &role, &platform, &level, &site];
+        log::info!("SQL {}", query_str);
+        log::info!("Prepared Arguments: {:?}", prepared_args);
         let row = self
             .client
-            .query(
-                "SELECT 
-                versionpin_id, 
-                distribution, 
-                level_name, 
-                role_name, 
-                site_name, 
-                platform_name,
-                withs
-            FROM find_distribution(
-                $1, 
-                role => $2, 
-                platform => $3, 
-                level=>$4, 
-                site => $5)",
-                &[&self.package, &role, &platform, &level, &site],
-            )
+            .query(query_str, prepared_args)
             .context(TokioPostgresError {
                 msg: "problem with select from find_distribution",
             })?
