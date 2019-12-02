@@ -1,6 +1,8 @@
 use super::args::PbSub;
 use super::utils::extract_coords;
+use super::utils::truncate;
 use packybara::packrat::{Client, PackratDb};
+use prettytable::{cell, format, row, table};
 
 pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Error>> {
     if let PbSub::Distribution {
@@ -23,7 +25,27 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
             .platform(platform.as_str())
             .site(site.as_str())
             .query()?;
-        println!("{}", result);
+
+        let mut table =
+            table!([bFg => "PIN ID", "DISTRIBUTION", "ROLE", "LEVEL", "PLATFORM", "SITE", "WITHS"]);
+        let withs = result.withs.unwrap_or(Vec::new());
+        let withs = if withs.len() > 0 {
+            format!("[{}...]", truncate(withs.join(",").as_ref(), 40))
+        } else {
+            "[]".to_string()
+        };
+        table.add_row(row![
+            result.versionpin_id,
+            result.distribution,
+            result.coords.role,
+            result.coords.level,
+            result.coords.platform,
+            result.coords.site,
+            withs,
+        ]);
+
+        table.set_format(*format::consts::FORMAT_CLEAN); //FORMAT_NO_LINESEP_WITH_TITLE  FORMAT_NO_BORDER_LINE_SEPARATOR
+        table.printstd();
     };
 
     Ok(())

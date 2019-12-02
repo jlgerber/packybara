@@ -1,4 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
+pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
 pub use crate::Coords;
 pub use crate::Distribution;
 use postgres::Client;
@@ -22,14 +23,18 @@ pub enum FindDistributionWithsError {
 #[derive(Debug, PartialEq, Eq)]
 pub struct FindDistributionWithsRow {
     /// the id of result in the VersionPin table
-    //pub versionpin_id: i32,
+    pub versionpin_id: i32,
     pub distribution: Distribution,
     pub coords: Coords,
 }
 
 impl fmt::Display for FindDistributionWithsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.distribution, self.coords)
+        write!(
+            f,
+            "{} {} {}",
+            self.versionpin_id, self.distribution, self.coords
+        )
     }
 }
 
@@ -40,13 +45,9 @@ impl FindDistributionWithsRow {
     /// * `versionpin_id`: The id of the relevant row in the versionpin table
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
-    pub fn new(
-        //versionpin_id: i32,
-        distribution: Distribution,
-        coords: Coords,
-    ) -> Self {
+    pub fn new(versionpin_id: i32, distribution: Distribution, coords: Coords) -> Self {
         FindDistributionWithsRow {
-            //versionpin_id,
+            versionpin_id,
             distribution,
             coords,
         }
@@ -56,7 +57,7 @@ impl FindDistributionWithsRow {
     ///
     /// Args
     pub fn try_from_parts(
-        //id: i32,
+        id: i32,
         distribution: &str,
         level: &str,
         role: &str,
@@ -76,11 +77,11 @@ impl FindDistributionWithsRow {
             },
         )?;
 
-        Ok(Self::new(/*id,*/ new_distribution, coords))
+        Ok(Self::new(id, new_distribution, coords))
     }
 
     pub fn from_parts(
-        //id: i32,
+        id: i32,
         distribution: &str,
         level: &str,
         role: &str,
@@ -90,7 +91,7 @@ impl FindDistributionWithsRow {
         let distribution = Distribution::new_unchecked(distribution);
         let coords = Coords::try_from_parts(level, role, platform, site).unwrap();
 
-        Self::new(/*id,*/ distribution, coords)
+        Self::new(id, distribution, coords)
     }
 }
 /// Responsible for finding a distribution
@@ -101,6 +102,8 @@ pub struct FindDistributionWiths<'a> {
     role: Option<&'a str>,
     platform: Option<&'a str>,
     site: Option<&'a str>,
+    order_by: Option<Vec<SearchAttribute>>,
+    order_direction: Option<OrderDirection>,
 }
 
 impl<'a> FindDistributionWiths<'a> {
@@ -112,6 +115,8 @@ impl<'a> FindDistributionWiths<'a> {
             role: None,
             platform: None,
             site: None,
+            order_by: None,
+            order_direction: None,
         }
     }
 
@@ -134,34 +139,66 @@ impl<'a> FindDistributionWiths<'a> {
         self.site = Some(site_n);
         self
     }
+
+    pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
+        self.order_by = Some(attributes);
+        self
+    }
+
+    pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
+        self.order_direction = Some(direction);
+        self
+    }
+
     pub fn query(&mut self) -> Result<Vec<FindDistributionWithsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
         let site = self.site.unwrap_or("any");
         let mut result = Vec::new();
-        for row in self.client.query(
-            "SELECT distribution, 
-                    level_name, 
-                    role_name, 
-                    site_name, 
-                    platform_name
+        let mut query_str = "SELECT 
+                versionpin_id,
+                distribution, 
+                level_name, 
+                role_name, 
+                site_name, 
+                platform_name
             FROM find_distribution_withs(
                 $1,
                 role => $2, 
                 platform => $3, 
                 level=> $4, 
-                site => $5)",
+                site => $5)"
+            .to_string();
+        fn from_attr_to_str(attr: &SearchAttribute) -> &'static str {
+            match attr {
+                SearchAttribute::Level => "level_name",
+                SearchAttribute::Role => "role_name",
+                SearchAttribute::Platform => "platform_name",
+                SearchAttribute::Site => "site_name",
+                SearchAttribute::Package => "package",
+                _ => panic!("TODO add snafu Error here"),
+            }
+        }
+        if let Some(ref orderby) = self.order_by {
+            let orderby = orderby
+                .iter()
+                .map(|x| from_attr_to_str(&x))
+                .collect::<Vec<_>>();
+            query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
+        }
+        for row in self.client.query(
+            query_str.as_str(),
             &[&self.package, &role, &platform, &level, &site],
         )? {
-            //let id: i32 = row.get(0);
-            let distribution: &str = row.get(0);
-            let level_name: &str = row.get(1);
-            let role_name: &str = row.get(2);
-            let site_name: &str = row.get(3);
-            let platform_name: &str = row.get(4);
+            let id: i32 = row.get(0);
+            let distribution: &str = row.get(1);
+            let level_name: &str = row.get(2);
+            let role_name: &str = row.get(3);
+            let site_name: &str = row.get(4);
+            let platform_name: &str = row.get(5);
             result.push(FindDistributionWithsRow::try_from_parts(
-                //id,
+                id,
                 distribution,
                 level_name,
                 role_name,

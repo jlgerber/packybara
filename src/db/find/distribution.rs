@@ -1,8 +1,8 @@
+use super::distributions::{FindDistributionsError, FindDistributionsRow};
 use crate::coords_error::CoordsError;
 pub use crate::Distribution;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
-
 /// Error type returned from FindDistributionsError
 #[derive(Debug, Snafu)]
 pub enum FindDistributionError {
@@ -18,6 +18,8 @@ pub enum FindDistributionError {
         msg: &'static str,
         source: tokio_postgres::error::Error,
     },
+    #[snafu(display("Error Constructing FindDistributionsRow {}", source))]
+    FindDistributionsRowError { source: FindDistributionsError },
 }
 
 /// Responsible for finding a distribution
@@ -61,17 +63,22 @@ impl<'a> FindDistribution<'a> {
         self.site = Some(site_n);
         self
     }
-
-    pub fn query(&mut self) -> Result<Distribution, FindDistributionError> {
+    pub fn query(&mut self) -> Result<FindDistributionsRow, FindDistributionError> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
         let site = self.site.unwrap_or("any");
-        let mut result = Vec::new();
-        for row in self
+        let row = self
             .client
             .query(
-                "SELECT distribution
+                "SELECT 
+                versionpin_id, 
+                distribution, 
+                level_name, 
+                role_name, 
+                site_name, 
+                platform_name,
+                withs
             FROM find_distribution(
                 $1, 
                 role => $2, 
@@ -83,14 +90,24 @@ impl<'a> FindDistribution<'a> {
             .context(TokioPostgresError {
                 msg: "problem with select from find_distribution",
             })?
-        {
-            let distribution: &str = row.get(0);
-            result.push(
-                Distribution::new(distribution).context(CreateDistributionError {
-                    input: distribution,
-                })?,
-            );
-        }
-        result.pop().ok_or(FindDistributionError::NoQueryResults)
+            .pop()
+            .ok_or(FindDistributionError::NoQueryResults)?;
+        let id: i32 = row.get(0);
+        let distribution: &str = row.get(1);
+        let level_name: &str = row.get(2);
+        let role_name: &str = row.get(3);
+        let site_name: &str = row.get(4);
+        let platform_name: &str = row.get(5);
+        let withs: Option<Vec<String>> = row.get(6);
+        FindDistributionsRow::try_from_parts(
+            id,
+            distribution,
+            level_name,
+            role_name,
+            platform_name,
+            site_name,
+            withs,
+        )
+        .context(FindDistributionsRowError)
     }
 }

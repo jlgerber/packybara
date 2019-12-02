@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         NoTls,
     )?;
     let Pb { cmd, .. } = opt;
-    println!("{:#?}", cmd);
+    //println!("{:#?}", cmd);
     match cmd {
         PbSub::Distribution { .. } => {
             cmd::distribution::process(client, cmd)?;
@@ -32,84 +32,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PbSub::Roles { .. } => {
             cmd::roles::process(client, cmd)?;
         }
+        PbSub::DistributionWiths { .. } => {
+            cmd::distribution_withs::process(client, cmd)?;
+        }
         _ => println!("not supported"),
     }
 
     Ok(())
-    /*
-    let mut result = PackratDb::new(client)
-        .find_distribution("houdini")
-        .level("bayou")
-        .role("fx_beta")
-        .platform("cent7_64")
-        .site("portland")
-        .query()?;
-    println!("{:?}", result);
-    println!(
-        "package: {} version: {}",
-        result.package(),
-        result.version()
-    );
-    println!("\n\nFIND THE DISTRIBUTION");
-
-    pb.find_distribution("maya")
-        .level("bayou")
-        .role("fx_beta")
-        .platform("cent7_64")
-        .site("portland")
-        .query()?;
-
-    println!("{:?}", result);
-    println!(
-        "package: {} version: {}",
-        result.package(),
-        result.version()
-    );
-
-    println!("\n\nFIND DISTRIBUTIONS");
-
-    let results = pb
-        .find_distributions("maya")
-        .level("bayou")
-        .role("fx_beta")
-        .platform("cent7_64")
-        .site("portland")
-        .query()?;
-
-    for result in results {
-        println!("{}", result);
-    }
-
-    println!("\n\nFIND WITHS");
-    let results = pb
-        .find_distribution_withs("maya")
-        .level("bayou")
-        .role("fx_beta")
-        .platform("cent7_64")
-        .site("portland")
-        .query()?;
-
-    for result in results {
-        println!("{}", result);
-    }
-
-    println!("\n\nFIND ALL DISTRIBUTIONS");
-    let results = pb
-        .find_all_distributions()
-        .level("facility")
-        .role("any")
-        .platform("any")
-        .site("any")
-        .order_by(vec![
-            //packybara::SearchAttribute::Level,
-            packybara::SearchAttribute::Package,
-        ])
-        .limit(15)
-        .search_mode(SearchMode::Descendant)
-        .query()?;
-    for result in results {
-        println!("{}", result);
-    }
-    Ok(())
-    */
 }

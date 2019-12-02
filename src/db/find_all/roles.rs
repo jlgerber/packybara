@@ -245,7 +245,6 @@ impl<'a> FindAllRoles<'a> {
     /// Initiate the query based on the current state of self and return a
     /// vector of results
     pub fn query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
-        //println!("{:#?}", self);
         fn process_map(root: &str, value: &str) -> String {
             if value != root {
                 if !value.contains("%") {
@@ -257,46 +256,18 @@ impl<'a> FindAllRoles<'a> {
                 root.to_string()
             }
         }
-        let level = self.level.map_or("facility".to_string(), |x| {
-            // if x != "facility" {
-            //     if !x.contains("%") {
-            //         format!("facility.{}", x)
-            //     } else {
-            //         x.to_string()
-            //     }
-            // } else {
-            //     "facility".to_string()
-            // }
-            process_map("facility", x)
-        });
-        let role = self.role.map_or("any".to_string(), |x| {
-            // if x != "any" {
-            //     if !x.contains("%") {
-            //         format!("any.{}", x)
-            //     } else {
-            //         x.to_string()
-            //     }
-            // } else {
-            //     "any".to_string()
-            // }
-            process_map("any", x)
-        });
-        let platform = self.platform.map_or("any".to_string(), |x| {
-            // if x != "any" {
-            //     format!("any.{}", x)
-            // } else {
-            //     "any".to_string()
-            // }
-            process_map("any", x)
-        });
-        let site = self.site.map_or("any".to_string(), |x| {
-            // if x != "any" {
-            //     format!("any.{}", x)
-            // } else {
-            //     "any".to_string()
-            // }
-            process_map("any", x)
-        });
+        let level = self
+            .level
+            .map_or("facility".to_string(), |x| process_map("facility", x));
+        let role = self
+            .role
+            .map_or("any".to_string(), |x| process_map("any", x));
+        let platform = self
+            .platform
+            .map_or("any".to_string(), |x| process_map("any", x));
+        let site = self
+            .site
+            .map_or("any".to_string(), |x| process_map("any", x));
         let mut result = Vec::new();
         // build up a vector of parameters for the prepared search
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
@@ -307,10 +278,7 @@ impl<'a> FindAllRoles<'a> {
 
         // used to join optional queries. will be set to " AND "
         // after first optional parameter is used
-        let mut join = "";
         let mut join_b = false;
-        // extension
-        let extension = "_path";
         // The op is the operator symbol used in the search
         let op = self.search_mode.to_symbol();
         let mut query_str = "SELECT DISTINCT 
@@ -329,23 +297,23 @@ impl<'a> FindAllRoles<'a> {
             || self.site.is_some()
         {
             fn prep_coord(
-                mut query_str: &mut String,
+                query_str: &mut String,
                 coord: &str,
-                mut join_b: &mut bool,
+                coord_name: &str,
+                join_b: &mut bool,
                 op: &str,
                 params_cnt: &mut i32,
             ) {
                 let is_like = coord.contains("%");
                 let join = if *join_b { " AND " } else { "" };
                 *query_str = format!(
-                    "{}{} level{}",
+                    "{}{} {}{}",
                     query_str,
                     join,
+                    coord_name,
                     prep_query("_path", op, *params_cnt, is_like)
                 );
                 *join_b = true;
-                //params.push(&coord);
-                //*join =  &" AND ";
                 *params_cnt = *params_cnt + 1;
             }
             query_str.push_str(" WHERE ");
@@ -353,60 +321,48 @@ impl<'a> FindAllRoles<'a> {
                 // just including join here in case i reorder or add an additional
                 // item above
                 //
-                prep_coord(&mut query_str, &level, &mut join_b, &op, &mut params_cnt);
-                params.push(&level);
-                if join_b {
-                    join = " AND ";
-                }
-                println!("join_b {} cnt {}", join_b, params_cnt);
-                /*
-                let is_like = level.contains("%");
-                query_str = format!(
-                    "{}{} level{}",
-                    query_str,
-                    join,
-                    prep_query(extension, op, params_cnt, is_like)
+                prep_coord(
+                    &mut query_str,
+                    &level,
+                    "level",
+                    &mut join_b,
+                    &op,
+                    &mut params_cnt,
                 );
                 params.push(&level);
-                join = " AND ";
-                params_cnt += 1;
-                */
             }
             if self.role.is_some() {
-                let is_like = role.contains("%");
-                query_str = format!(
-                    "{}{} role{}",
-                    query_str,
-                    join,
-                    prep_query(extension, op, params_cnt, is_like)
+                prep_coord(
+                    &mut query_str,
+                    &role,
+                    "role",
+                    &mut join_b,
+                    &op,
+                    &mut params_cnt,
                 );
                 params.push(&role);
-                join = " AND ";
-                params_cnt += 1;
             }
             if self.platform.is_some() {
-                let is_like = platform.contains("%");
-                query_str = format!(
-                    "{}{} platform{}",
-                    query_str,
-                    join,
-                    prep_query(extension, op, params_cnt, is_like)
+                prep_coord(
+                    &mut query_str,
+                    &platform,
+                    "platform",
+                    &mut join_b,
+                    &op,
+                    &mut params_cnt,
                 );
                 params.push(&platform);
-                join = " AND ";
-                params_cnt += 1;
             }
             if self.site.is_some() {
-                let is_like = platform.contains("%");
-                query_str = format!(
-                    "{}{} site{}",
-                    query_str,
-                    join,
-                    prep_query(extension, op, params_cnt, is_like)
+                prep_coord(
+                    &mut query_str,
+                    &site,
+                    "site",
+                    &mut join_b,
+                    &op,
+                    &mut params_cnt,
                 );
                 params.push(&site);
-                join = " AND ";
-                params_cnt += 1;
             }
         }
         if let Some(ref orderby) = self.order_by {
