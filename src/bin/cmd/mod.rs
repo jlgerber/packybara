@@ -1,3 +1,4 @@
+pub mod all_roles;
 pub mod args;
 pub mod roles;
 pub mod utils;

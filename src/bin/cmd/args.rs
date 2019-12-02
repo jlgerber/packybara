@@ -129,9 +129,18 @@ pub enum PbSub {
         /// provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by")]
         order_by: Option<String>,
-        /// Simple query. Just provide a list.
-        #[structopt(long = "simple")]
-        simple: bool,
+    },
+    /// Get a simple list of all roles
+    AllRoles {
+        /// The role (eg model or anim_beta). Defaults to 'any'.
+        #[structopt(short = "R", long)]
+        role: Option<String>,
+        ///  One of: role, subrole, any
+        #[structopt(short = "C", long)]
+        category: Option<String>,
+        /// provide one or more comma separated items to order the return by.
+        #[structopt(short, long = "order-by")]
+        order_by: Option<String>,
     },
     Platforms {},
 }

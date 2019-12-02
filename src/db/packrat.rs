@@ -67,6 +67,11 @@ impl PackratDb {
         find_all::roles::FindAllRoles::new(&mut self.client)
     }
 
+    /// Find roles that meet a specific criteria
+    pub fn find_roles<'b>(&'b mut self) -> find::roles::FindRoles {
+        find::roles::FindRoles::new(&mut self.client)
+    }
+
     pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
         find::withs::FindWiths::new(&mut self.client, package)
     }
