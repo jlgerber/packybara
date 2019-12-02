@@ -14,7 +14,7 @@ mod cmd;
 use cmd::args::*;
 use env_logger;
 use env_logger::Env;
-use log;
+//use log;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //env_logger::init();
     env_logger::from_env(Env::default().default_filter_or("warn")).init();

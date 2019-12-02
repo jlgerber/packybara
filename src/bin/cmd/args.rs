@@ -46,7 +46,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact,
+        /// Search mode - ancestor, exact, descendant.
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -73,7 +73,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact,
+        /// Search mode - ancestor, exact, descendant
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -101,7 +101,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact,
+        /// Search mode - ancestor, exact, descendant
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
@@ -124,7 +124,7 @@ pub enum PbSub {
         /// The site - defaults to 'any'
         #[structopt(short, long)]
         site: Option<String>,
-        /// Search mode - ancestor, exact,
+        /// Search mode - ancestor, exact, descendant
         #[structopt(long = "search-mode")]
         search_mode: Option<String>,
         /// limit the number of returned items
