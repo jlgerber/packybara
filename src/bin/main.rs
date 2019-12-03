@@ -60,6 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } // _ => println!("not supported"),
             }
         }
+        _ => println!("Not implemented"),
     }
 
     Ok(())

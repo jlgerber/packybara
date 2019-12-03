@@ -15,13 +15,17 @@ pub struct Pb {
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb CRUD")]
 pub enum PbCrud {
-    /// read from packybara
+    /// Read from DB
     #[structopt(display_order = 1)]
     Find {
         /// Read subcommands
         #[structopt(subcommand)]
         cmd: PbFind,
     },
+    /// Udate DB
+    Set {},
+    /// Remove from DB
+    Delete {},
 }
 
 #[derive(StructOpt, Debug, PartialEq)]
