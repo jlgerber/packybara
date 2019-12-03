@@ -40,6 +40,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PbSub::AllRoles { .. } => {
             cmd::all_roles::process(client, cmd)?;
         }
+        PbSub::AllPlatforms { .. } => {
+            cmd::all_platforms::process(client, cmd)?;
+        }
         PbSub::Roles { .. } => {
             cmd::roles::process(client, cmd)?;
         }

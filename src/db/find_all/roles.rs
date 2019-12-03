@@ -5,13 +5,13 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
-use snafu::{ResultExt, Snafu};
+use snafu::Snafu;
 use std::fmt;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
-pub enum OrderByChoices {
+pub enum OrderRoleBy {
     #[strum(
         serialize = "name",
         serialize = "Name",
@@ -125,7 +125,7 @@ pub struct FindAllRoles<'a> {
     client: &'a mut Client,
     role: Option<&'a str>,
     category: Option<&'a str>,
-    order_by: Option<Vec<OrderByChoices>>,
+    order_by: Option<Vec<OrderRoleBy>>,
     order_direction: Option<OrderDirection>,
     limit: Option<i32>,
 }
@@ -177,7 +177,7 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
-    pub fn order_by(&mut self, attributes: Vec<OrderByChoices>) -> &mut Self {
+    pub fn order_by(&mut self, attributes: Vec<OrderRoleBy>) -> &mut Self {
         self.order_by = Some(attributes);
         self
     }
@@ -212,7 +212,7 @@ impl<'a> FindAllRoles<'a> {
             }
         }
 
-        //let order_by = self.order_by.as_ref().unwrap_or(&vec![OrderByChoices::Name]);
+        //let order_by = self.order_by.as_ref().unwrap_or(&vec![OrderRoleBy::Name]);
 
         if let Some(ref orderby) = self.order_by {
             let orderby = orderby.iter().map(|x| x.as_ref()).collect::<Vec<_>>();

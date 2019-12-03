@@ -142,5 +142,14 @@ pub enum PbSub {
         #[structopt(short, long = "order-by")]
         order_by: Option<String>,
     },
+    /// Get a simple list of all platforms
+    AllPlatforms {
+        /// The platform (eg model or anim_beta). Defaults to 'any'.
+        #[structopt(short = "P", long)]
+        platform: Option<String>,
+        ///  platform or nutin'
+        #[structopt(short, long = "order-by")]
+        order_by: Option<String>,
+    },
     Platforms {},
 }
