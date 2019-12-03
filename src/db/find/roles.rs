@@ -256,7 +256,7 @@ impl<'a> FindRoles<'a> {
             FROM 
                 role_view ORDER BY name";
         let mut result = Vec::new();
-        log::info!("SQL {}", query_str);
+        log::info!("SQL\n{}", query_str);
         for row in self.client.query(query_str, &[])? {
             let role_name = row.get(0);
             result.push(FindRolesRow::try_from_parts(

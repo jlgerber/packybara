@@ -198,7 +198,7 @@ impl<'a> FindAllRoles<'a> {
                 name,
                 category
             FROM 
-                role_view"
+                role_view WHERE name <> 'any'"
             .to_string();
         let category = self.category.unwrap_or("role");
         if self.category.is_some() {
@@ -207,7 +207,7 @@ impl<'a> FindAllRoles<'a> {
                 //TODO: have function return custom error
                 log::error!("category specificed is not valid: {}", category);
             } else if category != "any" {
-                query_str = format!("{} WHERE category = $1", query_str);
+                query_str = format!("{} AND category = $1", query_str);
                 params.push(&category);
             }
         }
@@ -221,8 +221,8 @@ impl<'a> FindAllRoles<'a> {
             query_str = format!("{}  ORDER BY name", query_str);
         }
         let mut result = Vec::new();
-        log::info!("SQL {}", query_str.as_str());
-        log::info!("Prepared: {:?}", &params);
+        log::info!("SQL\n{}", query_str.as_str());
+        log::info!("Arguments\n{:?}", &params);
         for row in self.client.query(query_str.as_str(), &params[..])? {
             let role_name = row.get(0);
             let category = row.get(1);

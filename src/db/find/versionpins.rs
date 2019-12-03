@@ -171,8 +171,8 @@ impl<'a> FindVersionPins<'a> {
                         platform => $3, 
                         level=>$4, 
                         site => $5)";
-        log::info!("SQL {}", query_str);
-        log::info!("Prepared Arguments: {:?}", prepared_args);
+        log::info!("SQL\n{}", query_str);
+        log::info!("Arguments\n{:?}", prepared_args);
         for row in self.client.query(query_str, prepared_args)? {
             let id: i32 = row.get(0);
             let distribution: &str = row.get(1);

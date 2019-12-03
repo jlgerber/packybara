@@ -88,8 +88,8 @@ impl<'a> FindVersionPin<'a> {
 
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
             &[&self.package, &role, &platform, &level, &site];
-        log::info!("SQL {}", query_str);
-        log::info!("Prepared Arguments: {:?}", prepared_args);
+        log::info!("SQL\n{}", query_str);
+        log::info!("Arguments\n{:?}", prepared_args);
         let row = self
             .client
             .query(query_str, prepared_args)

@@ -223,8 +223,8 @@ impl<'a> FindAllVersionPins<'a> {
         let qstr = query_str.as_str();
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
             &[&role, &platform, &level, &site, &self.search_mode.as_ref()];
-        log::info!("SQL {}", qstr);
-        log::info!("Prepared Arguents: {:?}", prepared_args);
+        log::info!("SQL\n{}", qstr);
+        log::info!("Arguents\n{:?}", prepared_args);
         for row in self.client.query(qstr, prepared_args)? {
             let id: i32 = row.get(0);
             let distribution: &str = row.get(1);

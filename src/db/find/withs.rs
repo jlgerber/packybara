@@ -192,8 +192,8 @@ impl<'a> FindWiths<'a> {
 
         let prep_vals: &[&(dyn ToSql + std::marker::Sync)] =
             &[&self.package, &role, &platform, &level, &site];
-        log::info!("Prepared Statement: {}", query_str.as_str());
-        log::info!("Prepared Statement values: {:?}", prep_vals);
+        log::info!("SQL\n{}", query_str.as_str());
+        log::info!("Arguments\n{:?}", prep_vals);
 
         for row in self.client.query(query_str.as_str(), prep_vals)? {
             let id: i32 = row.get(0);

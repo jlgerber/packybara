@@ -43,13 +43,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PbSub::AllPlatforms { .. } => {
             cmd::all_platforms::process(client, cmd)?;
         }
+        PbSub::AllSites { .. } => {
+            cmd::all_sites::process(client, cmd)?;
+        }
         PbSub::Roles { .. } => {
             cmd::roles::process(client, cmd)?;
         }
         PbSub::Withs { .. } => {
             cmd::withs::process(client, cmd)?;
-        }
-        _ => println!("not supported"),
+        } // _ => println!("not supported"),
     }
 
     Ok(())
