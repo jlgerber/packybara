@@ -9,12 +9,24 @@ pub struct Pb {
     pub loglevel: Option<String>,
     /// Subcommand
     #[structopt(subcommand)] // Note that we mark a field as a subcommand
-    pub cmd: PbSub,
+    pub crud: PbCrud,
 }
 
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb CRUD")]
-pub enum PbSub {
+pub enum PbCrud {
+    /// read from packybara
+    #[structopt(display_order = 1)]
+    Find {
+        /// Read subcommands
+        #[structopt(subcommand)]
+        cmd: PbFind,
+    },
+}
+
+#[derive(StructOpt, Debug, PartialEq)]
+#[structopt(about = "PackybaraDb Read")]
+pub enum PbFind {
     /// Find the versionpin whose pin coords are closest to
     /// the supplied pin coords (level, role, platform, site).
     #[structopt(display_order = 1)]

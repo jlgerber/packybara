@@ -1,11 +1,11 @@
-use super::args::PbSub;
+use super::args::PbFind;
 use packybara::packrat::{Client, PackratDb};
 use packybara::OrderRoleBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
-pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Error>> {
-    if let PbSub::Roles {
+pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbFind::Roles {
         role,
         category,
         order_by,

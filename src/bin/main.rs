@@ -29,32 +29,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "host=127.0.0.1 user=postgres dbname=packrat password=example port=5432",
         NoTls,
     )?;
-    let Pb { cmd, .. } = opt;
-    match cmd {
-        PbSub::VersionPin { .. } => {
-            cmd::versionpin::process(client, cmd)?;
+
+    let Pb { crud, .. } = opt;
+    match crud {
+        PbCrud::Find { cmd } => {
+            match cmd {
+                PbFind::VersionPin { .. } => {
+                    cmd::versionpin::process(client, cmd)?;
+                }
+                PbFind::VersionPins { .. } => {
+                    cmd::versionpins::process(client, cmd)?;
+                }
+                PbFind::Roles { .. } => {
+                    cmd::all_roles::process(client, cmd)?;
+                }
+                PbFind::Platforms { .. } => {
+                    cmd::all_platforms::process(client, cmd)?;
+                }
+                PbFind::Sites { .. } => {
+                    cmd::all_sites::process(client, cmd)?;
+                }
+                PbFind::Levels { .. } => {
+                    cmd::all_levels::process(client, cmd)?;
+                }
+                PbFind::Pins { .. } => {
+                    cmd::pins::process(client, cmd)?;
+                }
+                PbFind::Withs { .. } => {
+                    cmd::withs::process(client, cmd)?;
+                } // _ => println!("not supported"),
+            }
         }
-        PbSub::VersionPins { .. } => {
-            cmd::versionpins::process(client, cmd)?;
-        }
-        PbSub::Roles { .. } => {
-            cmd::all_roles::process(client, cmd)?;
-        }
-        PbSub::Platforms { .. } => {
-            cmd::all_platforms::process(client, cmd)?;
-        }
-        PbSub::Sites { .. } => {
-            cmd::all_sites::process(client, cmd)?;
-        }
-        PbSub::Levels { .. } => {
-            cmd::all_levels::process(client, cmd)?;
-        }
-        PbSub::Pins { .. } => {
-            cmd::pins::process(client, cmd)?;
-        }
-        PbSub::Withs { .. } => {
-            cmd::withs::process(client, cmd)?;
-        } // _ => println!("not supported"),
     }
 
     Ok(())

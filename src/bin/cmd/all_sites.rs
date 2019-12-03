@@ -1,11 +1,11 @@
-use super::args::PbSub;
+use super::args::PbFind;
 use packybara::packrat::{Client, PackratDb};
 //use packybara::OrderSiteBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 //use std::str::FromStr;
-pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Error>> {
-    if let PbSub::Sites { site, .. } = cmd {
+pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbFind::Sites { site, .. } = cmd {
         //let (level, role, site, site, mode) =
         //extract_coords(&level, &role, &site, &site, &search_mode);
         let mut pb = PackratDb::new(client);

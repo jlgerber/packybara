@@ -1,11 +1,11 @@
-use super::args::PbSub;
+use super::args::PbFind;
 use super::utils::extract_coords;
 use super::utils::truncate;
 use packybara::packrat::{Client, PackratDb};
 use prettytable::{cell, format, row, table};
 
-pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Error>> {
-    if let PbSub::VersionPin {
+pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbFind::VersionPin {
         package,
         level,
         role,
