@@ -1,3 +1,4 @@
+pub mod all_levels;
 pub mod all_platforms;
 pub mod all_roles;
 pub mod all_sites;

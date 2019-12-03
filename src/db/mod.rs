@@ -3,6 +3,5 @@ pub mod find_all;
 pub mod packrat;
 pub mod search_attribute;
 pub mod utils;
-pub use find_all::OrderPlatformBy;
-pub use find_all::OrderRoleBy;
+pub use find_all::{OrderLevelBy, OrderPlatformBy, OrderRoleBy};
 pub use search_attribute::{SearchAttribute, SearchCtrl, SearchMode};

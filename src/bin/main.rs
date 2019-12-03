@@ -46,6 +46,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PbSub::AllSites { .. } => {
             cmd::all_sites::process(client, cmd)?;
         }
+        PbSub::AllLevels { .. } => {
+            cmd::all_levels::process(client, cmd)?;
+        }
         PbSub::Roles { .. } => {
             cmd::roles::process(client, cmd)?;
         }

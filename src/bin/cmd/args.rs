@@ -157,4 +157,16 @@ pub enum PbSub {
         #[structopt(short = "S", long)]
         site: Option<String>,
     },
+    /// Get a simple list of all levels
+    AllLevels {
+        /// The level. Defaults to 'any'.
+        #[structopt(short = "L", long)]
+        level: Option<String>,
+        ///  name of the show
+        #[structopt(short = "S", long)]
+        show: Option<String>,
+        /// provide one or more comma separated items to order the return by.
+        #[structopt(short, long = "order-by")]
+        order_by: Option<String>,
+    },
 }
