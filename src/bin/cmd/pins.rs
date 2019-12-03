@@ -6,7 +6,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 
 pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Error>> {
-    if let PbSub::Roles {
+    if let PbSub::Pins {
         level,
         role,
         platform,
@@ -16,10 +16,8 @@ pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Err
         ..
     } = cmd
     {
-        //let (level, role, platform, site, mode) =
-        //extract_coords(&level, &role, &platform, &site, &search_mode);
         let mut pb = PackratDb::new(client);
-        let mut results = pb.find_roles();
+        let mut results = pb.find_pins();
         results
             .role_opt(role.as_ref().map(Deref::deref))
             .level_opt(level.as_ref().map(Deref::deref))

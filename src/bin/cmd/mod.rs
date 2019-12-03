@@ -3,7 +3,7 @@ pub mod all_platforms;
 pub mod all_roles;
 pub mod all_sites;
 pub mod args;
-pub mod roles;
+pub mod pins;
 pub mod utils;
 pub mod versionpin;
 pub mod versionpins;

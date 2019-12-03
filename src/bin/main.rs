@@ -37,20 +37,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PbSub::VersionPins { .. } => {
             cmd::versionpins::process(client, cmd)?;
         }
-        PbSub::AllRoles { .. } => {
+        PbSub::Roles { .. } => {
             cmd::all_roles::process(client, cmd)?;
         }
-        PbSub::AllPlatforms { .. } => {
+        PbSub::Platforms { .. } => {
             cmd::all_platforms::process(client, cmd)?;
         }
-        PbSub::AllSites { .. } => {
+        PbSub::Sites { .. } => {
             cmd::all_sites::process(client, cmd)?;
         }
-        PbSub::AllLevels { .. } => {
+        PbSub::Levels { .. } => {
             cmd::all_levels::process(client, cmd)?;
         }
-        PbSub::Roles { .. } => {
-            cmd::roles::process(client, cmd)?;
+        PbSub::Pins { .. } => {
+            cmd::pins::process(client, cmd)?;
         }
         PbSub::Withs { .. } => {
             cmd::withs::process(client, cmd)?;

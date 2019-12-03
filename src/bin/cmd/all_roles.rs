@@ -5,7 +5,7 @@ use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
 pub fn process(client: Client, cmd: PbSub) -> Result<(), Box<dyn std::error::Error>> {
-    if let PbSub::AllRoles {
+    if let PbSub::Roles {
         role,
         category,
         order_by,

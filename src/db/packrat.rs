@@ -78,9 +78,9 @@ impl PackratDb {
     pub fn find_all_levels<'b>(&'b mut self) -> find_all::levels::FindAllLevels {
         find_all::levels::FindAllLevels::new(&mut self.client)
     }
-    /// Find roles that meet a specific criteria
-    pub fn find_roles<'b>(&'b mut self) -> find::roles::FindRoles {
-        find::roles::FindRoles::new(&mut self.client)
+    /// Find pins that meet a specific criteria
+    pub fn find_pins<'b>(&'b mut self) -> find::pins::FindPins {
+        find::pins::FindPins::new(&mut self.client)
     }
 
     pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {

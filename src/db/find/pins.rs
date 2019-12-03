@@ -8,7 +8,7 @@ use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
-pub type FindRolesResult<T, E = FindRolesError> = std::result::Result<T, E>;
+pub type FindPinsResult<T, E = FindPinsError> = std::result::Result<T, E>;
 
 // Helper function to convert a SearchAttribute to a column nme
 fn match_attrib(search_by: &SearchAttribute) -> &'static str {
@@ -22,9 +22,9 @@ fn match_attrib(search_by: &SearchAttribute) -> &'static str {
     }
 }
 
-/// Error type returned from  FindRolesError
+/// Error type returned from  FindPinsError
 #[derive(Debug, Snafu)]
-pub enum FindRolesError {
+pub enum FindPinsError {
     ///  DistributionNewError - failure to new up a distribution.
     #[snafu(display("Error constructing Distribution from {}: {}", msg, source))]
     DistributionNewError { msg: String, source: CoordsError },
@@ -33,9 +33,9 @@ pub enum FindRolesError {
     CoordsTryFromPartsError { coords: String, source: CoordsError },
 }
 
-/// A row returned from the  FindRoles.query
+/// A row returned from the  FindPins.query
 #[derive(Debug, PartialEq, Eq)]
-pub struct FindRolesRow {
+pub struct FindPinsRow {
     /// the id of result in the VersionPin table
     pub role: String,
     pub level: String,
@@ -43,7 +43,7 @@ pub struct FindRolesRow {
     pub site: String,
 }
 
-impl fmt::Display for FindRolesRow {
+impl fmt::Display for FindPinsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -53,8 +53,8 @@ impl fmt::Display for FindRolesRow {
     }
 }
 
-impl FindRolesRow {
-    /// New up a  FindRolesRow instance
+impl FindPinsRow {
+    /// New up a  FindPinsRow instance
     ///
     /// # Arguments
     /// * `role`  - the role name
@@ -63,9 +63,9 @@ impl FindRolesRow {
     /// * `site` - The site name
     ///
     /// # Returns
-    /// - FindRolesRow instance
+    /// - FindPinsRow instance
     pub fn new(role: String, level: String, platform: String, site: String) -> Self {
-        FindRolesRow {
+        FindPinsRow {
             role,
             level,
             platform,
@@ -84,14 +84,14 @@ impl FindRolesRow {
     ///
     /// # Returns
     /// Result
-    /// - Ok - FindRolesRow instance
-    /// - Err - FindRolesError
+    /// - Ok - FindPinsRow instance
+    /// - Err - FindPinsError
     pub fn try_from_parts(
         role: &str,
         level: &str,
         platform: &str,
         site: &str,
-    ) -> FindRolesResult<FindRolesRow> {
+    ) -> FindPinsResult<FindPinsRow> {
         let coords = Coords::try_from_parts(level, role, platform, site).context(
             CoordsTryFromPartsError {
                 coords: format!(
@@ -123,13 +123,13 @@ impl FindRolesRow {
     /// * `site`
     ///
     /// # Returns
-    /// - FindRolesRow instance
-    pub fn from_parts(role: &str, level: &str, platform: &str, site: &str) -> FindRolesRow {
+    /// - FindPinsRow instance
+    pub fn from_parts(role: &str, level: &str, platform: &str, site: &str) -> FindPinsRow {
         Self::try_from_parts(role, level, platform, site).unwrap()
     }
 }
 /// Responsible for finding a distribution
-pub struct FindRoles<'a> {
+pub struct FindPins<'a> {
     client: &'a mut Client,
     role: Option<&'a str>,
     level: Option<&'a str>,
@@ -142,11 +142,11 @@ pub struct FindRoles<'a> {
     simple: bool,
 }
 
-impl fmt::Debug for FindRoles<'_> {
+impl fmt::Debug for FindPins<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "FindRoles({:?} {:?} {:?} {:?})",
+            "FindPins({:?} {:?} {:?} {:?})",
             self.role, self.level, self.platform, self.site
         )
     }
@@ -160,10 +160,10 @@ fn prep_query(extension: &str, op: &str, params_cnt: i32, is_like: bool) -> Stri
     }
 }
 
-impl<'a> FindRoles<'a> {
-    /// new up a FIndAllRoles instance.
+impl<'a> FindPins<'a> {
+    /// new up a FIndAllPins instance.
     pub fn new(client: &'a mut Client) -> Self {
-        FindRoles {
+        FindPins {
             client,
             level: None,
             role: None,
@@ -250,7 +250,7 @@ impl<'a> FindRoles<'a> {
         self
     }
 
-    fn simple_query(&mut self) -> Result<Vec<FindRolesRow>, Box<dyn std::error::Error>> {
+    fn simple_query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
         let query_str = "SELECT DISTINCT 
                 name
             FROM 
@@ -259,7 +259,7 @@ impl<'a> FindRoles<'a> {
         log::info!("SQL\n{}", query_str);
         for row in self.client.query(query_str, &[])? {
             let role_name = row.get(0);
-            result.push(FindRolesRow::try_from_parts(
+            result.push(FindPinsRow::try_from_parts(
                 role_name, "facility", "any", "any",
             )?);
         }
@@ -268,7 +268,7 @@ impl<'a> FindRoles<'a> {
 
     /// Initiate the query based on the current state of self and return a
     /// vector of results
-    pub fn query(&mut self) -> Result<Vec<FindRolesRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
         fn process_map(root: &str, value: &str) -> String {
             if value != root {
                 if !value.contains("%") {
@@ -411,7 +411,7 @@ impl<'a> FindRoles<'a> {
             let level_name: &str = row.get(1);
             let platform_name: &str = row.get(2);
             let site_name: &str = row.get(3);
-            result.push(FindRolesRow::try_from_parts(
+            result.push(FindPinsRow::try_from_parts(
                 role_name,
                 level_name,
                 platform_name,

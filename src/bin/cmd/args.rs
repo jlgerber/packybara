@@ -15,42 +15,42 @@ pub struct Pb {
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb CRUD")]
 pub enum PbSub {
-    /// Find the specific versionpin whose coords are closest to
-    /// the supplied coords (level,role,platform,site)
+    /// Find the versionpin whose pin coords are closest to
+    /// the supplied pin coords (level, role, platform, site).
     #[structopt(display_order = 1)]
     VersionPin {
-        /// The name of the package to search for
+        /// The name of the package to search for.
         #[structopt()]
         package: String,
-        /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
+        /// The level, which may be 'facility' or a Levelspec (ie show[.seq[.shot]]). Defaults to 'facility'.
         #[structopt(short = "L", long, display_order = 1)]
         level: Option<String>,
         /// The role (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short = "R", long, display_order = 2)]
         role: Option<String>,
-        /// OS - (eg cent7_64)
+        /// The operating system name (eg cent7_64). Defaults to 'any'.
         #[structopt(short = "P", long, display_order = 3)]
         platform: Option<String>,
-        /// The site - defaults to 'any'
+        /// The location name (eg portland). Defaults to 'any'.
         #[structopt(short = "S", long, display_order = 4)]
         site: Option<String>,
-        /// Search mode - ancestor (or down), exact, descendant (or up)
+        /// Search mode - ancestor (or down), exact, descendant (or up). Defauts to 'ancestor'.
         #[structopt(long = "search", display_order = 5)]
         search_mode: Option<String>,
-        /// limit the number of returned items
+        /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
         limit: Option<i32>,
-        /// provide one or more comma separated items to order the return by.
+        /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
-        /// do not truncate the withs if true. defaults to false
+        /// Do not truncate the withs if true. Defaults to false.
         #[structopt(short = "w", long = "withs", display_order = 8)]
         full_withs: bool,
     },
     #[structopt(display_order = 2)]
-    /// Find all distributions that meet criteria.
+    /// Find all versionpins that meet supplied name and pin coordinate criteria.
     VersionPins {
-        /// The name of the package
+        /// The name of the package.
         #[structopt(short, long, display_order = 1)]
         package: Option<String>,
         /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
@@ -59,121 +59,120 @@ pub enum PbSub {
         /// The role (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short = "R", long, display_order = 3)]
         role: Option<String>,
-        /// OS - (eg cent7_64)
+        /// The operating system name (eg cent7_64).
         #[structopt(short = "P", long, display_order = 4)]
         platform: Option<String>,
-        /// The site - defaults to 'any'
+        /// The location name (eg portland). Defaults to 'any'.
         #[structopt(short = "S", long, display_order = 5)]
         site: Option<String>,
-        /// Search mode - ancestor (or down), exact, descendant (or up)
+        /// The search mode - ancestor (or down), exact, descendant (or up).
         #[structopt(short, long = "search", display_order = 6)]
         search_mode: Option<String>,
-        /// limit the number of returned items
+        /// Limit the number of returned items.
         #[structopt(short, long, display_order = 7)]
         limit: Option<i32>,
-        /// provide one or more comma separated items to order the return by.
+        /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 8)]
         order_by: Option<String>,
-        /// do not truncate the withs if true. defaults to false
+        /// Do not truncate the withs if true. Defaults to false.
         #[structopt(short = "w", long = "withs", display_order = 9)]
         full_withs: bool,
     },
     #[structopt(display_order = 3)]
-    /// Find the specific distribution's specific withs,
-    /// whose coords are closest to the supplied coords
-    /// (level,role,platform,site)
+    /// Find a distribution's withs' distributions,
+    /// based on a supplied package name and pin coords
+    /// (level, role, platform, site).
     Withs {
-        /// The name of the package to search for
+        /// The name of the package to search for.
         #[structopt()]
         package: String,
-        /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
+        /// The level, which may be 'facility' or a Levelspec (ie show[.seq[.shot]]). Defaults to 'facility'.
         #[structopt(short = "L", long, display_order = 1)]
         level: Option<String>,
         /// The role (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short = "R", long, display_order = 2)]
         role: Option<String>,
-        /// OS - (eg cent7_64)
+        /// The operating system name - (eg cent7_64). Defaults to 'any'.
         #[structopt(short = "P", long, display_order = 3)]
         platform: Option<String>,
-        /// The site - defaults to 'any'
+        /// The site - defaults to 'any'.
         #[structopt(short = "S", long, display_order = 4)]
         site: Option<String>,
-        /// Search mode - ancestor (or down), exact, descendant (or up)
+        /// Search mode - ancestor (or down), exact, descendant (or up).
         #[structopt(short, long = "search", display_order = 5)]
         search_mode: Option<String>,
-        /// limit the number of returned items
+        /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
         limit: Option<i32>,
-        /// provide one or more comma separated items to order the return by.
+        /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
     },
     #[structopt(display_order = 4)]
-    /// Search for roles. Discover what roles are being used
-    /// in relation to other coordinates. Or just get a list.
-    Roles {
+    /// Search for pins. Discover what pin coordinates are being used.
+    Pins {
         /// The role (eg model or anim_beta). Defaults to 'any'.
-        #[structopt(short = "R", long, display_order = 1)]
+        #[structopt(short = "R", long, display_order = 2)]
         role: Option<String>,
         /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
-        #[structopt(short = "L", long, display_order = 2)]
+        #[structopt(short = "L", long, display_order = 1)]
         level: Option<String>,
-        /// OS - (eg cent7_64)
+        /// The operating system name - (eg cent7_64). Defaults to 'any'.
         #[structopt(short = "P", long, display_order = 3)]
         platform: Option<String>,
-        /// The site - defaults to 'any'
+        /// The location name (eg portland) - defaults to 'any'.
         #[structopt(short = "S", long, display_order = 4)]
         site: Option<String>,
-        /// Search mode - ancestor (or down), exact, descendant (or up)
+        /// Search mode - ancestor (or down), exact, descendant (or up). Defaults to 'ancestor'.
         #[structopt(short, long = "search", display_order = 5)]
         search_mode: Option<String>,
-        /// limit the number of returned items
+        /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
         limit: Option<i32>,
-        /// provide one or more comma separated items to order the return by.
+        /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
     },
     #[structopt(display_order = 5)]
-    /// Get a simple list of all roles
-    AllRoles {
+    /// Get a simple list of all roles.
+    Roles {
         /// The role (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short = "R", long, display_order = 1)]
         role: Option<String>,
-        ///  One of: role, subrole, any
+        ///  The role category. One of: role, subrole, any. Defaults to 'any'.
         #[structopt(short = "C", long, display_order = 2)]
         category: Option<String>,
-        /// provide one or more comma separated items to order the return by.
+        /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 3)]
         order_by: Option<String>,
     },
     #[structopt(display_order = 6)]
-    /// Get a simple list of all platforms
-    AllPlatforms {
+    /// Get a simple list of all platforms.
+    Platforms {
         /// The platform (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short = "P", long, display_order = 1)]
         platform: Option<String>,
-        ///  platform or nutin'
+        ///  Order by ... Platform or nutin'.
         #[structopt(short, long = "order-by", display_order = 2)]
         order_by: Option<String>,
     },
     #[structopt(display_order = 7)]
-    /// Get a simple list of all sites
-    AllSites {
-        /// The site (eg model or anim_beta). Defaults to 'any'.
+    /// Get a simple list of all sites.
+    Sites {
+        /// The location name (eg portland). Defaults to 'any'.
         #[structopt(short = "S", long)]
         site: Option<String>,
     },
     #[structopt(display_order = 8)]
-    /// Get a simple list of all levels
-    AllLevels {
-        /// The level. Defaults to 'any'.
+    /// Get a simple list of all levels.
+    Levels {
+        /// The jobsystem level (facility or show[.seq[.shot]]). Defaults to 'any'.
         #[structopt(short = "L", long, display_order = 1)]
         level: Option<String>,
-        ///  name of the show
+        ///  The name of the show.
         #[structopt(short = "S", long, display_order = 2)]
         show: Option<String>,
-        /// provide one or more comma separated items to order the return by.
+        /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 3)]
         order_by: Option<String>,
     },
