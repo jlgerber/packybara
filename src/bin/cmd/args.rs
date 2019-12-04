@@ -43,6 +43,12 @@ pub enum PbAdd {
         #[structopt(short, long = "name")]
         names: Vec<String>,
     },
+    /// Add one or more levels
+    #[structopt(display_order = 2)]
+    Levels {
+        #[structopt(name = "LEVEL")]
+        names: Vec<String>,
+    },
 }
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb Read")]

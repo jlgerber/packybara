@@ -1,9 +1,10 @@
-use super::args::PbFind;
+use super::args::{PbAdd, PbFind};
 use packybara::packrat::{Client, PackratDb};
 use packybara::OrderLevelBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
+
 pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Levels {
         level,
@@ -41,5 +42,16 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         table.printstd();
     };
 
+    Ok(())
+}
+
+/// Add one or more levels
+pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbAdd::Levels { mut names, .. } = cmd {
+        let mut pb = PackratDb::new(client);
+        let mut results = pb.add_levels();
+        let results = results.levels(&mut names).create()?;
+        println!("{}", results);
+    }
     Ok(())
 }

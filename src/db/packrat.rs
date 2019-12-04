@@ -95,4 +95,9 @@ impl PackratDb {
     pub fn add_packages<'b>(&'b mut self) -> add::packages::AddPackages {
         add::packages::AddPackages::new(&mut self.client)
     }
+
+    /// add
+    pub fn add_levels<'b>(&'b mut self) -> add::levels::AddLevels {
+        add::levels::AddLevels::new(&mut self.client)
+    }
 }

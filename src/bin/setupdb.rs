@@ -8,22 +8,32 @@
  *******************************************************/
 use env_logger;
 use env_logger::Env;
+use log;
 use packybara::packrat::{Client, NoTls};
 use std::env;
 use std::fs;
 use structopt::StructOpt;
 
-//use log;
+#[derive(StructOpt, Debug, PartialEq)]
+pub struct Build {
+    /// Set the loglevel
+    #[structopt(short, long)]
+    loglevel: Option<String>,
+
+    #[structopt(short, long)]
+    populate: bool,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    //  let opt = Pb::from_args();
-    //  if let Pb {
-    //      loglevel: Some(ref level),
-    //      ..
-    //  } = opt
-    //  {
-    //      env::set_var("RUST_LOG", level);
-    //  }
-    env_logger::from_env(Env::default().default_filter_or("debug")).init();
+    let opt = Build::from_args();
+    if let Build {
+        loglevel: Some(ref level),
+        ..
+    } = opt
+    {
+        env::set_var("RUST_LOG", level);
+    }
+    env_logger::from_env(Env::default().default_filter_or("warn")).init();
     let drop_schema = "DROP SCHEMA IF EXISTS audit CASCADE";
     let drop_db = "DROP DATABASE IF EXISTS packrat";
     let create_db = "CREATE DATABASE packrat WITH ENCODING = UTF8";
@@ -55,6 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ] {
         let contents = fs::read_to_string(file_path)?;
         log::info!("batch executing {}", file_path);
+        log::debug!("{}", contents);
         client.batch_execute(contents.as_str())?;
     }
     Ok(())

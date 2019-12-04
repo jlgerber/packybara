@@ -25,24 +25,14 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
 
     Ok(())
 }
-pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
-    let PbAdd::Packages { mut names, .. } = cmd;
-    //if let PbAdd::Packages { mut names, .. } = cmd {
-    //let (level, role, site, site, mode) =
-    //extract_coords(&level, &role, &site, &site, &search_mode);
-    let mut pb = PackratDb::new(client);
-    let mut results = pb.add_packages();
-    let results = results.packages(&mut names).create()?;
-    // For now I do this. I need to add packge handling into the query
-    // either by switching functions or handling the sql on this end
-    println!("{}", results);
-    // let mut table = table!([bFg => "Name"]);
-    // for result in results {
-    //     table.add_row(row![result.name]);
-    // }
-    // table.set_format(*format::consts::FORMAT_CLEAN); //FORMAT_NO_LINESEP_WITH_TITLE  FORMAT_NO_BORDER_LINE_SEPARATOR
-    // table.printstd();
-    //};
 
+/// Add one or more packages
+pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbAdd::Packages { mut names, .. } = cmd {
+        let mut pb = PackratDb::new(client);
+        let mut results = pb.add_packages();
+        let results = results.packages(&mut names).create()?;
+        println!("{}", results);
+    }
     Ok(())
 }

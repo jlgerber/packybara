@@ -66,6 +66,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbAdd::Packages { .. } => {
                 cmd::all_packages::add(client, cmd)?;
             }
+            PbAdd::Levels { .. } => {
+                cmd::all_levels::add(client, cmd)?;
+            }
         },
         _ => println!("Not implemented"),
     }
