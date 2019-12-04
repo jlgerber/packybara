@@ -32,34 +32,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let Pb { crud, .. } = opt;
     match crud {
-        PbCrud::Find { cmd } => {
-            match cmd {
-                PbFind::VersionPin { .. } => {
-                    cmd::versionpin::process(client, cmd)?;
-                }
-                PbFind::VersionPins { .. } => {
-                    cmd::versionpins::process(client, cmd)?;
-                }
-                PbFind::Roles { .. } => {
-                    cmd::all_roles::process(client, cmd)?;
-                }
-                PbFind::Platforms { .. } => {
-                    cmd::all_platforms::process(client, cmd)?;
-                }
-                PbFind::Sites { .. } => {
-                    cmd::all_sites::process(client, cmd)?;
-                }
-                PbFind::Levels { .. } => {
-                    cmd::all_levels::process(client, cmd)?;
-                }
-                PbFind::Pins { .. } => {
-                    cmd::pins::process(client, cmd)?;
-                }
-                PbFind::Withs { .. } => {
-                    cmd::withs::process(client, cmd)?;
-                } // _ => println!("not supported"),
+        PbCrud::Find { cmd } => match cmd {
+            PbFind::VersionPin { .. } => {
+                cmd::versionpin::process(client, cmd)?;
             }
-        }
+            PbFind::VersionPins { .. } => {
+                cmd::versionpins::process(client, cmd)?;
+            }
+            PbFind::Roles { .. } => {
+                cmd::all_roles::process(client, cmd)?;
+            }
+            PbFind::Platforms { .. } => {
+                cmd::all_platforms::process(client, cmd)?;
+            }
+            PbFind::Sites { .. } => {
+                cmd::all_sites::process(client, cmd)?;
+            }
+            PbFind::Levels { .. } => {
+                cmd::all_levels::process(client, cmd)?;
+            }
+            PbFind::Pins { .. } => {
+                cmd::pins::process(client, cmd)?;
+            }
+            PbFind::Withs { .. } => {
+                cmd::withs::process(client, cmd)?;
+            }
+            PbFind::Packages { .. } => {
+                cmd::all_packages::process(client, cmd)?;
+            }
+            _ => println!("not supported"),
+        },
         _ => println!("Not implemented"),
     }
 

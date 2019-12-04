@@ -23,8 +23,10 @@ pub enum PbCrud {
         cmd: PbFind,
     },
     /// Udate DB
+    #[structopt(display_order = 2)]
     Set {},
     /// Remove from DB
+    #[structopt(display_order = 3)]
     Delete {},
 }
 
@@ -67,31 +69,32 @@ pub enum PbFind {
     /// Find all versionpins that meet supplied name and pin coordinate criteria.
     VersionPins {
         /// The name of the package.
-        #[structopt(short, long, display_order = 1)]
+        //#[structopt(short, long, display_order = 1)]
+        #[structopt(name = "PACKAGE")]
         package: Option<String>,
         /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
-        #[structopt(short = "L", long, display_order = 2)]
+        #[structopt(short = "L", long, display_order = 1)]
         level: Option<String>,
         /// The role (eg model or anim_beta). Defaults to 'any'.
-        #[structopt(short = "R", long, display_order = 3)]
+        #[structopt(short = "R", long, display_order = 2)]
         role: Option<String>,
         /// The operating system name (eg cent7_64).
-        #[structopt(short = "P", long, display_order = 4)]
+        #[structopt(short = "P", long, display_order = 3)]
         platform: Option<String>,
         /// The location name (eg portland). Defaults to 'any'.
-        #[structopt(short = "S", long, display_order = 5)]
+        #[structopt(short = "S", long, display_order = 4)]
         site: Option<String>,
         /// The search mode - ancestor (or down), exact, descendant (or up).
-        #[structopt(short, long = "search", display_order = 6)]
+        #[structopt(short, long = "search", display_order = 5)]
         search_mode: Option<String>,
         /// Limit the number of returned items.
-        #[structopt(short, long, display_order = 7)]
+        #[structopt(short, long, display_order = 6)]
         limit: Option<i32>,
         /// Provide one or more comma separated items to order the return by.
-        #[structopt(short, long = "order-by", display_order = 8)]
+        #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
         /// Do not truncate the withs if true. Defaults to false.
-        #[structopt(short = "w", long = "withs", display_order = 9)]
+        #[structopt(short = "w", long = "withs", display_order = 8)]
         full_withs: bool,
     },
     #[structopt(display_order = 3)]
@@ -192,4 +195,7 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 3)]
         order_by: Option<String>,
     },
+    #[structopt(display_order = 9)]
+    /// Get a simple list of all packages.
+    Packages {},
 }

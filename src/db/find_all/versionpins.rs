@@ -78,7 +78,7 @@ impl FindAllVersionPinsRow {
     /// Try to attempt to construct a distribution from &strs. This is a fallible operation
     /// returning a result.
     ///
-    /// Args
+    /// # Arguments
     pub fn try_from_parts(
         id: i32,
         distribution: &str,
