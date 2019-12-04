@@ -1,3 +1,4 @@
+pub mod add;
 pub mod find;
 pub mod find_all;
 pub mod packrat;

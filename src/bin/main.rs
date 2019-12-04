@@ -62,6 +62,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             _ => println!("not supported"),
         },
+        PbCrud::Add { cmd } => match cmd {
+            PbAdd::Packages { .. } => {
+                cmd::all_packages::add(client, cmd)?;
+            }
+        },
         _ => println!("Not implemented"),
     }
 

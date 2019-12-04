@@ -6,7 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::db::{find, find_all};
+use crate::db::{add, find, find_all};
 //use postgres::Client;
 pub use postgres::{Client, NoTls};
 
@@ -89,5 +89,10 @@ impl PackratDb {
 
     pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
         find::withs::FindWiths::new(&mut self.client, package)
+    }
+
+    /// Find pins that meet a specific criteria
+    pub fn add_packages<'b>(&'b mut self) -> add::packages::AddPackages {
+        add::packages::AddPackages::new(&mut self.client)
     }
 }

@@ -24,12 +24,26 @@ pub enum PbCrud {
     },
     /// Udate DB
     #[structopt(display_order = 2)]
-    Set {},
+    Add {
+        /// Read subcommands
+        #[structopt(subcommand)]
+        cmd: PbAdd,
+    },
     /// Remove from DB
     #[structopt(display_order = 3)]
     Delete {},
 }
 
+#[derive(StructOpt, Debug, PartialEq)]
+#[structopt(about = "PackybaraDb Read")]
+pub enum PbAdd {
+    /// Add one or more packages
+    #[structopt(display_order = 1)]
+    Packages {
+        #[structopt(short, long = "name")]
+        names: Vec<String>,
+    },
+}
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb Read")]
 pub enum PbFind {
