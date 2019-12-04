@@ -40,7 +40,7 @@ pub enum PbAdd {
     /// Add one or more packages
     #[structopt(display_order = 1)]
     Packages {
-        #[structopt(short, long = "name")]
+        #[structopt(name = "PACKAGE")]
         names: Vec<String>,
     },
     /// Add one or more levels
@@ -49,7 +49,14 @@ pub enum PbAdd {
         #[structopt(name = "LEVEL")]
         names: Vec<String>,
     },
+    /// Add one or more roles
+    #[structopt(display_order = 3)]
+    Roles {
+        #[structopt(name = "ROLE")]
+        names: Vec<String>,
+    },
 }
+
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb Read")]
 pub enum PbFind {

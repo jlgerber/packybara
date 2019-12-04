@@ -71,6 +71,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbAdd::Levels { .. } => {
                 cmd::all_levels::add(client, cmd)?;
             }
+            PbAdd::Roles { .. } => {
+                cmd::all_roles::add(client, cmd)?;
+            }
         },
         _ => println!("Not implemented"),
     }

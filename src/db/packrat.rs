@@ -100,4 +100,9 @@ impl PackratDb {
     pub fn add_levels<'b>(&'b mut self) -> add::levels::AddLevels {
         add::levels::AddLevels::new(&mut self.client)
     }
+
+    /// add
+    pub fn add_roles<'b>(&'b mut self) -> add::roles::AddRoles {
+        add::roles::AddRoles::new(&mut self.client)
+    }
 }
