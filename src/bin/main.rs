@@ -15,6 +15,8 @@ use env_logger::Env;
 use std::env;
 
 //use log;
+//trait RetType: std::error::Error + std::fmt::Display {}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Pb::from_args();
     if let Pb {

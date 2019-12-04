@@ -5,6 +5,12 @@ use snafu::{ResultExt, Snafu};
 //use std::fmt;
 use log;
 
+#[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
+pub enum InvalidLevelKind {
+    TooManyLevels,
+    InvalidName,
+    InvalidCharacter,
+}
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
 pub enum AddLevelsError {
@@ -16,6 +22,11 @@ pub enum AddLevelsError {
     },
     #[snafu(display("No level names supplied"))]
     NoLevelNamesError,
+    #[snafu(display("Invalid level {:?}: {}", kind, level))]
+    InvalidLevel {
+        level: String,
+        kind: InvalidLevelKind,
+    },
 }
 
 /// Responsible for creating levels
@@ -54,6 +65,12 @@ impl<'a> AddLevels<'a> {
             return Err(AddLevelsError::NoLevelNamesError);
         }
         for level in &levels {
+            if level.matches(".").count() > 2 {
+                return Err(AddLevelsError::InvalidLevel {
+                    level: level.clone(),
+                    kind: InvalidLevelKind::TooManyLevels,
+                });
+            }
             let mut previous = "facility".to_string();
             for piece in level.split(".") {
                 let next = format!("{}.{}", previous, piece);
