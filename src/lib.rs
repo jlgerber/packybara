@@ -26,4 +26,5 @@ pub mod site;
 pub use site::Site;
 pub mod role;
 pub use role::Role;
+pub mod changeset;
 pub mod coords_error;

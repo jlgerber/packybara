@@ -814,3 +814,37 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql;
 */
+
+CREATE FUNCTION get_actions()
+RETURNS TABLE (
+	transaction_id bigint, 
+	actions json
+)
+AS $$
+BEGIN
+  RETURN QUERY  
+  SELECT
+    la.transaction_id,
+    json_build_object(table_name,
+    case 
+    when action = 'INSERT' THEN 
+        json_build_object(action, ARRAY_AGG(row_data))
+    when action = 'UPDATE' THEN
+        json_build_object( action, ARRAY_AGG( json_build_object('from',to_json(row_data),'to',to_json(changed_fields))))
+    WHEN action = 'DELETE' THEN 
+        json_build_object(action, ARRAY_AGG(row_data))
+    ELSE 
+        json_build_object(action,table_name) 
+    END 
+    ) AS actions
+
+FROM
+    audit.logged_actions as la
+GROUP BY
+    la.transaction_id, la.action, la.table_name
+ORDER BY
+    la.transaction_id;
+END
+$$
+LANGUAGE plpgsql;
+

@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.14.0"
+version = "0.15.0"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
@@ -27,3 +27,5 @@ prettytable-rs = "0.8.0"
 log = "0.4.8"
 env_logger = "0.7.1"
 itertools = "0.8.2"
+serde = {version = "1.0.103",  features = ["derive"] }
+serde_json = "1.0.44"
