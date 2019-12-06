@@ -55,6 +55,12 @@ pub enum PbAdd {
         #[structopt(name = "ROLE")]
         names: Vec<String>,
     },
+    /// Add one or more roles
+    #[structopt(display_order = 4)]
+    Platforms {
+        #[structopt(name = "PLATFORM")]
+        names: Vec<String>,
+    },
 }
 
 #[derive(StructOpt, Debug, PartialEq)]

@@ -105,4 +105,9 @@ impl PackratDb {
     pub fn add_roles<'b>(&'b mut self) -> add::roles::AddRoles {
         add::roles::AddRoles::new(&mut self.client)
     }
+
+    /// add
+    pub fn add_platforms<'b>(&'b mut self) -> add::platforms::AddPlatforms {
+        add::platforms::AddPlatforms::new(&mut self.client)
+    }
 }

@@ -3,7 +3,7 @@ pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMod
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
+//use postgres::types::ToSql;
 use postgres::Client;
 use snafu::Snafu;
 use std::fmt;

@@ -1,4 +1,4 @@
-use super::args::PbFind;
+use super::args::{PbAdd, PbFind};
 use packybara::packrat::{Client, PackratDb};
 use packybara::OrderPlatformBy;
 use prettytable::{cell, format, row, table};
@@ -40,5 +40,16 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         table.printstd();
     };
 
+    Ok(())
+}
+
+/// Add one or more roles
+pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbAdd::Platforms { mut names, .. } = cmd {
+        let mut pb = PackratDb::new(client);
+        let mut results = pb.add_platforms();
+        let results = results.platforms(&mut names).create()?;
+        println!("{}", results);
+    }
     Ok(())
 }

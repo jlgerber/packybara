@@ -1,10 +1,10 @@
 use itertools::Itertools;
+use log;
 use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
-//use std::fmt;
-use log;
 
+/// An enum which defines the kinds of InvalidLevelErrors we may encounter. .
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidLevelKind {
     TooManyLevels,
@@ -20,8 +20,11 @@ pub enum AddLevelsError {
         msg: &'static str,
         source: tokio_postgres::error::Error,
     },
+    /// If we attempt to call create without any levels registered
+    /// for creation, we return a NoLevelNamesError
     #[snafu(display("No level names supplied"))]
     NoLevelNamesError,
+    /// For various problems with the supplied level input
     #[snafu(display("Invalid level {:?}: {}", kind, level))]
     InvalidLevel {
         level: String,
@@ -29,13 +32,21 @@ pub enum AddLevelsError {
     },
 }
 
-/// Responsible for creating levels
+/// The AddLevels struct is responsible for creating levels.
 pub struct AddLevels<'a> {
     client: &'a mut Client,
     names: Vec<String>,
 }
 
 impl<'a> AddLevels<'a> {
+    /// New up an AddLevels instance
+    ///
+    /// # Arguments
+    /// * `client` - a mutable reference to a postgress::Client, which holds
+    /// the database connection, among other things.
+    ///
+    /// # Returns
+    /// * An instance of Self
     pub fn new(client: &'a mut Client) -> Self {
         Self {
             client,
@@ -43,16 +54,39 @@ impl<'a> AddLevels<'a> {
         }
     }
 
-    pub fn level(&'a mut self, name: String) -> &mut Self {
-        self.names.push(name);
+    /// Add a level to the levels we will attempt to add to th DB.
+    ///
+    /// # Arguments
+    /// * `name` - A name of a level we wish to create. This will be in
+    /// addition to any level names we have already supplied using the level
+    /// or levels methods. Name may be any type that implements Into<String>,
+    /// so feel free to pass in a &str or a String or....
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
+    pub fn level<I: Into<String>>(&'a mut self, name: I) -> &mut Self {
+        self.names.push(name.into());
         self
     }
-
+    /// Add a vector of levels to the existing levels we will attempt to
+    /// add to th DB.
+    ///
+    /// # Arguments
+    /// * `names` - A vector of level names that we wish to create.
+    /// This will be in  addition to any level names we have already supplied
+    /// using the level or levels methods.
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn levels(&'a mut self, names: &mut Vec<String>) -> &mut Self {
         self.names.append(names);
         self
     }
-
+    /// Create level instances in the database, returning the number of
+    /// new instances created.
+    ///
+    /// # Returns
+    /// * Ok(u64) | Err(AddLevelsError)
     pub fn create(&mut self) -> Result<u64, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self

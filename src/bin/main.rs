@@ -62,7 +62,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbFind::Packages { .. } => {
                 cmd::all_packages::process(client, cmd)?;
             }
-            _ => println!("not supported"),
         },
         PbCrud::Add { cmd } => match cmd {
             PbAdd::Packages { .. } => {
@@ -73,6 +72,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             PbAdd::Roles { .. } => {
                 cmd::all_roles::add(client, cmd)?;
+            }
+            PbAdd::Platforms { .. } => {
+                cmd::all_platforms::add(client, cmd)?;
             }
         },
         _ => println!("Not implemented"),

@@ -1,9 +1,8 @@
 use itertools::Itertools;
+use log;
 use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
-//use std::fmt;
-use log;
 
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
@@ -25,6 +24,13 @@ pub struct AddPackages<'a> {
 }
 
 impl<'a> AddPackages<'a> {
+    /// new up an AddPackages instance
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A reference to a postgres::Client instance, which
+    /// stores the connection to the database, and provides crud methods
+    /// for us.
     pub fn new(client: &'a mut Client) -> Self {
         Self {
             client,
@@ -32,16 +38,44 @@ impl<'a> AddPackages<'a> {
         }
     }
 
-    pub fn package(&'a mut self, name: String) -> &mut Self {
-        self.names.push(name);
+    /// Add a package name to the list of packages we wish to create.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - A package we wish to create in the db. Currently, all
+    /// validation is done at creation request time. However, I should consider
+    /// making this call fallible, and validating name up front.
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
+    pub fn package<I: Into<String>>(&'a mut self, name: I) -> &mut Self {
+        self.names.push(name.into());
         self
     }
 
+    /// Add a vector of package names to the list of package names we wish
+    /// to create in the database. Like, package, packages is an infallible
+    /// call that does no validation. However, I am reconsidering this.
+    ///
+    /// # Arguments
+    /// * `names` - A list of names we wish to create in the db.
+    ///
+    /// # Returns
+    /// * a mutable reference to Self
     pub fn packages(&'a mut self, names: &mut Vec<String>) -> &mut Self {
         self.names.append(names);
         self
     }
 
+    /// Create previously registered package name(s) in the database. This call is
+    /// fallible, and may return either the number of new packages created, or a
+    /// relevant error.
+    ///
+    /// # Arguments
+    /// None
+    ///
+    /// # Returns Result
+    /// * Ok(u64) | Err(AddPackagesError)
     pub fn create(&mut self) -> Result<u64, AddPackagesError> {
         let packages = self.names.iter().unique().cloned().collect::<Vec<String>>();
         if packages.len() == 0 {
