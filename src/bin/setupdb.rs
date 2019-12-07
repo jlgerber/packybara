@@ -52,7 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let packrat_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/packrat.sql");
     let procs_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/procs.sql");
-    let audit_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/vendor/audit.sql");
+    //let audit_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/vendor/audit.sql");
+    let audit_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/audit_jsonb.sql");
+
     let populate_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/populate.sql");
     let register_audits_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/register_audits.sql");
 
