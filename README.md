@@ -354,3 +354,70 @@ from
         limit 1) 
     ) As a
  where  position('id' in key)>0;
+ ```
+
+ ## scratch
+ ```sql
+ select row_to_json(r) from
+ (select 
+    a.table_name as entity,
+    a.action,
+   ( case
+    when a.action = 'INSERT' then
+        json_agg( a.new_state) 
+    else
+       null
+    end ) as new_state
+    
+ 
+ from
+    (SELECT 
+        table_name,
+        action,
+        jsonb_agg(old_state) as old_state,
+        jsonb_agg(new_state) as new_state 
+    from 
+        audit.logged_actions 
+    group by 
+        action,table_name) 
+    as a 
+group by 
+    a.action, a.table_name) as r;
+
+```
+
+```
+SELECT 
+    ROW_TO_JSON(a) 
+FROM (
+    SELECT 
+        2 as _schema,
+        table_name,
+        action,
+        /* OLD STATE */
+        ( CASE
+        WHEN action = 'DELETE' THEN
+            JSONB_AGG( old_state) 
+        WHEN action = 'UPDATE' THEN
+            JSONB_AGG( old_state) 
+        ELSE
+            '[]'::jsonb
+        END ) AS old_state,
+
+        /* NEW STATE */
+        ( CASE
+        WHEN action = 'INSERT' THEN
+            JSONB_AGG( new_state) 
+        WHEN action = 'UPDATE' THEN 
+            JSONB_AGG( new_state) 
+        ELSE
+            '[]'::jsonb  
+        END ) AS new_state
+            
+                
+    FROM 
+        audit.logged_actions 
+    GROUP BY 
+        action,table_name
+) AS a;
+    ```
