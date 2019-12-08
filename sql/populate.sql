@@ -180,7 +180,6 @@ VALUES
 	('houdini','18.111'),
 	('houdini','18.222'),
 	('houdini','18.333'),
-
 	('nuke','11.0'),
 	('nuke','11.1'),
 	('nuke','11.2'),
@@ -195,7 +194,6 @@ VALUES
 	('nuke','12.4'),
 	('nuke','12.5'),
 	('nuke','12.6'),
-
 	('mari','4.0.1'),
 	('mari','4.0.2'),
 	('mari','4.0.3'),
@@ -226,7 +224,6 @@ VALUES
 	('mari','4.5.0'),
 	('mari','4.5.1'),
 	('mari','4.5.2'),
-
 	('vray','3.5.0'),
 	('vray','3.5.1'),
 	('vray','3.5.2'),
@@ -243,8 +240,6 @@ VALUES
 	('vray','4.0.0'),
 	('vray','4.0.1'),
 	('vray','4.0.2'),
-
-	
 	('redshift','1.0.1'),
 	('redshift','1.0.2'),
 	('redshift','1.1.0'),
@@ -268,7 +263,6 @@ VALUES
 	('redshift','2.5.2'),
 	('redshift','2.5.3'),
 	('redshift','2.5.4'),
-
 	('track','4.1.0'),
 	('track','4.1.1'),
 	('track','4.1.2'),
@@ -278,7 +272,6 @@ VALUES
 	('track','4.2.2'),
 	('track','4.2.3'),
 	('track','4.2.4'),
-
 	('race','7.0.0'),
 	('race','7.0.1'),
 	('race','7.0.2'),
@@ -286,7 +279,6 @@ VALUES
 	('race','7.1.1'),
 	('race','7.1.2'),
 	('race','7.1.3'),
-
 	('racetrack','7.0.0'),
 	('racetrack','7.0.1'),
 	('racetrack','7.0.2'),
@@ -294,7 +286,6 @@ VALUES
 	('racetrack','7.1.1'),
 	('racetrack','7.1.2'),
 	('racetrack','7.1.3'),
-
 	('snitcher','1.0.1'),
 	('snitcher','1.0.2'),
 	('snitcher','1.1.0'),
@@ -313,7 +304,6 @@ VALUES
 	('snitcher','2.5.2'),
 	('snitcher','2.5.3'),
 	('snitcher','2.5.4'),
-
 	('xerces','1.0.1'),
 	('xerces','1.0.2'),
 	('xerces','1.1.0'),
@@ -342,7 +332,6 @@ VALUES
 	('xerces','2.6.2'),
 	('xerces','2.6.3'),
 	('xerces','2.6.4'),
-
 	('wam','1.0.0'),
 	('wam','1.0.1'),
 	('wam','1.0.2'),
@@ -368,7 +357,6 @@ VALUES
 	('wam','1.3.4'),
 	('wam','1.3.5'),
 	('wam','1.3.6'),
-
 	('wambase','1.0.0'),
 	('wambase','1.0.1'),
 	('wambase','1.0.2'),
@@ -390,7 +378,6 @@ VALUES
 	('wambase','2.1.2'),
 	('wambase','2.1.3'),
 	('wambase','2.1.4'),
-
 	('modelpublish','1.0.0'),
 	('modelpublish','1.0.1'),
 	('modelpublish','1.0.2'),
@@ -406,7 +393,6 @@ VALUES
 	('modelpublish','2.0.1'),
 	('modelpublish','2.0.2'),
 	('modelpublish','2.0.3'),
-
 	('modelpipeline','1.0.0'),
 	('modelpipeline','1.0.1'),
 	('modelpipeline','1.0.2'),
@@ -425,7 +411,6 @@ VALUES
 	('modelpipeline','1.2.4'),
 	('modelpipeline','1.2.5'),
 	('modelpipeline','1.2.6'),
-
 	('animtools','1.0.0'),
 	('animtools','1.0.1'),
 	('animtools','1.0.2'),
@@ -443,7 +428,6 @@ VALUES
 	('animtools','2.0.3'),
 	('animtools','2.0.4'),
 	('animtools','2.0.5'),
-
 	('animpublish','1.0.0'),
 	('animpublish','1.0.1'),
 	('animpublish','1.0.2'),
@@ -459,7 +443,6 @@ VALUES
 	('animpublish','2.0.1'),
 	('animpublish','2.0.2'),
 	('animpublish','2.0.3'),
-
 	('lightpipeline','1.0.0'),
 	('lightpipeline','1.0.1'),
 	('lightpipeline','1.0.2'),
@@ -475,7 +458,6 @@ VALUES
 	('lightpipeline','2.0.1'),
 	('lightpipeline','2.0.2'),
 	('lightpipeline','2.0.3'),
-
 	('houdinipipeline','1.0.0'),
 	('houdinipipeline','1.0.1'),
 	('houdinipipeline','1.0.2'),
@@ -500,7 +482,6 @@ VALUES
 	('houdinipipeline','2.0.2'),
 	('houdinipipeline','2.0.3'),
 	('houdinipipeline','2.0.4'),
-
 	('houd_out_geo','1.0.0'),
 	('houd_out_geo','1.0.1'),
 	('houd_out_geo','1.0.2'),
@@ -527,7 +508,6 @@ VALUES
 	('houd_out_geo','2.0.2'),
 	('houd_out_geo','2.0.3'),
 	('houd_out_geo','2.0.4'),
-
 	('houdinicamera','1.0.0'),
 	('houdinicamera','1.0.1'),
 	('houdinicamera','1.0.2'),
@@ -557,7 +537,6 @@ VALUES
 	('houdinicamera','1.3.8'),
 	('houdinicamera','1.3.9'),
 	('houdinicamera','1.3.10'),
-	
 	('houdinicamera','2.0.0.beta1'),
 	('houdinicamera','2.0.1.beta1'),
 	('houdinicamera','2.0.1.beta2'),
@@ -569,7 +548,6 @@ VALUES
 	('houdinicamera','2.0.7'),
 	('houdinicamera','2.0.8'),
 	('houdinicamera','2.0.9'),
-
 	('atomic','1.0.0'),
 	('atomic','1.0.1'),
 	('atomic','1.0.2'),
@@ -627,127 +605,250 @@ VALUES
 	('atomic','6.1.6');
 
 
-INSERT INTO versionpin
-	(role, level, site, platform, package, distribution_id)
+INSERT INTO pincoord
+	(role, level, site, platform, package)
 VALUES
 	-- FACILITY
 	--   maya
-	('any', 'facility', 'any', 'any', 'maya', 1),-- 2016.sp1
-	('any', 'facility', 'any.hyderabad', 'any', 'maya', 13), -- 2018.sp3
-	('any.td.beta', 'facility', 'any', 'any', 'maya', 17), --'maya.2019.sp2'
+	('any', 'facility', 'any', 'any', 'maya'),-- 2016.sp1
+	('any', 'facility', 'any.hyderabad', 'any', 'maya'), -- 2018.sp3
+	('any.td.beta', 'facility', 'any', 'any', 'maya'), --'maya.2019.sp2'
 	--   houdini
-	('any', 'facility', 'any', 'any', 'houdini',22), -- 'houdini.16.5.232'
-	('any.fx', 'facility', 'any', 'any', 'houdini',23 ), -- 'houdini.16.5.233'
-	('any', 'facility', 'any.portland', 'any', 'houdini', 24), --'houdini.16.5.333'
+	('any', 'facility', 'any', 'any', 'houdini'), -- 'houdini.16.5.232'
+	('any.fx', 'facility', 'any', 'any', 'houdini' ), -- 'houdini.16.5.233'
+	('any', 'facility', 'any.portland', 'any', 'houdini'), --'houdini.16.5.333'
 	--   nuke
-	('any', 'facility', 'any', 'any', 'nuke', 39), --'nuke.11.0'
-	('any.comp', 'facility', 'any', 'any', 'nuke', 40), --'nuke.11.1'
-	('any.comp.beta', 'facility', 'any', 'any', 'nuke',41 ), --'nuke.11.2'
+	('any', 'facility', 'any', 'any', 'nuke'), --'nuke.11.0'
+	('any.comp', 'facility', 'any', 'any', 'nuke'), --'nuke.11.1'
+	('any.comp.beta', 'facility', 'any', 'any', 'nuke' ), --'nuke.11.2'
 	-- mari
-	('any', 'facility', 'any', 'any', 'mari', 74), --'mari.4.4.0' 
+	('any', 'facility', 'any', 'any', 'mari'), --'mari.4.4.0' 
 	-- track
-	('any', 'facility', 'any', 'any', 'track', 126), -- 'track.4.2.0'
+	('any', 'facility', 'any', 'any', 'track'), -- 'track.4.2.0'
 	-- race
-	('any', 'facility', 'any', 'any', 'race',131 ),--'race.7.0.0'
-	('any', 'facility', 'any.hyderabad', 'any', 'race', 133), --'race.7.0.2'
+	('any', 'facility', 'any', 'any', 'race'),--'race.7.0.0'
+	('any', 'facility', 'any.hyderabad', 'any', 'race'), --'race.7.0.2'
 	-- racetrack
-	('any', 'facility', 'any', 'any', 'racetrack', 138 ),--'racetrack.7.0.0'
-	('any', 'facility', 'any.hyderabad', 'any', 'racetrack',140 ), --'racetrack.7.0.2'
+	('any', 'facility', 'any', 'any', 'racetrack' ),--'racetrack.7.0.0'
+	('any', 'facility', 'any.hyderabad', 'any', 'racetrack'), --'racetrack.7.0.2'
 	--snitcher
-	('any', 'facility', 'any', 'any', 'snitcher',149 ), --'snitcher.2.1.0'
+	('any', 'facility', 'any', 'any', 'snitcher'), --'snitcher.2.1.0'
 	-- xerces
-	('any', 'facility', 'any', 'any', 'xerces',170 ),--'xerces.2.1.3'
+	('any', 'facility', 'any', 'any', 'xerces'),--'xerces.2.1.3'
 	-- wam
-	('any', 'facility', 'any', 'any', 'wam',199 ), --'wam.1.1.4'
+	('any', 'facility', 'any', 'any', 'wam'), --'wam.1.1.4'
 	-- wambase
-	('any', 'facility', 'any', 'any', 'wambase',229), -- 'wambase.2.0.4'
+	('any', 'facility', 'any', 'any', 'wambase'), -- 'wambase.2.0.4'
 	-- modelpublish
-	('any', 'facility', 'any', 'any', 'modelpublish',244 ),--'modelpublish.1.1.3'
+	('any', 'facility', 'any', 'any', 'modelpublish' ),--'modelpublish.1.1.3'
 	-- modelpipeline
-	('any', 'facility', 'any', 'any', 'modelpipeline',260 ),--'modelpipeline.1.1.4'
+	('any', 'facility', 'any', 'any', 'modelpipeline' ),--'modelpipeline.1.1.4'
 	-- animtools
-	('any', 'facility', 'any', 'any', 'animtools', 281 ), --'animtools.2.0.0'
+	('any', 'facility', 'any', 'any', 'animtools' ), --'animtools.2.0.0'
 	-- animpublish
-	('any', 'facility', 'any', 'any', 'animpublish',276 ),--'animpublish.1.1.2'
+	('any', 'facility', 'any', 'any', 'animpublish' ),--'animpublish.1.1.2'
 	-- lightpipeline
-	('any', 'facility', 'any', 'any', 'lightpipeline', 312 ), --'lightpipeline.1.1.6'
+	('any', 'facility', 'any', 'any', 'lightpipeline' ), --'lightpipeline.1.1.6'
 	-- houdinipipeline
-	('any', 'facility', 'any', 'any', 'houdinipipeline',327 ),--'houdinipipeline.1.1.4'
+	('any', 'facility', 'any', 'any', 'houdinipipeline' ),--'houdinipipeline.1.1.4'
 	-- houd_out_geo
-	('any', 'facility', 'any', 'any', 'houd_out_geo', 349),--'houd_out_geo.1.1.4'
+	('any', 'facility', 'any', 'any', 'houd_out_geo'),--'houd_out_geo.1.1.4'
 	-- houdinicamera
-	('any', 'facility', 'any', 'any', 'houdinicamera',374 ), --'houdinicamera.1.1.3'
+	('any', 'facility', 'any', 'any', 'houdinicamera' ), --'houdinicamera.1.1.3'
 	-- atomic
-	('any', 'facility', 'any', 'any', 'atomic',448 ), --'atomic.5.1.4'
+	('any', 'facility', 'any', 'any', 'atomic' ), --'atomic.5.1.4'
 	--  vray
-	('any', 'facility', 'any', 'any', 'vray', 91 ),--'vray.3.6.2'
-	('any.light', 'facility', 'any', 'any', 'vray', 92 ),
-	('any.light.beta', 'facility', 'any', 'any', 'vray',93 ),
-	('any.model', 'facility', 'any', 'any', 'vray', 92 ),--'vray.3.6.3'
-	('any.model.beta', 'facility', 'any', 'any', 'vray',93 ),--'vray.3.6.4'
+	('any', 'facility', 'any', 'any', 'vray' ),--'vray.3.6.2'
+	('any.light', 'facility', 'any', 'any', 'vray' ),
+	('any.light.beta', 'facility', 'any', 'any', 'vray' ),
+	('any.model', 'facility', 'any', 'any', 'vray' ),--'vray.3.6.3'
+	('any.model.beta', 'facility', 'any', 'any', 'vray' ),--'vray.3.6.4'
 	--    redshift
-	('any', 'facility', 'any', 'any', 'redshift',103 ), --'redshift.2.1.0'
-	('any.light', 'facility', 'any', 'any', 'redshift',104 ), -- 'redshift.2.1.1'
-	('any.light.beta', 'facility', 'any', 'any', 'redshift', 105), -- 'redshift.2.1.2'
-	('any.model', 'facility', 'any', 'any', 'redshift',104 ),
-	('any.model.beta', 'facility', 'any', 'any', 'redshift', 107), --'redshift.2.1.2'
+	('any', 'facility', 'any', 'any', 'redshift' ), --'redshift.2.1.0'
+	('any.light', 'facility', 'any', 'any', 'redshift' ), -- 'redshift.2.1.1'
+	('any.light.beta', 'facility', 'any', 'any', 'redshift'), -- 'redshift.2.1.2'
+	('any.model', 'facility', 'any', 'any', 'redshift' ),
+	('any.model.beta', 'facility', 'any', 'any', 'redshift'), --'redshift.2.1.2'
 
 	-- BAYOU
 	-- nuke
-	('any', 'facility.bayou', 'any', 'any', 'nuke', 44), --'nuke.11.5'
-	('any.comp', 'facility.bayou', 'any', 'any', 'nuke', 47 ), --'nuke.12.1'
-	('any.comp.cent7', 'facility.bayou', 'any', 'any.cent7_64', 'nuke',48 ), --'nuke.12.2'
+	('any', 'facility.bayou', 'any', 'any', 'nuke'), --'nuke.11.5'
+	('any.comp', 'facility.bayou', 'any', 'any', 'nuke' ), --'nuke.12.1'
+	('any.comp.cent7', 'facility.bayou', 'any', 'any.cent7_64', 'nuke' ), --'nuke.12.2'
 	--   maya
-	('any', 'facility.bayou', 'any', 'any', 'maya',12 ), --'maya.2018.sp2'
-	('any', 'facility.bayou', 'any', 'any.cent7_64', 'maya',15 ), --'maya.2018.sp5'
-	('any.model', 'facility.bayou', 'any', 'any', 'maya',13 ),--'maya.2018.sp5'
-	('any.model.beta', 'facility.bayou', 'any', 'any', 'maya', 19), --'maya.2019.sp4'
+	('any', 'facility.bayou', 'any', 'any', 'maya' ), --'maya.2018.sp2'
+	('any', 'facility.bayou', 'any', 'any.cent7_64', 'maya' ), --'maya.2018.sp5'
+	('any.model', 'facility.bayou', 'any', 'any', 'maya' ),--'maya.2018.sp5'
+	('any.model.beta', 'facility.bayou', 'any', 'any', 'maya'), --'maya.2019.sp4'
 	-- houdini
-	('any', 'facility.bayou', 'any', 'any', 'houdini', 25),--'houdini.16.5.444'
-	('any.fx', 'facility.bayou', 'any', 'any', 'houdini',26 ), --'houdini.16.5.555'
-	('any.fx.beta', 'facility.bayou', 'any', 'any.cent7_64', 'houdini', 27 ), --'houdini.17.5.232'
+	('any', 'facility.bayou', 'any', 'any', 'houdini'),--'houdini.16.5.444'
+	('any.fx', 'facility.bayou', 'any', 'any', 'houdini' ), --'houdini.16.5.555'
+	('any.fx.beta', 'facility.bayou', 'any', 'any.cent7_64', 'houdini' ), --'houdini.17.5.232'
 	-- houdinipipeline
-	('any.fx.beta', 'facility.bayou', 'any', 'any', 'houdinipipeline',336 ),--'houdinipipeline.2.0.0.beta1'
+	('any.fx.beta', 'facility.bayou', 'any', 'any', 'houdinipipeline' ),--'houdinipipeline.2.0.0.beta1'
 	-- houd_out_geo
-	('any.fx.beta', 'facility.bayou', 'any', 'any', 'houd_out_geo',362 ),--'houd_out_geo.2.0.1.beta1'
+	('any.fx.beta', 'facility.bayou', 'any', 'any', 'houd_out_geo' ),--'houd_out_geo.2.0.1.beta1'
 	-- redshift
-	('any', 'facility.bayou', 'any', 'any', 'redshift', 110), --'redshift.2.2.3'
+	('any', 'facility.bayou', 'any', 'any', 'redshift'), --'redshift.2.2.3'
 	-- vray
-	('any', 'facility.bayou', 'any', 'any', 'vray',92 ), --'vray.3.6.3'
-	('any.light.beta', 'facility.bayou', 'any', 'any','vray', 95), -- 'vray.3.6.6'
+	('any', 'facility.bayou', 'any', 'any', 'vray' ), --'vray.3.6.3'
+	('any.light.beta', 'facility.bayou', 'any', 'any','vray'), -- 'vray.3.6.6'
 
 	-- PLASMA
 	--  nuke
-	('any', 'facility.plasma', 'any', 'any', 'nuke',45 ), --'nuke.11.6'
-	('any.comp', 'facility.plasma', 'any', 'any', 'nuke', 46), --'nuke.12.0'
-	('any.comp.cent7', 'facility.plasma', 'any', 'any.cent7_64', 'nuke',47 ), --'nuke.12.1'
+	('any', 'facility.plasma', 'any', 'any', 'nuke' ), --'nuke.11.6'
+	('any.comp', 'facility.plasma', 'any', 'any', 'nuke'), --'nuke.12.0'
+	('any.comp.cent7', 'facility.plasma', 'any', 'any.cent7_64', 'nuke' ), --'nuke.12.1'
 	--   maya
-	('any', 'facility.plasma', 'any', 'any', 'maya', 12 ),--'maya.2018.sp2'
-	('any', 'facility.plasma', 'any', 'any.cent7_64', 'maya',15 ), --'maya.2018.sp5'
-	('any.model', 'facility.plasma', 'any', 'any', 'maya', 13 ), --'maya.2018.sp3'
-	('any.model.beta', 'facility.plasma', 'any', 'any', 'maya',19 ),--'maya.2019.sp4'
+	('any', 'facility.plasma', 'any', 'any', 'maya' ),--'maya.2018.sp2'
+	('any', 'facility.plasma', 'any', 'any.cent7_64', 'maya' ), --'maya.2018.sp5'
+	('any.model', 'facility.plasma', 'any', 'any', 'maya' ), --'maya.2018.sp3'
+	('any.model.beta', 'facility.plasma', 'any', 'any', 'maya' ),--'maya.2019.sp4'
 	-- houdini
-	('any', 'facility.plasma', 'any', 'any', 'houdini',21 ), --'houdini.16.5.222'
-	('any.fx', 'facility.plasma', 'any', 'any', 'houdini',26 ), --'houdini.16.5.555'
-	('any.fx.beta', 'facility.plasma', 'any', 'any.cent7_64', 'houdini',36 ),--'houdini.18.111'
+	('any', 'facility.plasma', 'any', 'any', 'houdini' ), --'houdini.16.5.222'
+	('any.fx', 'facility.plasma', 'any', 'any', 'houdini' ), --'houdini.16.5.555'
+	('any.fx.beta', 'facility.plasma', 'any', 'any.cent7_64', 'houdini' ),--'houdini.18.111'
 	-- vray
-	('any', 'facility.plasma', 'any', 'any', 'vray', 93 ),--'vray.3.6.4'
-	('any.light.beta', 'facility.plasma', 'any', 'any', 'vray', 98 ), --'vray.4.0.2'
+	('any', 'facility.plasma', 'any', 'any', 'vray' ),--'vray.3.6.4'
+	('any.light.beta', 'facility.plasma', 'any', 'any', 'vray' ), --'vray.4.0.2'
 	-- RESCUE
 	-- nuke
-	('any', 'facility.rescue', 'any', 'any', 'nuke', 40 ),--'nuke.11.1'
-	('any.comp', 'facility.rescue', 'any', 'any', 'nuke', 48), -- 'nuke.12.2'
-	('any.comp.cent7', 'facility.rescue', 'any', 'any', 'nuke',47 ), --'nuke.12.1'
+	('any', 'facility.rescue', 'any', 'any', 'nuke' ),--'nuke.11.1'
+	('any.comp', 'facility.rescue', 'any', 'any', 'nuke'), -- 'nuke.12.2'
+	('any.comp.cent7', 'facility.rescue', 'any', 'any', 'nuke'	 ), --'nuke.12.1'
 	-- maya
-	('any', 'facility.rescue', 'any', 'any', 'maya',13 ), --'maya.2018.sp3'
-	('any', 'facility.rescue', 'any', 'any.cent7_64', 'maya',17 ), --'maya.2019.sp2'
-	('any.model', 'facility.rescue', 'any', 'any', 'maya', 13 ), --'maya.2018.sp3'
-	('any.model.beta', 'facility.rescue', 'any', 'any', 'maya',18), -- 'maya.2019.sp3'
+	('any', 'facility.rescue', 'any', 'any', 'maya' ), --'maya.2018.sp3'
+	('any', 'facility.rescue', 'any', 'any.cent7_64', 'maya' ), --'maya.2019.sp2'
+	('any.model', 'facility.rescue', 'any', 'any', 'maya' ), --'maya.2018.sp3'
+	('any.model.beta', 'facility.rescue', 'any', 'any', 'maya'), -- 'maya.2019.sp3'
 	-- houdini
-	('any', 'facility.rescue', 'any', 'any', 'houdini', 24 ), --'houdini.16.5.333'
+	('any', 'facility.rescue', 'any', 'any', 'houdini' ), --'houdini.16.5.333'
 	-- vray
-	('any', 'facility.rescue', 'any', 'any', 'vray',94 ), --'vray.3.6.5'
-	('any.light.beta', 'facility.rescue', 'any', 'any', 'vray', 96 ); --'vray.4.0.0'
+	('any', 'facility.rescue', 'any', 'any', 'vray'), --'vray.3.6.5'
+	('any.light.beta', 'facility.rescue', 'any', 'any', 'vray' ); --'vray.4.0.0'
+
+
+INSERT INTO versionpin
+	(coord, distribution)
+VALUES
+	-- FACILITY
+	--   maya
+	(1, 1),-- 2016.sp1
+	(2, 13), -- 2018.sp3
+	(3, 17), --'maya.2019.sp2'
+	--   houdini
+	(4,22), -- 'houdini.16.5.232'
+	(5,23 ), -- 'houdini.16.5.233'
+	(6, 24), --'houdini.16.5.333'
+	--   nuke
+	(7, 39), --'nuke.11.0'
+	(8, 40), --'nuke.11.1'
+	(9,41 ), --'nuke.11.2'
+	-- mari
+	(10, 74), --'mari.4.4.0' 
+	-- track
+	(11, 126), -- 'track.4.2.0'
+	-- race
+	(12,131 ),--'race.7.0.0'
+	(13, 133), --'race.7.0.2'
+	-- racetrack
+	(14, 138 ),--'racetrack.7.0.0'
+	(15,140 ), --'racetrack.7.0.2'
+	--snitcher
+	(16,149 ), --'snitcher.2.1.0'
+	-- xerces
+	(17,170 ),--'xerces.2.1.3'
+	-- wam
+	(18,199 ), --'wam.1.1.4'
+	-- wambase
+	(19,229), -- 'wambase.2.0.4'
+	-- modelpublish
+	(20,244 ),--'modelpublish.1.1.3'
+	-- modelpipeline
+	(21,260 ),--'modelpipeline.1.1.4'
+	-- animtools
+	(22, 281 ), --'animtools.2.0.0'
+	-- animpublish
+	(23,293 ),--'animpublish.1.1.2'
+	-- lightpipeline
+	(24, 312 ), --'lightpipeline.1.1.6'
+	-- houdinipipeline
+	(25,327 ),--'houdinipipeline.1.1.4'
+	-- houd_out_geo
+	(26, 349),--'houd_out_geo.1.1.4'
+	-- houdinicamera
+	(27,374 ), --'houdinicamera.1.1.3'
+	-- atomic
+	(28,448 ), --'atomic.5.1.4'
+	--  vray
+	(29, 91 ),--'vray.3.6.2'
+	(30, 92 ),
+	(31,93 ),
+	(32, 92 ),--'vray.3.6.3'
+	(33,93 ),--'vray.3.6.4'
+	--    redshift
+	(34,103 ), --'redshift.2.1.0'
+	(35,104 ), -- 'redshift.2.1.1'
+	(36, 105), -- 'redshift.2.1.2'
+	(37,104 ),
+	(38, 107), --'redshift.2.1.2'
+
+	-- BAYOU
+	-- nuke
+	(39, 44), --'nuke.11.5'
+	(40, 47 ), --'nuke.12.1'
+	(41,48 ), --'nuke.12.2'
+	--   maya
+	(42,12 ), --'maya.2018.sp2'
+	(43,15 ), --'maya.2018.sp5'
+	(44,13 ),--'maya.2018.sp5'
+	(45, 19), --'maya.2019.sp4'
+	-- houdini
+	(46, 25),--'houdini.16.5.444'
+	(47,26 ), --'houdini.16.5.555'
+	(48, 27 ), --'houdini.17.5.232'
+	-- houdinipipeline
+	(49,336 ),--'houdinipipeline.2.0.0.beta1'
+	-- houd_out_geo
+	(50,362 ),--'houd_out_geo.2.0.1.beta1'
+	-- redshift
+	(51, 110), --'redshift.2.2.3'
+	-- vray
+	(52,92 ), --'vray.3.6.3'
+	(53, 95), -- 'vray.3.6.6'
+
+	-- PLASMA
+	--  nuke
+	(54,45 ), --'nuke.11.6'
+	(55, 46), --'nuke.12.0'
+	(56,47 ), --'nuke.12.1'
+	--   maya
+	(57, 12 ),--'maya.2018.sp2'
+	(58,15 ), --'maya.2018.sp5'
+	(59, 13 ), --'maya.2018.sp3'
+	(60,19 ),--'maya.2019.sp4'
+	-- houdini
+	(61,21 ), --'houdini.16.5.222'
+	(62,26 ), --'houdini.16.5.555'
+	(63,36 ),--'houdini.18.111'
+	-- vray
+	(64, 93 ),--'vray.3.6.4'
+	(65, 98 ), --'vray.4.0.2'
+	-- RESCUE
+	-- nuke
+	(66, 40 ),--'nuke.11.1'
+	(67, 48), -- 'nuke.12.2'
+	(68,47 ), --'nuke.12.1'
+	-- maya
+	(69,13 ), --'maya.2018.sp3'
+	(70,17 ), --'maya.2019.sp2'
+	(71, 13 ), --'maya.2018.sp3'
+	(72,18), -- 'maya.2019.sp3'
+	-- houdini
+	(73, 24 ), --'houdini.16.5.333'
+	-- vray
+	(74,94 ), --'vray.3.6.5'
+	(75, 96 ); --'vray.4.0.0'
 
 
 	------------------
@@ -979,4 +1080,4 @@ VALUES
 	(73, 'wam', 5),
 	(73, 'wambase', 6),
 	(73, 'houdinipipeline', 7),
-	(73, 'houd_out_geo', 8);
+	(73, 'houd_out_geo', 8);	

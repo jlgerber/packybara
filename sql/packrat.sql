@@ -1,8 +1,13 @@
 CREATE EXTENSION IF NOT EXISTS ltree;
+DROP SEQUENCE IF EXISTS pincoord_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS versionpin_id_seq CASCADE;
+
 DROP SEQUENCE IF EXISTS revision_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS withpackage_id_seq CASCADE;
 DROP TABLE IF EXISTS revision CASCADE; 
+
+DROP TABLE IF EXISTS pincoord CASCADE;
+
 DROP VIEW IF EXISTS versionpin_view CASCADE;
 DROP TABLE IF EXISTS versionpin CASCADE;
 DROP TABLE IF EXISTS package CASCADE;
@@ -123,12 +128,7 @@ CREATE OR REPLACE VIEW role_view AS (
 ---------------
 --  PACKAGE  --
 ---------------
-/*
-we only have a package table because you cannot create unique constraints 
-against a subltree. We will manage the entries via a trigger on distribution. Any
-time a nlevel == 1 element is added or removed this needs to be reflected in 
-package
-*/
+-- should we ultimately merge this back in with the distribution?
 CREATE TABLE IF NOT EXISTS package (
   name VARCHAR PRIMARY KEY
 );
@@ -169,19 +169,66 @@ CREATE TABLE IF NOT EXISTS revision (
 );
 
 ------------------
---  VERSIONPIN  --
+-- PINCOORD    --
 ------------------
-CREATE TABLE IF NOT EXISTS versionpin (
+CREATE TABLE IF NOT EXISTS pincoord (
 	id SERIAL PRIMARY KEY,
 	role LTREE DEFAULT 'any' REFERENCES role(path) NOT NULL,
 	level LTREE DEFAULT 'facility' REFERENCES level(path) NOT NULL,
 	site LTREE DEFAULT 'any' REFERENCES site(path) NOT NULL, 
 	platform LTREE DEFAULT 'any' REFERENCES platform(path) NOT NULL, 
-	package VARCHAR  REFERENCES PACKAGE(name) NOT NULL,
-	distribution_id INTEGER REFERENCES distribution(id),
+	package varchar references package(name) not null,
 	UNIQUE (role, level, site, platform, package)
 );
 
+
+------------------
+-- versionpin    --
+------------------
+CREATE TABLE IF NOT EXISTS versionpin (
+	id SERIAL PRIMARY KEY,
+	coord integer references pincoord(id) not null,
+	distribution integer references distribution(id) not null
+);
+
+CREATE OR REPLACE FUNCTION valid_package_in_versionpin()
+RETURNS TRIGGER
+AS $$
+DECLARE
+	dist_package varchar;
+	coord_package varchar;
+BEGIN
+	if  (TG_OP = 'INSERT') then
+        select package from distribution into dist_package where distribution.id = NEW.distribution;
+		select package from pincoord into coord_package where pincoord.id = new.id; 
+		if dist_package <> coord_package then 
+		    RAISE EXCEPTION 'pincooord (% %) and distribution (% %) must have same package',NEW.id, coord_package, NEW.distribution, dist_package;
+		end if;
+    end if;
+
+     --code for update
+     if  (TG_OP = 'UPDATE') then
+	 	if OLD.coord <> NEW.coord then 
+			RAISE EXCEPTION 'cannot update pincoord';
+    	END IF;
+        if OLD.distribution <> NEW.distribution then
+			select package from distribution into dist_package where distribution.id = NEW.distribution;
+			select package from pincoord into coord_package where pincoord.id = new.id; 
+			if dist_package <> coord_package then 
+				RAISE EXCEPTION 'pincooord and distribution must have same package';
+			end if;
+        end if;
+     end if;
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+--SQL;
+
+DROP TRIGGER IF EXISTS update_or_insert_versionpin_trigger on versionpin;
+CREATE TRIGGER update_or_insert_versionpin_trigger
+    BEFORE INSERT OR UPDATE ON versionpin
+    FOR EACH ROW 
+    EXECUTE PROCEDURE valid_package_in_versionpin();
 
 -----------------
 -- WITHPACKAGE --
@@ -193,8 +240,6 @@ CREATE TABLE IF NOT EXISTS withpackage (
 	id SERIAL PRIMARY KEY,
 	-- the id of the versionpin this with relates to
 	versionpin INTEGER REFERENCES versionpin(id) NOT NULL,
-	-- the name of the package we are with'ing
-	-- we should remove this now that versionpin.distribution_id exists
 	package VARCHAR REFERENCES package(name) NOT NULL, 
 	-- the order of the package in the list of withs
 	pinorder INTEGER NOT NULL,
@@ -222,16 +267,17 @@ CREATE OR REPLACE VIEW versionpin_withs AS (
 	) 
 	SELECT 
 		vpn.id as versionpin_id,
-		vpn.role,
-		vpn.level,
-		vpn.site,
-		vpn.platform,
-		vpn.package,
-		vpn.distribution_id,
+		pc.role,
+		pc.level,
+		pc.site,
+		pc.platform,
+		pc.package,
+		vpn.distribution as distribution_id,
 		cte.withs 
 	FROM 
 		versionpin AS vpn 
-	LEFT OUTER JOIN 
+	join pincoord as pc on vpn.coord = pc.id
+	LEFT OUTER JOIN  
 		cte 
 	ON 
 		cte.versionpin = vpn.id
@@ -241,27 +287,28 @@ CREATE OR REPLACE VIEW versionpin_view AS (
 	select 
 	versionpin.id as id,
 	level_view.name AS level,
-	versionpin.level AS level_path,
+	pincoord.level AS level_path,
 	level_view.show AS show,
 	role_view.name AS role,
-	versionpin.role AS role_path,
+	pincoord.role AS role_path,
 	site_view.name AS site,
-	versionpin.site AS site_path, 
+	pincoord.site AS site_path, 
 	platform_view.name AS platform,
-	versionpin.platform AS platform_path,
+	pincoord.platform AS platform_path,
 	distribution_view.package,
 	distribution_view.name AS distribution_name,
 	distribution_view.version AS version,
-	versionpin_withs.package || '-' || ltree2text(distribution_view.version) AS distribution,
+	distribution_view.package || '-' || ltree2text(distribution_view.version) AS distribution,
 	versionpin_withs.withs AS withs
-	FROM versionpin, role_view, level_view, site_view, platform_view, versionpin_withs, distribution_view
+	FROM versionpin, pincoord, role_view, level_view, site_view, platform_view, versionpin_withs, distribution_view
 	WHERE 
+		pincoord.id = versionpin.coord AND
 	    level_view.path = versionpin_withs.level AND
 	    role_view.path  = versionpin_withs.role AND
 	    site_view.path = versionpin_withs.site AND
 		versionpin.id = versionpin_withs.versionpin_id AND
 	    platform_view.path = versionpin_withs.platform AND
-	    distribution_view.package = versionpin_withs.package AND
+	    --distribution_view.package = versionpin_withs.package AND
 	    distribution_view.distribution_id = versionpin_withs.distribution_id
 );
 
