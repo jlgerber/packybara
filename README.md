@@ -1,5 +1,10 @@
 # Packybara
-
+## Todos
+- [ ] remove package from versionpin
+- [ ] split versionpin into versionpin and pincoord. 
+      - a pincoord will have unique role,level,platform, and site
+      - a versionpin will relate a pincoord to a distribution
+- [ ] update withpackage to relate to a pincoord 
 
 # db 
 ```
