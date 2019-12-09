@@ -1080,4 +1080,4 @@ VALUES
 	(73, 'wam', 5),
 	(73, 'wambase', 6),
 	(73, 'houdinipipeline', 7),
-	(73, 'houd_out_geo', 8);	
+	(73, 'houd_out_geo', 8);
