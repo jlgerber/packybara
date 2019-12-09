@@ -972,8 +972,8 @@ CREATE OR REPLACE FUNCTION
 	package_name text default '%',
 	level text default 'facility',
 	role text default 'any',
-	platform text default 'any'
-	site text default 'any',
+	platform text default 'any',
+	site text default 'any'
 	) 
 RETURNS TABLE(
   versionpin_id integer,
@@ -985,7 +985,7 @@ RETURNS TABLE(
   platform_name text,
   platform_path ltree,
   site_name text,
-  site_path ltree,
+  site_path ltree
 ) AS $$ 
 DECLARE 
 	package_n text;
@@ -1024,14 +1024,14 @@ BEGIN
 		v.platform as platform_name,
 		v.platform_path,
 		v.site as site_name,
-		v.site_path,
+		v.site_path
 	FROM 
 		pkgcoord_view 
 	AS v
 	WHERE
 		v.package = package_name
-		AND v.level_path @> level_ltree;
+		AND v.level_path @> level_ltree
 		AND v.role_path @> role_ltree
 		AND v.platform_path @> platform_ltree
-		AND v.site_path @> site_ltree
+		AND v.site_path @> site_ltree;
 END $$ LANGUAGE plpgsql;
