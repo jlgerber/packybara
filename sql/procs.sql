@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION
 	insert_distribution(param_distribution ltree) 
 RETURNS INTEGER AS 
 $$ DECLARE 
-	package_name varchar := ltree2text(subpath($1, 0, 1));
+	package_name text := ltree2text(subpath($1, 0, 1));
 	sz INTEGER := nlevel($1);
 	version_ltree LTREE := subpath(full_pkg_ltree, 1);
 BEGIN 
@@ -39,7 +39,7 @@ CREATE OR REPLACE FUNCTION
 RETURNS INTEGER AS $$ 
 DECLARE 
 	full_pkg_ltree LTREE := text2ltree(lower(replace(replace ($1, '-', '.'), ' ', '')));
-	package_name /*package.name%TYPE*/varchar := ltree2text(subpath(full_pkg_ltree, 0, 1));
+	package_name /*package.name%TYPE*/text := ltree2text(subpath(full_pkg_ltree, 0, 1));
 	sz INTEGER := nlevel(full_pkg_ltree);
 	pkg_ltree LTREE := subpath(full_pkg_ltree, 1);
 BEGIN 
@@ -61,7 +61,7 @@ BEGIN
 	INSERT INTO 
 		distribution (package, version)
 	VALUES
-		(package_name :: varchar, pkg_ltree);
+		(package_name :: text, pkg_ltree);
 	RETURN 1;
 END $$ LANGUAGE plpgsql;
 
@@ -172,7 +172,7 @@ DECLARE
 	site_ltree ltree := 'any';
 	role_ltree ltree := 'any';
 	platform_ltree ltree := 'any';
-	package_name /*package.name %TYPE*/ varchar := '';
+	package_name /*package.name %TYPE*/ text := '';
 	distribution_ltree ltree := '';
 	distribution_version ltree;
 	dist_id INTEGER;
@@ -259,7 +259,7 @@ DECLARE
 	site_ltree ltree := 'any';
 	role_ltree ltree := 'any';
 	platform_ltree ltree := 'any';
-	package_name /*package.name %TYPE*/ varchar := '';
+	package_name /*package.name %TYPE*/ text := '';
 	distribution_ltree ltree := '';
 	distribution_version ltree;
 	dist_id INTEGER;
@@ -363,7 +363,7 @@ CREATE OR REPLACE FUNCTION
 RETURNS TABLE(
   versionpin_id integer,
   distribution text,
-  package varchar,
+  package text,
   version ltree,
   level_name text,
   level_path ltree,
@@ -373,7 +373,7 @@ RETURNS TABLE(
   role_path ltree,
   platform_name text,
   platform_path ltree,
-  withs varchar []
+  withs text []
 ) AS $$ 
 DECLARE 
 	level_ltree ltree := '';
@@ -446,7 +446,7 @@ CREATE OR REPLACE FUNCTION
 RETURNS TABLE(
   versionpin_id integer,
   distribution text,
-  package varchar,
+  package text,
   version ltree,
   level_name text,
   level_path ltree,
@@ -456,7 +456,7 @@ RETURNS TABLE(
   role_path ltree,
   platform_name text,
   platform_path ltree,
-  withs varchar []
+  withs text []
 ) AS $$ 
 BEGIN 
 	RETURN query
@@ -530,7 +530,7 @@ CREATE OR REPLACE FUNCTION
 	) 
 RETURNS TABLE(
   id integer,
-  package varchar,
+  package text,
   version ltree,
   distribution text,
   show text,
@@ -542,7 +542,7 @@ RETURNS TABLE(
   role_path ltree,
   platform_name text,
   platform_path ltree,
-  withs varchar []
+  withs text []
 ) AS $$ 
 DECLARE 
 	level_ltree ltree := '';
@@ -625,7 +625,7 @@ CREATE OR REPLACE FUNCTION
 	) 
 RETURNS TABLE(
   id integer,
-  package varchar,
+  package text,
   version ltree,
   distribution text,
   show text,
@@ -637,7 +637,7 @@ RETURNS TABLE(
   role_path ltree,
   platform_name text,
   platform_path ltree,
-  withs varchar []
+  withs text []
 ) AS $$ DECLARE 
 	level_ltree ltree := '';
 	site_ltree ltree := '';
@@ -723,7 +723,7 @@ debug_search_versionpins(
   search_mode text default 'ancestor'
 ) RETURNS TABLE(
   versionpin_id integer,
-  package varchar,
+  package text,
   version ltree,
   distribution text,
   show text,
@@ -735,7 +735,7 @@ debug_search_versionpins(
   role_path ltree,
   platform_name text,
   platform_path ltree,
-  withs varchar []
+  withs text []
 ) AS $$ 
 DECLARE 
 	level_ltree ltree := '';
@@ -835,7 +835,7 @@ OR REPLACE FUNCTION find_distribution_deps(
   site text default 'any',
   role text default 'any',
   platform text default 'any'
-) RETURNS TABLE(package_names varchar) AS $$ BEGIN RETURN query
+) RETURNS TABLE(package_names text) AS $$ BEGIN RETURN query
 SELECT
   unnest(vv.withs)
 FROM (
@@ -866,7 +866,7 @@ OR REPLACE FUNCTION find_distribution_withs(
   platform text default 'any'
 ) RETURNS TABLE(
 	versionpin_id INTEGER,
-	package varchar,
+	package text,
 	version ltree,
 	distribution text,
 	show text,
@@ -878,7 +878,7 @@ OR REPLACE FUNCTION find_distribution_withs(
 	role_path ltree,
 	platform_name text,
 	platform_path ltree,
-	withs varchar []
+	withs text []
 ) AS $$ 
 BEGIN 
 	RETURN QUERY 
@@ -923,7 +923,7 @@ CREATE OR REPLACE FUNCTION append_with(
 RETURNS INTEGER AS $$
 DECLARE
 	vpin ltree; 
-	pkg varchar;
+	pkg text;
 BEGIN
 	SELECT versionpin_ INTO vpin, pkg FROM 
 END 

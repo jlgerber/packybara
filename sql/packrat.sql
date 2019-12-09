@@ -130,7 +130,7 @@ CREATE OR REPLACE VIEW role_view AS (
 ---------------
 -- should we ultimately merge this back in with the distribution?
 CREATE TABLE IF NOT EXISTS package (
-  name VARCHAR PRIMARY KEY
+  name TEXT PRIMARY KEY
 );
 
 ------------------
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS package (
 ------------------
 CREATE TABLE IF NOT EXISTS distribution (
 	id SERIAL PRIMARY KEY, 
-	package VARCHAR REFERENCES package(name) NOT NULL,
+	package TEXT REFERENCES package(name) NOT NULL,
 	version LTREE NOT NULL,
 	UNIQUE(package, version)
 );
@@ -160,7 +160,7 @@ CREATE OR REPLACE VIEW distribution_view AS (
 ---------------
 CREATE TABLE IF NOT EXISTS revision (
 	id SERIAL PRIMARY KEY,
-	author VARCHAR NOT NULL,
+	author TEXT NOT NULL,
 	-- consider making this a timestamp without time zone and 
 	-- making the applications convert
 	created_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS pincoord (
 	level LTREE DEFAULT 'facility' REFERENCES level(path) NOT NULL,
 	site LTREE DEFAULT 'any' REFERENCES site(path) NOT NULL, 
 	platform LTREE DEFAULT 'any' REFERENCES platform(path) NOT NULL, 
-	package varchar references package(name) not null,
+	package text references package(name) not null,
 	UNIQUE (role, level, site, platform, package)
 );
 
@@ -197,8 +197,8 @@ RETURNS TRIGGER
 AS $$
 DECLARE
 	existing_dist integer;
-	dist_package varchar;
-	coord_package varchar;
+	dist_package text;
+	coord_package text;
 BEGIN
 	if  (TG_OP = 'INSERT') then
 	/*
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS withpackage (
 	id SERIAL PRIMARY KEY,
 	-- the id of the versionpin this with relates to
 	versionpin INTEGER REFERENCES versionpin(id) NOT NULL,
-	package VARCHAR REFERENCES package(name) NOT NULL, 
+	package TEXT REFERENCES package(name) NOT NULL, 
 	-- the order of the package in the list of withs
 	pinorder INTEGER NOT NULL,
 	UNIQUE (versionpin, package),

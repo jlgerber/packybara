@@ -856,7 +856,7 @@ VALUES
 	------------------
 
 	INSERT INTO withpackage 
-	-- id            varchar     integer
+	-- id            text     integer
 	(versionpin, package, pinorder) 
 	VALUES 
 -- maya@facility
