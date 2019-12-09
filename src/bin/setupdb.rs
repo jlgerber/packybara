@@ -17,11 +17,20 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug, PartialEq)]
 pub struct Build {
     /// Set the loglevel
-    #[structopt(short, long)]
+    #[structopt(short, long, display_order = 1)]
     loglevel: Option<String>,
-
-    #[structopt(short, long)]
+    /// drop the database, then create it from scratch. Then add in the triggers.
+    #[structopt(short, long, display_order = 2)]
+    rebuild: bool,
+    /// populate the database with functions
+    #[structopt(short = "f", long = "funcs", display_order = 3)]
+    procs: bool,
+    /// populate the database with scratch data
+    #[structopt(short, long, display_order = 4)]
     populate: bool,
+    /// Do everything, in the following order: rebuild, procs, populate
+    #[structopt(short, long, display_order = 5)]
+    all: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,6 +43,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::set_var("RUST_LOG", level);
     }
     env_logger::from_env(Env::default().default_filter_or("warn")).init();
+    let Build {
+        rebuild,
+        procs,
+        populate,
+        all,
+        ..
+    } = opt;
     let drop_schema = "DROP SCHEMA IF EXISTS audit CASCADE";
     let drop_db = "DROP DATABASE IF EXISTS packrat";
     let create_db = "CREATE DATABASE packrat WITH ENCODING = UTF8";
@@ -42,27 +58,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "host=127.0.0.1 user=postgres dbname=postgres password=example port=5432",
         NoTls,
     )?;
-    client.execute(drop_schema, &[])?;
-    client.execute(drop_db, &[])?;
-    client.execute(create_db, &[])?;
+    if rebuild || all {
+        client.execute(drop_schema, &[])?;
+        client.execute(drop_db, &[])?;
+        client.execute(create_db, &[])?;
+    }
 
     let mut client = Client::connect(
         "host=127.0.0.1 user=postgres dbname=packrat password=example port=5432",
         NoTls,
     )?;
-    let packrat_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/packrat.sql");
-    let procs_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/procs.sql");
-    let audit_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/vendor/audit.sql");
-    let populate_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/populate.sql");
-    let register_audits_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/register_audits.sql");
+    let mut files = Vec::new();
 
-    for file_path in &[
-        packrat_sql,
-        procs_sql,
-        audit_sql,
-        populate_sql,
-        register_audits_sql,
-    ] {
+    if rebuild || all {
+        let packrat_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/packrat.sql");
+        let audit_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/vendor/audit.sql");
+        let register_audits_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/register_audits.sql");
+        files.push(packrat_sql);
+        files.push(audit_sql);
+        files.push(register_audits_sql);
+    }
+    if procs || all {
+        let procs_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/procs.sql");
+        files.push(procs_sql);
+    }
+    if populate || all {
+        let populate_sql = concat!(env!("CARGO_MANIFEST_DIR"), "/sql/populate.sql");
+        files.push(populate_sql);
+    }
+
+    for file_path in &files {
         let contents = fs::read_to_string(file_path)?;
         log::info!("batch executing {}", file_path);
         log::debug!("{}", contents);
