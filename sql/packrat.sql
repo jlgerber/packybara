@@ -150,7 +150,8 @@ CREATE OR REPLACE VIEW distribution_view AS (
 	id AS distribution_id,
 	package,
 	version,
-	package || '-' || LTREE2TEXT(version) AS name
+	ltree2text(version) as version_name,
+	package || '-' || ltree2text(version) AS name
 	FROM 
 	  distribution 
 );
