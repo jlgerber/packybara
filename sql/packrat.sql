@@ -188,21 +188,47 @@ CREATE TABLE IF NOT EXISTS pincoord (
 CREATE TABLE IF NOT EXISTS versionpin (
 	id SERIAL PRIMARY KEY,
 	coord integer references pincoord(id) not null,
-	distribution integer references distribution(id) not null
+	distribution integer references distribution(id) not null,
+	unique(coord,distribution)
 );
 
 CREATE OR REPLACE FUNCTION valid_package_in_versionpin()
 RETURNS TRIGGER
 AS $$
 DECLARE
+	existing_dist integer;
 	dist_package varchar;
 	coord_package varchar;
 BEGIN
 	if  (TG_OP = 'INSERT') then
+	/*
+	if pincoord.package 
+	select versionpin where versionpin.coord = NEW.coord and versionpin.distribution in (select distribution where distribution.package = dist_package)
+	*/
+		
         select package from distribution into dist_package where distribution.id = NEW.distribution;
-		select package from pincoord into coord_package where pincoord.id = new.id; 
+		select package from pincoord into coord_package where pincoord.id = new.coord; 
 		if dist_package <> coord_package then 
-		    RAISE EXCEPTION 'pincooord (% %) and distribution (% %) must have same package',NEW.id, coord_package, NEW.distribution, dist_package;
+		    RAISE EXCEPTION 'pincoord (% %) and distribution (% %) must have same package',
+			NEW.id, coord_package, NEW.distribution, dist_package;
+		end if;
+		if exists(
+				select 
+					id 
+				from 
+					versionpin_view 
+				where 
+					coord_id = new.coord 
+					and distribution_id in (
+						select 
+							id 
+						from 
+							distribution 
+						where 
+							package=coord_package
+					)
+		) then
+			RAISE EXCEPTION 'pincoord % for package % exists', new.coord, dist_package;
 		end if;
     end if;
 
@@ -217,6 +243,7 @@ BEGIN
 			if dist_package <> coord_package then 
 				RAISE EXCEPTION 'pincooord and distribution must have same package';
 			end if;
+			
         end if;
      end if;
     RETURN NEW;
@@ -295,6 +322,8 @@ CREATE OR REPLACE VIEW versionpin_view AS (
 	pincoord.site AS site_path, 
 	platform_view.name AS platform,
 	pincoord.platform AS platform_path,
+	versionpin.coord as coord_id,
+	versionpin.distribution as distribution_id,
 	distribution_view.package,
 	distribution_view.name AS distribution_name,
 	distribution_view.version AS version,
