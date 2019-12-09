@@ -63,6 +63,17 @@ impl Distribution {
         let name = name.into();
         Distribution { name }
     }
+    /// New up a Distribution from a package and version. This is fallible,
+    /// and will validate the inputs.
+    pub fn from_parts(package: &str, version: &str) -> CoordsResult<Self> {
+        Self::new(format!("{}-{}", package, version))
+    }
+    /// New up a Distribution from a package and version. This version
+    /// is infallible. So be sure to pass in valid &strs
+    pub fn from_parts_unchecked(package: &str, version: &str) -> Self {
+        Self::new_unchecked(format!("{}-{}", package, version))
+    }
+
     /// Retrieve the name of the package
     pub fn package(&self) -> &str {
         self.name.split("-").next().unwrap()
