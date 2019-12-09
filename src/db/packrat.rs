@@ -82,6 +82,12 @@ impl PackratDb {
     pub fn find_all_packages<'b>(&'b mut self) -> find_all::packages::FindAllPackages {
         find_all::packages::FindAllPackages::new(&mut self.client)
     }
+
+    pub fn find_all_distributions<'b>(
+        &'b mut self,
+    ) -> find_all::distributions::FindAllDistributions {
+        find_all::distributions::FindAllDistributions::new(&mut self.client)
+    }
     /// Find pins that meet a specific criteria
     pub fn find_pins<'b>(&'b mut self) -> find::pins::FindPins {
         find::pins::FindPins::new(&mut self.client)
