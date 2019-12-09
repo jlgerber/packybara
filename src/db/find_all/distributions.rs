@@ -8,18 +8,18 @@ use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
 //use std::str::FromStr;
-use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+//use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
-pub enum OrderDistributionBy {
-    #[strum(
-        serialize = "name",
-        serialize = "Name",
-        serialize = "NAME",
-        to_string = "name"
-    )]
-    Name,
-}
+// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
+// pub enum OrderDistributionBy {
+//     #[strum(
+//         serialize = "name",
+//         serialize = "Name",
+//         serialize = "NAME",
+//         to_string = "name"
+//     )]
+//     Name,
+// }
 
 pub type FindAllDistributionsResult<T, E = FindAllDistributionsError> = std::result::Result<T, E>;
 
