@@ -164,31 +164,81 @@ impl<'a> FindPkgCoords<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindPkgCoordsRow>, Box<dyn std::error::Error>> {
+    fn get_query_str(&mut self) -> (String, Vec<String>) {
         let package = self.package.unwrap_or("");
-        let level = self.level.unwrap_or("facility");
-        let role = self.role.unwrap_or("any");
-        let platform = self.platform.unwrap_or("any");
-        let site = self.site.unwrap_or("any");
-        let mut result = Vec::new();
-        let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
-            &[&package, &level, &role, &platform, &site];
-        let query_str = "SELECT 
+        let level = self.level.map_or("facility".to_string(), |x| {
+            let val = if x == "facility" { "" } else { "facility." };
+            format!("{}{}", val, x)
+        });
+        let role = self.role.map_or("any".to_string(), |x| {
+            let val = if x == "any" { "" } else { "any." };
+            format!("{}{}", val, x)
+        });
+        let platform = self.platform.map_or("any".to_string(), |x| {
+            let val = if x == "any" { "" } else { "any." };
+            format!("{}{}", val, x)
+        });
+        let site = self.site.map_or("any".to_string(), |x| {
+            let val = if x == "any" { "" } else { "any." };
+            format!("{}{}", val, x)
+        });
+        let mut prepared = Vec::new();
+        let mut query_str = "SELECT 
                         pkgcoord_id, 
                         package, 
                         level_name, 
                         role_name, 
                         platform_name,
                         site_name, 
-                    FROM findall_pkgcoords(
-                        package => $1, 
-                        level=>$2, 
-                        role => $3, 
-                        platform => $4, 
-                        site => $5)";
+                    FROM pkgcoord_view"
+            .to_string();
+        let mut cnt = 1;
+        let mut whereval = "";
+
+        if self.package.is_some() {
+            query_str = format!("{} {} package = ${}", query_str, whereval, cnt);
+            cnt += 1;
+            whereval = " AND ";
+            prepared.push(package.to_string());
+        }
+        if self.level.is_some() {
+            query_str = format!("{} {} level = ${}", query_str, whereval, cnt);
+            cnt += 1;
+            whereval = " AND ";
+            prepared.push(level);
+        }
+        if self.role.is_some() {
+            query_str = format!("{} {} role = ${}", query_str, whereval, cnt);
+            cnt += 1;
+            whereval = " AND ";
+            prepared.push(role);
+        }
+        if self.platform.is_some() {
+            query_str = format!("{} {} platform = ${}", query_str, whereval, cnt);
+            cnt += 1;
+            whereval = " AND ";
+            prepared.push(platform);
+        }
+        if self.site.is_some() {
+            query_str = format!("{} {} site = ${}", query_str, whereval, cnt);
+            // uncomment if we add an additional parameter
+            //cnt += 1;
+            //whereval = " AND ";
+            prepared.push(site);
+        }
+        (query_str, prepared)
+    }
+
+    pub fn query(&mut self) -> Result<Vec<FindPkgCoordsRow>, Box<dyn std::error::Error>> {
+        let (query_str, prep) = self.get_query_str();
+        let mut result = Vec::new();
+        let mut prepared_args: Vec<&(dyn ToSql + Sync)> = Vec::new();
+        for argval in &prep {
+            prepared_args.push(argval);
+        }
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        for row in self.client.query(query_str, prepared_args)? {
+        for row in self.client.query(query_str.as_str(), &prepared_args[..])? {
             let id: i32 = row.get(0);
             let package: &str = row.get(1);
             let level_name: &str = row.get(2);
