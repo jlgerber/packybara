@@ -39,7 +39,7 @@ CREATE OR REPLACE FUNCTION
 RETURNS INTEGER AS $$ 
 DECLARE 
 	full_pkg_ltree LTREE := text2ltree(lower(replace(replace ($1, '-', '.'), ' ', '')));
-	package_name package.name %TYPE := ltree2text(subpath(full_pkg_ltree, 0, 1));
+	package_name /*package.name%TYPE*/varchar := ltree2text(subpath(full_pkg_ltree, 0, 1));
 	sz INTEGER := nlevel(full_pkg_ltree);
 	pkg_ltree LTREE := subpath(full_pkg_ltree, 1);
 BEGIN 
@@ -172,10 +172,11 @@ DECLARE
 	site_ltree ltree := 'any';
 	role_ltree ltree := 'any';
 	platform_ltree ltree := 'any';
-	package_name package.name %TYPE := '';
+	package_name /*package.name %TYPE*/ varchar := '';
 	distribution_ltree ltree := '';
 	distribution_version ltree;
 	dist_id INTEGER;
+	coord_id INTEGER;
 BEGIN 
 	IF lower(level_n) != 'facility' THEN 
 		level_ltree = text2ltree('facility.' || lower(level_n));
@@ -192,11 +193,12 @@ BEGIN
 	distribution_ltree = text2ltree(replace(lower(distribution_n), '-', '.'));
 	package_name = ltree2text(subpath(distribution_ltree, 0, 1));
 	distribution_version = subpath(distribution_ltree, 1);
+	
 	SELECT
 		id 
 	INTO 
 		dist_id
-	FROm 
+	FROM 
 		distribution
 	WHERE
 		distribution.package = package_name
@@ -205,26 +207,139 @@ BEGIN
 	IF dist_id IS NULL THEN 
 		RAISE EXCEPTION 'unable to find distribtion for % %', package_name, distribution_version;
 	END IF;
+
+	insert into pincoord (role, level, platform, site, package) 
+	values (role_ltree, level_ltree, platform_ltree, site_ltree, package_name)
+	on conflict do nothing;
+	
+	SELECT
+		id 
+	INTO 
+		coord_id
+	FROM 
+		pincoord
+	WHERE
+		pincoord.package = package_name
+		AND pincoord.level = level_ltree 
+		AND pincoord.role = role_ltree 
+		AND pincoord.platform = platform_ltree
+		AND pincoord.site = site_ltree;
+		raise notice 'pincoord id is % ',coord_id;
+	
+	IF coord_id IS NULL THEN 
+		RAISE EXCEPTION 'unable to find pincoord for % % % % %', package_name, level_n, role_n, platform_n, site_n;
+	END IF;
+
 	INSERT INTO versionpin (
-		level,
-		site,
-		role,
-		platform,
-		package,
-		distribution_id
+		coord,
+		distribution
 	)
 	VALUES
 		(
-		level_ltree,
-		site_ltree,
-		role_ltree,
-		platform_ltree,
-		package_name,
+		coord_id,
 		dist_id
-		) ON CONFLICT (role, level, site, platform, package) 
-		DO UPDATE
-			SET
-				distribution_id = dist_id;
+		) ;
+	RETURN 1;
+END $$ LANGUAGE plpgsql;
+
+-------------------------
+--  update_versionpin  --
+-------------------------
+CREATE OR REPLACE FUNCTION 
+	update_versionpin(
+		distribution_n text,
+		level_n text default 'facility',
+		site_n text default 'any',
+		role_n text default 'any',
+		platform_n text default 'any'
+	) 
+RETURNS INTEGER AS $$ 
+DECLARE 
+	level_ltree ltree := 'facility';
+	site_ltree ltree := 'any';
+	role_ltree ltree := 'any';
+	platform_ltree ltree := 'any';
+	package_name /*package.name %TYPE*/ varchar := '';
+	distribution_ltree ltree := '';
+	distribution_version ltree;
+	dist_id INTEGER;
+	coord_id INTEGER;
+	vp_id INTEGER; -- versionpin
+BEGIN 
+	IF lower(level_n) != 'facility' THEN 
+		level_ltree = text2ltree('facility.' || lower(level_n));
+	END IF;
+	IF lower(site_n) != 'any' THEN 
+		site_ltree = text2ltree('any.' || lower(site_n));
+	END IF;
+	IF lower(role_n) != 'any' THEN 
+		role_ltree = text2ltree('any.' || lower(replace(role_n, '_', '.')));
+	END IF;
+	IF lower(platform_n) != 'any' THEN 
+			platform_ltree = text2ltree('any.' || lower(platform_n));
+	END IF;
+	distribution_ltree = text2ltree(replace(lower(distribution_n), '-', '.'));
+	package_name = ltree2text(subpath(distribution_ltree, 0, 1));
+	distribution_version = subpath(distribution_ltree, 1);
+	
+	SELECT
+		id 
+	INTO 
+		coord_id
+	FROM 
+		pincoord
+	WHERE
+		pincoord.package = package_name
+		AND pincoord.level = level_ltree 
+		AND pincoord.role = role_ltree 
+		AND pincoord.platform = platform_ltree
+		AND pincoord.site = site_ltree;
+		raise notice 'pincoord id is % ',coord_id;
+	IF coord_id IS NULL THEN 
+		RAISE EXCEPTION 'unable to find pincoord for % % % % %', package_name, level_n, role_n, platform_n, site_n;
+	END IF;
+
+	SELECT
+		id 
+	INTO 
+		dist_id
+	FROM 
+		distribution
+	WHERE
+		distribution.package = package_name
+		AND distribution.version = distribution_version;
+		raise notice 'dist_id is % ',dist_id;
+	IF dist_id IS NULL THEN 
+		RAISE EXCEPTION 'unable to find distribtion for % %', package_name, distribution_version;
+	END IF;
+
+	select 
+		id 
+	into 
+		vp_id
+	from 
+		versionpin 
+	where 
+		coord = coord_id
+		and distribution in (
+			select 
+				id 
+			from 
+				distribution
+			where 
+				package=package_name
+		);
+	if vp_id is null then 
+		raise exception 'uanble to find versionpin with supplied coord id % and package %',coord_id, package_name;
+	end if;
+
+	update  
+		versionpin 
+	set 
+		distribution = dist_id 
+	where 
+		versionpin.id = vp_id;
+		
 	RETURN 1;
 END $$ LANGUAGE plpgsql;
 
@@ -814,3 +929,36 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql;
 */
+DROP FUNCTION get_actions;
+CREATE FUNCTION get_actions()
+RETURNS TABLE (
+	transaction_id bigint, 
+	actions json
+)
+AS $$
+BEGIN
+  RETURN QUERY  
+  SELECT
+    la.transaction_id,
+    json_build_object(table_name,
+    case 
+    when action = 'INSERT' THEN 
+        json_build_object(action, ARRAY_AGG(row_data))
+    when action = 'UPDATE' THEN
+        json_build_object( action, ARRAY_AGG( json_build_object('from',to_json(row_data),'to',to_json(changed_fields))))
+    WHEN action = 'DELETE' THEN 
+        json_build_object(action, ARRAY_AGG(row_data))
+    ELSE 
+        json_build_object(action,table_name) 
+    END 
+    ) AS actions
+
+FROM
+    audit.logged_actions as la
+GROUP BY
+    la.transaction_id, la.action, la.table_name
+ORDER BY
+    la.transaction_id;
+END
+$$
+LANGUAGE plpgsql;
