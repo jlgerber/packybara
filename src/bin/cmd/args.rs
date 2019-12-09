@@ -22,20 +22,27 @@ pub enum PbCrud {
         #[structopt(subcommand)]
         cmd: PbFind,
     },
-    /// Udate DB
+    /// Set the curernt whatever in the db
     #[structopt(display_order = 2)]
+    Set {
+        /// Read subcommands
+        #[structopt(subcommand)]
+        cmd: PbSet,
+    },
+    /// create new things in the db
+    #[structopt(display_order = 3)]
     Add {
         /// Read subcommands
         #[structopt(subcommand)]
         cmd: PbAdd,
     },
     /// Remove from DB
-    #[structopt(display_order = 3)]
+    #[structopt(display_order = 4)]
     Delete {},
 }
 
 #[derive(StructOpt, Debug, PartialEq)]
-#[structopt(about = "PackybaraDb Read")]
+#[structopt(about = "PackybaraDb Add")]
 pub enum PbAdd {
     /// Add one or more packages
     #[structopt(display_order = 1)]
@@ -64,7 +71,15 @@ pub enum PbAdd {
 }
 
 #[derive(StructOpt, Debug, PartialEq)]
-#[structopt(about = "PackybaraDb Read")]
+#[structopt(about = "Set entities in db")]
+pub enum PbSet {
+    /// set the current versionpin
+    #[structopt(display_order = 1)]
+    VersionPin {},
+}
+
+#[derive(StructOpt, Debug, PartialEq)]
+#[structopt(about = "Find entities in db")]
 pub enum PbFind {
     /// Find the versionpin whose pin coords are closest to
     /// the supplied pin coords (level, role, platform, site).
