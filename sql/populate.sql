@@ -605,7 +605,7 @@ VALUES
 	('atomic','6.1.6');
 
 
-INSERT INTO pincoord
+INSERT INTO pkgcoord
 	(role, level, site, platform, package)
 VALUES
 	-- FACILITY

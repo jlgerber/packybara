@@ -208,7 +208,7 @@ BEGIN
 		RAISE EXCEPTION 'unable to find distribtion for % %', package_name, distribution_version;
 	END IF;
 
-	insert into pincoord (role, level, platform, site, package) 
+	insert into pkgcoord (role, level, platform, site, package) 
 	values (role_ltree, level_ltree, platform_ltree, site_ltree, package_name)
 	on conflict do nothing;
 	
@@ -217,17 +217,17 @@ BEGIN
 	INTO 
 		coord_id
 	FROM 
-		pincoord
+		pkgcoord
 	WHERE
-		pincoord.package = package_name
-		AND pincoord.level = level_ltree 
-		AND pincoord.role = role_ltree 
-		AND pincoord.platform = platform_ltree
-		AND pincoord.site = site_ltree;
-		raise notice 'pincoord id is % ',coord_id;
+		pkgcoord.package = package_name
+		AND pkgcoord.level = level_ltree 
+		AND pkgcoord.role = role_ltree 
+		AND pkgcoord.platform = platform_ltree
+		AND pkgcoord.site = site_ltree;
+		raise notice 'pkgcoord id is % ',coord_id;
 	
 	IF coord_id IS NULL THEN 
-		RAISE EXCEPTION 'unable to find pincoord for % % % % %', package_name, level_n, role_n, platform_n, site_n;
+		RAISE EXCEPTION 'unable to find pkgcoord for % % % % %', package_name, level_n, role_n, platform_n, site_n;
 	END IF;
 
 	INSERT INTO versionpin (
@@ -287,16 +287,16 @@ BEGIN
 	INTO 
 		coord_id
 	FROM 
-		pincoord
+		pkgcoord
 	WHERE
-		pincoord.package = package_name
-		AND pincoord.level = level_ltree 
-		AND pincoord.role = role_ltree 
-		AND pincoord.platform = platform_ltree
-		AND pincoord.site = site_ltree;
-		raise notice 'pincoord id is % ',coord_id;
+		pkgcoord.package = package_name
+		AND pkgcoord.level = level_ltree 
+		AND pkgcoord.role = role_ltree 
+		AND pkgcoord.platform = platform_ltree
+		AND pkgcoord.site = site_ltree;
+		raise notice 'pkgcoord id is % ',coord_id;
 	IF coord_id IS NULL THEN 
-		RAISE EXCEPTION 'unable to find pincoord for % % % % %', package_name, level_n, role_n, platform_n, site_n;
+		RAISE EXCEPTION 'unable to find pkgcoord for % % % % %', package_name, level_n, role_n, platform_n, site_n;
 	END IF;
 
 	SELECT
