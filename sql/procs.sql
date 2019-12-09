@@ -929,7 +929,8 @@ BEGIN
 END 
 $$ LANGUAGE plpgsql;
 */
-DROP FUNCTION get_actions;
+
+DROP FUNCTION IF EXISTS get_actions;
 CREATE FUNCTION get_actions()
 RETURNS TABLE (
 	transaction_id bigint, 
