@@ -231,4 +231,20 @@ pub enum PbFind {
     #[structopt(display_order = 9)]
     /// Get a simple list of all packages.
     Packages {},
+    #[structopt(display_order = 8)]
+    /// Get a list of distributions
+    Distributions {
+        /// The package name. Otherwise we search for all packages.
+        #[structopt(short = "P", long, display_order = 1)]
+        package: Option<String>,
+        ///  The version of the distributions (eg 1.2.3).
+        #[structopt(short = "V", long, display_order = 2)]
+        version: Option<String>,
+        // /// Provide one or more comma separated items to order the return by.
+        // #[structopt(short, long = "order-by", display_order = 3)]
+        // order_by: Option<String>,
+        /// The order direction. may be "asc" or "desc".
+        #[structopt(short = "D", long = "order-direction", display_order = 3)]
+        order_direction: Option<String>,
+    },
 }

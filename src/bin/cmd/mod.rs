@@ -1,3 +1,4 @@
+pub mod all_distributions;
 pub mod all_levels;
 pub mod all_packages;
 pub mod all_platforms;
