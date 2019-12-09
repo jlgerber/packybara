@@ -1,5 +1,19 @@
 # Packybara
 
+## Notes
+
+### versionpin notation
+I need a way to set versionpins from the command line. What about this?
+```bash
+<distribution>@role:<role>.level:<level>.platform:<platform>.site:<site>
+```
+where role, level, paltform, and site pairs are optional, and their order is not fixed. 
+We can also use single letter abreviations. 
+
+```
+maya-2018.sp3@l:bayou => maya-2018.sp3@level:bayou.role:any.platform:any.site:any
+```
+
 
 # db 
 ```

@@ -963,3 +963,75 @@ ORDER BY
 END
 $$
 LANGUAGE plpgsql;
+
+-------------------------
+--  findall_pkgcoords  --
+-------------------------
+CREATE OR REPLACE FUNCTION 
+	findall_pkgcoords(
+	package_name text default '%',
+	level text default 'facility',
+	role text default 'any',
+	platform text default 'any'
+	site text default 'any',
+	) 
+RETURNS TABLE(
+  versionpin_id integer,
+  package text,
+  level_name text,
+  level_path ltree,
+  role_name text,
+  role_path ltree,
+  platform_name text,
+  platform_path ltree,
+  site_name text,
+  site_path ltree,
+) AS $$ 
+DECLARE 
+	package_n text;
+	level_ltree ltree := '';
+	site_ltree ltree := '';
+	role_ltree ltree := '';
+	platform_ltree ltree := '';
+BEGIN 
+	package_n = lower(package);
+	IF lower(level) = 'facility' THEN 
+		level_ltree := text2ltree(lower(level));
+	ELSE 
+		level_ltree := text2ltree('facility.' || replace(lower(level), ' ', '_'));
+	END IF;
+	IF lower(role) = 'any' THEN 
+		role_ltree := text2ltree('any');
+	ELSE role_ltree := text2ltree('any.' || replace(lower(role), '_', '.'));
+	END IF;
+	IF lower(platform) = 'any' THEN 
+		platform_ltree := text2ltree('any');
+	ELSE 
+		platform_ltree := text2ltree('any.' || replace(lower(platform), ' ', '_'));
+	END IF;
+	IF lower(site) = 'any' THEN 
+		site_ltree := text2ltree(lower(site));
+	ELSE 
+		site_ltree := text2ltree('any.' || replace(lower(site), ' ', '_'));
+	END IF;
+	RETURN QUERY SELECT
+		v.id as coord_id,
+		v.package,
+		v.level as level_name,
+		v.level_path,
+		v.role as role_name,
+		v.role_path,
+		v.platform as platform_name,
+		v.platform_path,
+		v.site as site_name,
+		v.site_path,
+	FROM 
+		pkgcoord_view 
+	AS v
+	WHERE
+		v.package = package_name
+		AND v.level_path @> level_ltree;
+		AND v.role_path @> role_ltree
+		AND v.platform_path @> platform_ltree
+		AND v.site_path @> site_ltree
+END $$ LANGUAGE plpgsql;
