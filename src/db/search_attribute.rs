@@ -116,9 +116,13 @@ pub enum SearchModeError {
     InvalidLtreeSearchMode { mode: String },
 }
 
+/// Where clause components, starting with Where. SHould have Or as well
+/// to be complete
 #[derive(Debug, PartialEq, Eq, EnumString, AsRefStr, Display, IntoStaticStr, Clone, Copy)]
 pub enum JoinMode {
+    #[strum(serialize = "where", to_string = "WHERE")]
     Where,
+    #[strum(serialize = "and", to_string = "AND")]
     And,
 }
 
@@ -149,16 +153,38 @@ impl SearchMode {
             Self::Ltree(op) => op.to_symbol(),
         }
     }
-    /// Convert from a string. This function is fallible.
+    /// Convert from a string to a SearchMode. This function is fallible.
+    ///
+    /// # Arguments
+    /// * `input` - We accept the following inputs:
+    ///
+    /// Input | SearchMode
+    /// --- | ---
+    /// = | Equal
+    /// equal | Equal
+    /// eq | Equal
+    /// like | Like
+    /// ~ | Like
+    /// < | Ancestor
+    /// <@ | Ancestor
+    /// ancestor | Ancestor
+    /// down | ancestor
+    /// d | ancestor
+    /// . | Exact
+    /// exact | Exact
+    /// e | Exact
+    /// > | Descendant
+    /// @> | Descendant
+    /// descendant | Descendant
+    /// up | Descendant
+    /// u | Descendant
     pub fn try_from_str<I: AsRef<str>>(input: I) -> Result<SearchMode, SearchModeError> {
-        match input.as_ref() {
-            "=" | "equal" | "Equal" | "eq" | "EQ" => Ok(SearchMode::Equal),
-            "like" | "Like" | "LIKE" | "~" => Ok(SearchMode::Like),
-            "<" | "<@" | "ancestor" | "Ancestor" | "up" => {
-                Ok(Self::Ltree(LtreeSearchMode::Ancestor))
-            }
-            "." | "exact" | "Exact" | "e" | "E" => Ok(Self::Ltree(LtreeSearchMode::Exact)),
-            ">" | "@>" | "descendant" | "down" => Ok(Self::Ltree(LtreeSearchMode::Descendant)),
+        match input.as_ref().to_ascii_lowercase().as_str() {
+            "=" | "equal" | "eq" => Ok(SearchMode::Equal),
+            "like" | "~" => Ok(SearchMode::Like),
+            "<" | "<@" | "ancestor" | "down" | "d" => Ok(Self::Ltree(LtreeSearchMode::Ancestor)),
+            "." | "exact" | "e" => Ok(Self::Ltree(LtreeSearchMode::Exact)),
+            ">" | "@>" | "descendant" | "up" | "u" => Ok(Self::Ltree(LtreeSearchMode::Descendant)),
             _ => Err(SearchModeError::InvalidLtreeSearchMode {
                 mode: input.as_ref().to_string(),
             }),

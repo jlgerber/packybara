@@ -13,7 +13,7 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         platform,
         site,
         search_mode,
-        //order_by,
+        order_by,
         ..
     } = cmd
     {
@@ -24,17 +24,11 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
             .role_opt(role.as_ref().map(Deref::deref))
             .level_opt(level.as_ref().map(Deref::deref))
             .platform_opt(platform.as_ref().map(Deref::deref))
-            .site_opt(site.as_ref().map(Deref::deref));
+            .site_opt(site.as_ref().map(Deref::deref))
+            .order_by_opt(order_by.as_ref().map(Deref::deref));
         if let Some(ref mode) = search_mode {
             results.search_mode(SearchMode::try_from_str(mode)?);
         }
-        // if let Some(ref order) = order_by {
-        //     let orders = order
-        //         .split(",")
-        //         .map(|x| SearchAttribute::from_str(x).unwrap_or(SearchAttribute::Unknown))
-        //         .collect::<Vec<SearchAttribute>>();
-        //     results.order_by(orders);
-        // }
         let results = results.query()?;
         // For now I do this. I need to add packge handling into the query
         // either by switching functions or handling the sql on this end

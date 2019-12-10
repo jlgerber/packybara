@@ -9,6 +9,47 @@ use postgres::types::ToSql;
 use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
+use std::str::FromStr;
+use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
+pub enum OrderPkgCoordsBy {
+    #[strum(
+        serialize = "package",
+        serialize = "Package",
+        serialize = "PACKAGE",
+        to_string = "package"
+    )]
+    Package,
+    #[strum(
+        serialize = "role",
+        serialize = "Role",
+        serialize = "ROLE",
+        to_string = "role"
+    )]
+    Role,
+    #[strum(
+        serialize = "level",
+        serialize = "Level",
+        serialize = "LEVEL",
+        to_string = "level"
+    )]
+    Level,
+    #[strum(
+        serialize = "platform",
+        serialize = "Platform",
+        serialize = "PLATFORM",
+        to_string = "platform"
+    )]
+    Platform,
+    #[strum(
+        serialize = "site",
+        serialize = "Site",
+        serialize = "SITE",
+        to_string = "site"
+    )]
+    Site,
+}
 
 pub type FindPkgCoordsResult<T, E = FindPkgCoordsError> = std::result::Result<T, E>;
 
@@ -104,6 +145,7 @@ pub struct FindPkgCoords<'a> {
     pub platform: Option<&'a str>,
     pub site: Option<&'a str>,
     pub search_mode: SearchMode,
+    pub order_by: Option<Vec<OrderPkgCoordsBy>>,
 }
 
 impl<'a> FindPkgCoords<'a> {
@@ -116,6 +158,7 @@ impl<'a> FindPkgCoords<'a> {
             platform: None,
             site: None,
             search_mode: SearchMode::Ltree(LtreeSearchMode::Ancestor),
+            order_by: None,
         }
     }
 
@@ -148,6 +191,21 @@ impl<'a> FindPkgCoords<'a> {
         self.search_mode = mode;
         self
     }
+
+    pub fn order_by(&mut self, order: &'a str) -> &mut Self {
+        // Vec<OrderPkgCoordsBy>
+        let mut orders = Vec::new();
+        for o in order.split(",") {
+            if let Ok(value) = OrderPkgCoordsBy::from_str(o) {
+                orders.push(value);
+            } else {
+                log::error!("unable to order by {}", o);
+            }
+        }
+        self.order_by = Some(orders);
+        self
+    }
+
     pub fn package_opt(&mut self, package_n: Option<&'a str>) -> &mut Self {
         self.package = package_n;
         self
@@ -172,6 +230,24 @@ impl<'a> FindPkgCoords<'a> {
         self.site = site_n;
         self
     }
+
+    pub fn order_by_opt(&mut self, order: Option<&'a str>) -> &mut Self {
+        if let Some(order) = order {
+            let mut orders = Vec::new();
+            for o in order.split(",") {
+                if let Ok(value) = OrderPkgCoordsBy::from_str(o) {
+                    orders.push(value);
+                } else {
+                    log::error!("unable to order by {}", o);
+                }
+            }
+            self.order_by = Some(orders);
+        } else {
+            self.order_by = None;
+        }
+        self
+    }
+
     fn prep_query_str(default: &'static str, value: &str) -> String {
         match value {
             _ if value == default => default.to_string(),
@@ -205,7 +281,6 @@ impl<'a> FindPkgCoords<'a> {
                     FROM pkgcoord_view"
             .to_string();
         let mut cnt = 1;
-        //let mut whereval = "";
 
         if self.package.is_some() {
             let sm = if package.contains("%s") {
@@ -220,12 +295,9 @@ impl<'a> FindPkgCoords<'a> {
             };
             query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
             cnt += 1;
-            // query_str = format!("{} {} package = ${}", query_str, whereval, cnt);
-            // whereval = " AND ";
             prepared.push(package.to_string());
         }
 
-        //if self.level.is_some() {
         let sm = if level.contains("%") {
             &SearchMode::Like
         } else {
@@ -238,11 +310,7 @@ impl<'a> FindPkgCoords<'a> {
         };
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         cnt += 1;
-        //query_str = format!("{} {} level = ${}", query_str, whereval, cnt);
-        // whereval = " AND ";
         prepared.push(level);
-        //}
-        //if self.role.is_some() {
         let sm = if role.contains("%") {
             &SearchMode::Like
         } else {
@@ -255,11 +323,7 @@ impl<'a> FindPkgCoords<'a> {
         };
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         cnt += 1;
-        // query_str = format!("{} {} role = ${}", query_str, whereval, cnt);
-        // whereval = " AND ";
         prepared.push(role);
-        //}
-        //if self.platform.is_some() {
         let sm = if platform.contains("%") {
             &SearchMode::Like
         } else {
@@ -272,11 +336,7 @@ impl<'a> FindPkgCoords<'a> {
         };
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         cnt += 1;
-        // query_str = format!("{} {} platform = ${}", query_str, whereval, cnt);
-        // whereval = " AND ";
         prepared.push(platform);
-        //}
-        //if self.site.is_some() {
         let sm = if site.contains("%") {
             &SearchMode::Like
         } else {
@@ -287,13 +347,17 @@ impl<'a> FindPkgCoords<'a> {
         } else {
             "site"
         };
+
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
-        //cnt += 1;
-        //query_str = format!("{} {} site = ${}", query_str, whereval, cnt);
-        // uncomment if we add an additional parameter
-        //whereval = " AND ";
         prepared.push(site);
-        //}
+        if let Some(ref order) = self.order_by {
+            let joined = order
+                .iter()
+                .map(|x| x.as_ref())
+                .collect::<Vec<_>>()
+                .join(",");
+            query_str.push_str(format!(" ORDER BY {}", joined).as_str());
+        }
         (query_str, prepared)
     }
 

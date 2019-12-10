@@ -15,28 +15,28 @@ pub struct Pb {
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb CRUD")]
 pub enum PbCrud {
-    /// Read from DB
+    /// Find things in the database.
     #[structopt(display_order = 1)]
     Find {
         /// Read subcommands
         #[structopt(subcommand)]
         cmd: PbFind,
     },
-    /// Set the curernt whatever in the db
+    /// Update things in the database.
     #[structopt(display_order = 2)]
     Set {
         /// Read subcommands
         #[structopt(subcommand)]
         cmd: PbSet,
     },
-    /// create new things in the db
+    /// Create new things in the database.
     #[structopt(display_order = 3)]
     Add {
         /// Read subcommands
         #[structopt(subcommand)]
         cmd: PbAdd,
     },
-    /// Remove from DB
+    /// Remove things from the database.
     #[structopt(display_order = 4)]
     Delete {},
 }
@@ -44,26 +44,26 @@ pub enum PbCrud {
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb Add")]
 pub enum PbAdd {
-    /// Add one or more packages
-    #[structopt(display_order = 1)]
+    /// Add one or more packages to the database.
+    #[structopt(display_order = 1, name = "package")]
     Packages {
         #[structopt(name = "PACKAGE")]
         names: Vec<String>,
     },
-    /// Add one or more levels
-    #[structopt(display_order = 2)]
+    /// Add one or more levels to the database.
+    #[structopt(display_order = 2, name = "level")]
     Levels {
         #[structopt(name = "LEVEL")]
         names: Vec<String>,
     },
-    /// Add one or more roles
-    #[structopt(display_order = 3)]
+    /// Add one or more roles to the database.
+    #[structopt(display_order = 3, name = "role")]
     Roles {
         #[structopt(name = "ROLE")]
         names: Vec<String>,
     },
-    /// Add one or more roles
-    #[structopt(display_order = 4)]
+    /// Add one or more roles to the database.
+    #[structopt(display_order = 4, name = "platform")]
     Platforms {
         #[structopt(name = "PLATFORM")]
         names: Vec<String>,
@@ -73,7 +73,7 @@ pub enum PbAdd {
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "Set entities in db")]
 pub enum PbSet {
-    /// set the current versionpin
+    /// Set the distribution for a versionpin
     #[structopt(display_order = 1)]
     VersionPin {},
 }
@@ -86,7 +86,7 @@ pub enum PbFind {
     #[structopt(display_order = 1)]
     VersionPin {
         /// The name of the package to search for.
-        #[structopt()]
+        #[structopt(name = "PACKAGE")]
         package: String,
         /// The level, which may be 'facility' or a Levelspec (ie show[.seq[.shot]]). Defaults to 'facility'.
         #[structopt(short = "L", long, display_order = 1)]
@@ -151,7 +151,7 @@ pub enum PbFind {
     /// (level, role, platform, site).
     Withs {
         /// The name of the package to search for.
-        #[structopt()]
+        #[structopt(name = "PACKAGE")]
         package: String,
         /// The level, which may be 'facility' or a Levelspec (ie show[.seq[.shot]]). Defaults to 'facility'.
         #[structopt(short = "L", long, display_order = 1)]
@@ -250,7 +250,7 @@ pub enum PbFind {
     /// Get a list of distributions
     Distributions {
         /// The package name. Otherwise we search for all packages.
-        #[structopt(short = "P", long, display_order = 1)]
+        #[structopt(short = "N", long, display_order = 1)]
         package: Option<String>,
         ///  The version of the distributions (eg 1.2.3).
         #[structopt(short = "V", long, display_order = 2)]
@@ -263,31 +263,34 @@ pub enum PbFind {
         order_direction: Option<String>,
     },
     #[structopt(display_order = 10)]
-    /// Search for package coordinates.
+    /// Search for package coordinates. Package coordinates are simply
+    /// a package name and a set of Coords (Level, Role, Platform, Site).
     PkgCoords {
         /// The package name. Otherwise we search for all packages.
-        #[structopt(short = "P", long, display_order = 1)]
+        #[structopt(short = "N", long, display_order = 1)]
         package: Option<String>,
         /// The role (eg model or anim_beta). Defaults to 'any'.
-        #[structopt(short = "R", long, display_order = 2)]
+        #[structopt(short = "R", long, display_order = 3)]
         role: Option<String>,
         /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
-        #[structopt(short = "L", long, display_order = 1)]
+        #[structopt(short = "L", long, display_order = 2)]
         level: Option<String>,
         /// The operating system name - (eg cent7_64). Defaults to 'any'.
-        #[structopt(short = "P", long, display_order = 3)]
+        #[structopt(short = "P", long, display_order = 4)]
         platform: Option<String>,
         /// The location name (eg portland) - defaults to 'any'.
-        #[structopt(short = "S", long, display_order = 4)]
+        #[structopt(short = "S", long, display_order = 5)]
         site: Option<String>,
-        /// Search mode - ancestor (or down), exact, descendant (or up). Defaults to 'ancestor'.
-        #[structopt(short, long = "search", display_order = 5)]
+        /// Search mode - ancestor (or 'down','d', '<'), exact (or 'e' or '.'),
+        /// descendant (or 'up','u', '>').
+        /// Defaults to 'ancestor'.
+        #[structopt(short, long = "search", display_order = 6)]
         search_mode: Option<String>,
         // /// Limit the number of returned items.
         // #[structopt(short, long, display_order = 6)]
         // limit: Option<i32>,
-        // /// Provide one or more comma separated items to order the return by.
-        // #[structopt(short, long = "order-by", display_order = 7)]
-        // order_by: Option<String>,
+        /// Provide one or more comma separated items to order the return by.
+        #[structopt(short, long = "order-by", display_order = 7)]
+        order_by: Option<String>,
     },
 }
