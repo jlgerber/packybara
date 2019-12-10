@@ -2,8 +2,10 @@ pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{
     JoinMode, LtreeSearchMode, OrderDirection, SearchAttribute, SearchMode,
 };
+pub use crate::utils::pred_true_false;
 pub use crate::Coords;
 pub use crate::Distribution;
+
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
@@ -287,73 +289,35 @@ impl<'a> FindPkgCoords<'a> {
                              FROM pkgcoord_view"
             .to_string();
         let mut cnt = 1;
-
+        // Package
         if self.package.is_some() {
-            let sm = if package.contains("%s") {
-                SearchMode::Like
-            } else {
-                SearchMode::Equal
-            };
-            let search_var = if sm == SearchMode::Like {
-                "package_name"
-            } else {
-                "package"
-            };
+            let sm = pred_true_false(package.contains("%s"), SearchMode::Like, SearchMode::Equal);
+            let search_var = pred_true_false(sm == SearchMode::Like, "package_name", "package");
             query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
             cnt += 1;
             prepared.push(package.to_string());
         }
-
-        let sm = if level.contains("%") {
-            &SearchMode::Like
-        } else {
-            &self.search_mode
-        };
-        let search_var = if sm == &SearchMode::Like {
-            "level_name"
-        } else {
-            "level"
-        };
+        //Level
+        let sm = pred_true_false(level.contains("%"), &SearchMode::Like, &self.search_mode);
+        let search_var = pred_true_false(sm == &SearchMode::Like, "level_name", "level");
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         cnt += 1;
         prepared.push(level);
-        let sm = if role.contains("%") {
-            &SearchMode::Like
-        } else {
-            &self.search_mode
-        };
-        let search_var = if sm == &SearchMode::Like {
-            "role_name"
-        } else {
-            "role"
-        };
+        // Role
+        let sm = pred_true_false(role.contains("%"), &SearchMode::Like, &self.search_mode);
+        let search_var = pred_true_false(sm == &SearchMode::Like, "role_name", "role");
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         cnt += 1;
         prepared.push(role);
-        let sm = if platform.contains("%") {
-            &SearchMode::Like
-        } else {
-            &self.search_mode
-        };
-        let search_var = if sm == &SearchMode::Like {
-            "platform_name"
-        } else {
-            "platform"
-        };
+        // Platform
+        let sm = pred_true_false(platform.contains("%"), &SearchMode::Like, &self.search_mode);
+        let search_var = pred_true_false(sm == &SearchMode::Like, "platform_name", "platform");
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         cnt += 1;
         prepared.push(platform);
-        let sm = if site.contains("%") {
-            &SearchMode::Like
-        } else {
-            &self.search_mode
-        };
-        let search_var = if sm == &SearchMode::Like {
-            "site_name"
-        } else {
-            "site"
-        };
-
+        // Site
+        let sm = pred_true_false(site.contains("%"), &SearchMode::Like, &self.search_mode);
+        let search_var = pred_true_false(sm == &SearchMode::Like, "site_name", "site");
         query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
         prepared.push(site);
         if let Some(ref order) = self.order_by {
@@ -366,7 +330,7 @@ impl<'a> FindPkgCoords<'a> {
         }
         (query_str, prepared)
     }
-
+    /// execute the query
     pub fn query(&mut self) -> Result<Vec<FindPkgCoordsRow>, Box<dyn std::error::Error>> {
         let (query_str, prep) = self.get_query_str();
         let mut result = Vec::new();
