@@ -262,4 +262,32 @@ pub enum PbFind {
         #[structopt(short = "D", long = "order-direction", display_order = 3)]
         order_direction: Option<String>,
     },
+    #[structopt(display_order = 10)]
+    /// Search for package coordinates.
+    PkgCoords {
+        /// The package name. Otherwise we search for all packages.
+        #[structopt(short = "P", long, display_order = 1)]
+        package: Option<String>,
+        /// The role (eg model or anim_beta). Defaults to 'any'.
+        #[structopt(short = "R", long, display_order = 2)]
+        role: Option<String>,
+        /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
+        #[structopt(short = "L", long, display_order = 1)]
+        level: Option<String>,
+        /// The operating system name - (eg cent7_64). Defaults to 'any'.
+        #[structopt(short = "P", long, display_order = 3)]
+        platform: Option<String>,
+        /// The location name (eg portland) - defaults to 'any'.
+        #[structopt(short = "S", long, display_order = 4)]
+        site: Option<String>,
+        /// Search mode - ancestor (or down), exact, descendant (or up). Defaults to 'ancestor'.
+        #[structopt(short, long = "search", display_order = 5)]
+        search_mode: Option<String>,
+        // /// Limit the number of returned items.
+        // #[structopt(short, long, display_order = 6)]
+        // limit: Option<i32>,
+        // /// Provide one or more comma separated items to order the return by.
+        // #[structopt(short, long = "order-by", display_order = 7)]
+        // order_by: Option<String>,
+    },
 }

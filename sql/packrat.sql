@@ -183,20 +183,26 @@ CREATE TABLE IF NOT EXISTS pkgcoord (
 );
 
 
-CREATE OR REPLACE VIEW pkcoord_view AS (
+CREATE OR REPLACE VIEW pkgcoord_view AS (
 	SELECT 
 		id AS pkgcoord_id,
 		package,
 		level,
-		ltree2text(level) as level_name, 
+		level_view.name as level_name, 
 		role,
-		ltree2text(role) as role_name, 
-		site,
-		ltree2text(site) as site_name,
+		role_view.name as role_name, 
 		platform,
-		ltree2text(platform) as platform_name
+		platform_view.name as platform_name,
+		site,
+		site_view.name as site_name
 	FROM 
-	  pkgcoord 
+	  pkgcoord, level_view, role_view, platform_view, site_view
+	WHERE 
+		level_view.path = level  
+		AND role_view.path = role
+		AND platform_view.path = platform
+		AND site_view.path = site
+
 );
 ------------------
 -- versionpin    --

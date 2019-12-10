@@ -92,27 +92,31 @@ impl PackratDb {
     pub fn find_pins<'b>(&'b mut self) -> find::pins::FindPins {
         find::pins::FindPins::new(&mut self.client)
     }
-
+    /// Find pkgcoords that meet a specific criteria
+    pub fn find_pkgcoords<'b>(&'b mut self) -> find::pkgcoords::FindPkgCoords {
+        find::pkgcoords::FindPkgCoords::new(&mut self.client)
+    }
+    /// find withs of a distribution
     pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
         find::withs::FindWiths::new(&mut self.client, package)
     }
 
-    /// Find pins that meet a specific criteria
+    /// add packages
     pub fn add_packages<'b>(&'b mut self) -> add::packages::AddPackages {
         add::packages::AddPackages::new(&mut self.client)
     }
 
-    /// add
+    /// add levels
     pub fn add_levels<'b>(&'b mut self) -> add::levels::AddLevels {
         add::levels::AddLevels::new(&mut self.client)
     }
 
-    /// add
+    /// add roles
     pub fn add_roles<'b>(&'b mut self) -> add::roles::AddRoles {
         add::roles::AddRoles::new(&mut self.client)
     }
 
-    /// add
+    /// add platforms
     pub fn add_platforms<'b>(&'b mut self) -> add::platforms::AddPlatforms {
         add::platforms::AddPlatforms::new(&mut self.client)
     }

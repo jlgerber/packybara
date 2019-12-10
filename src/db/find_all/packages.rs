@@ -1,5 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
-pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
+pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;

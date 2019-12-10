@@ -2,7 +2,7 @@ use super::args::PbFind;
 use super::utils::extract_coords;
 use super::utils::truncate;
 use packybara::packrat::{Client, PackratDb};
-use packybara::{SearchAttribute, SearchMode};
+use packybara::{LtreeSearchMode, SearchAttribute};
 use prettytable::{cell, format, row, table};
 use std::str::FromStr;
 
@@ -32,7 +32,7 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
             .role(role.as_str())
             .platform(platform.as_str())
             .site(site.as_str())
-            .search_mode(SearchMode::from_str(mode.as_str())?);
+            .search_mode(LtreeSearchMode::from_str(mode.as_str())?);
         if let Some(ref order) = order_by {
             let orders = order
                 .split(",")

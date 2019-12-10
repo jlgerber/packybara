@@ -1,10 +1,13 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
+pub use crate::db::search_attribute::{
+    JoinMode, LtreeSearchMode, OrderDirection, SearchAttribute, SearchMode,
+};
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
-use snafu::{ResultExt, Snafu};
+use snafu::Snafu;
 use std::fmt;
 
 pub type FindPkgCoordsResult<T, E = FindPkgCoordsError> = std::result::Result<T, E>;
@@ -95,11 +98,12 @@ impl FindPkgCoordsRow {
 /// Responsible for finding a distribution
 pub struct FindPkgCoords<'a> {
     client: &'a mut Client,
-    package: Option<&'a str>,
-    level: Option<&'a str>,
-    role: Option<&'a str>,
-    platform: Option<&'a str>,
-    site: Option<&'a str>,
+    pub package: Option<&'a str>,
+    pub level: Option<&'a str>,
+    pub role: Option<&'a str>,
+    pub platform: Option<&'a str>,
+    pub site: Option<&'a str>,
+    pub search_mode: SearchMode,
 }
 
 impl<'a> FindPkgCoords<'a> {
@@ -111,6 +115,7 @@ impl<'a> FindPkgCoords<'a> {
             role: None,
             platform: None,
             site: None,
+            search_mode: SearchMode::Ltree(LtreeSearchMode::Ancestor),
         }
     }
 
@@ -139,6 +144,10 @@ impl<'a> FindPkgCoords<'a> {
         self
     }
 
+    pub fn search_mode(&mut self, mode: SearchMode) -> &mut Self {
+        self.search_mode = mode;
+        self
+    }
     pub fn package_opt(&mut self, package_n: Option<&'a str>) -> &mut Self {
         self.package = package_n;
         self
@@ -163,25 +172,28 @@ impl<'a> FindPkgCoords<'a> {
         self.site = site_n;
         self
     }
-
+    fn prep_query_str(default: &'static str, value: &str) -> String {
+        match value {
+            _ if value == default => default.to_string(),
+            _ if value.contains("%") => value.to_string(),
+            _ => format!("{}.{}", default, value),
+        }
+    }
     fn get_query_str(&mut self) -> (String, Vec<String>) {
         let package = self.package.unwrap_or("");
         let level = self.level.map_or("facility".to_string(), |x| {
-            let val = if x == "facility" { "" } else { "facility." };
-            format!("{}{}", val, x)
+            Self::prep_query_str("facility", x)
         });
-        let role = self.role.map_or("any".to_string(), |x| {
-            let val = if x == "any" { "" } else { "any." };
-            format!("{}{}", val, x)
-        });
-        let platform = self.platform.map_or("any".to_string(), |x| {
-            let val = if x == "any" { "" } else { "any." };
-            format!("{}{}", val, x)
-        });
-        let site = self.site.map_or("any".to_string(), |x| {
-            let val = if x == "any" { "" } else { "any." };
-            format!("{}{}", val, x)
-        });
+        let role = self
+            .role
+            .map_or("any".to_string(), |x| Self::prep_query_str("any", x));
+        let platform = self
+            .platform
+            .map_or("any".to_string(), |x| Self::prep_query_str("any", x));
+        let site = self
+            .site
+            .map_or("any".to_string(), |x| Self::prep_query_str("any", x));
+
         let mut prepared = Vec::new();
         let mut query_str = "SELECT 
                         pkgcoord_id, 
@@ -189,43 +201,99 @@ impl<'a> FindPkgCoords<'a> {
                         level_name, 
                         role_name, 
                         platform_name,
-                        site_name, 
+                        site_name
                     FROM pkgcoord_view"
             .to_string();
         let mut cnt = 1;
-        let mut whereval = "";
+        //let mut whereval = "";
 
         if self.package.is_some() {
-            query_str = format!("{} {} package = ${}", query_str, whereval, cnt);
+            let sm = if package.contains("%s") {
+                SearchMode::Like
+            } else {
+                SearchMode::Equal
+            };
+            let search_var = if sm == SearchMode::Like {
+                "package_name"
+            } else {
+                "package"
+            };
+            query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
             cnt += 1;
-            whereval = " AND ";
+            // query_str = format!("{} {} package = ${}", query_str, whereval, cnt);
+            // whereval = " AND ";
             prepared.push(package.to_string());
         }
-        if self.level.is_some() {
-            query_str = format!("{} {} level = ${}", query_str, whereval, cnt);
-            cnt += 1;
-            whereval = " AND ";
-            prepared.push(level);
-        }
-        if self.role.is_some() {
-            query_str = format!("{} {} role = ${}", query_str, whereval, cnt);
-            cnt += 1;
-            whereval = " AND ";
-            prepared.push(role);
-        }
-        if self.platform.is_some() {
-            query_str = format!("{} {} platform = ${}", query_str, whereval, cnt);
-            cnt += 1;
-            whereval = " AND ";
-            prepared.push(platform);
-        }
-        if self.site.is_some() {
-            query_str = format!("{} {} site = ${}", query_str, whereval, cnt);
-            // uncomment if we add an additional parameter
-            //cnt += 1;
-            //whereval = " AND ";
-            prepared.push(site);
-        }
+
+        //if self.level.is_some() {
+        let sm = if level.contains("%") {
+            &SearchMode::Like
+        } else {
+            &self.search_mode
+        };
+        let search_var = if sm == &SearchMode::Like {
+            "level_name"
+        } else {
+            "level"
+        };
+        query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
+        cnt += 1;
+        //query_str = format!("{} {} level = ${}", query_str, whereval, cnt);
+        // whereval = " AND ";
+        prepared.push(level);
+        //}
+        //if self.role.is_some() {
+        let sm = if role.contains("%") {
+            &SearchMode::Like
+        } else {
+            &self.search_mode
+        };
+        let search_var = if sm == &SearchMode::Like {
+            "role_name"
+        } else {
+            "role"
+        };
+        query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
+        cnt += 1;
+        // query_str = format!("{} {} role = ${}", query_str, whereval, cnt);
+        // whereval = " AND ";
+        prepared.push(role);
+        //}
+        //if self.platform.is_some() {
+        let sm = if platform.contains("%") {
+            &SearchMode::Like
+        } else {
+            &self.search_mode
+        };
+        let search_var = if sm == &SearchMode::Like {
+            "platform_name"
+        } else {
+            "platform"
+        };
+        query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
+        cnt += 1;
+        // query_str = format!("{} {} platform = ${}", query_str, whereval, cnt);
+        // whereval = " AND ";
+        prepared.push(platform);
+        //}
+        //if self.site.is_some() {
+        let sm = if site.contains("%") {
+            &SearchMode::Like
+        } else {
+            &self.search_mode
+        };
+        let search_var = if sm == &SearchMode::Like {
+            "site_name"
+        } else {
+            "site"
+        };
+        query_str.push_str(SearchMode::search_string(search_var, &sm, cnt).as_str());
+        //cnt += 1;
+        //query_str = format!("{} {} site = ${}", query_str, whereval, cnt);
+        // uncomment if we add an additional parameter
+        //whereval = " AND ";
+        prepared.push(site);
+        //}
         (query_str, prepared)
     }
 

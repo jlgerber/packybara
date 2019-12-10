@@ -65,6 +65,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbFind::Distributions { .. } => {
                 cmd::all_distributions::process(client, cmd)?;
             }
+            PbFind::PkgCoords { .. } => {
+                cmd::pkgcoords::process(client, cmd)?;
+            }
         },
         PbCrud::Add { cmd } => match cmd {
             PbAdd::Packages { .. } => {

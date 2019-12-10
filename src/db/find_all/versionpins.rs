@@ -1,5 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
-pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, SearchMode};
+pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, LtreeSearchMode};
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -129,7 +129,7 @@ pub struct FindAllVersionPins<'a> {
     order_by: Option<Vec<SearchAttribute>>,
     order_direction: Option<OrderDirection>,
     limit: Option<i32>,
-    search_mode: SearchMode,
+    search_mode: LtreeSearchMode,
 }
 
 impl<'a> FindAllVersionPins<'a> {
@@ -143,7 +143,7 @@ impl<'a> FindAllVersionPins<'a> {
             order_by: None,
             order_direction: None,
             limit: None,
-            search_mode: SearchMode::Ancestor,
+            search_mode: LtreeSearchMode::Ancestor,
         }
     }
 
@@ -182,7 +182,7 @@ impl<'a> FindAllVersionPins<'a> {
         self
     }
 
-    pub fn search_mode(&mut self, mode: SearchMode) -> &mut Self {
+    pub fn search_mode(&mut self, mode: LtreeSearchMode) -> &mut Self {
         self.search_mode = mode;
         self
     }

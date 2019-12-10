@@ -1,3 +1,6 @@
+//use snafu::ResultExt;
+use snafu::Snafu;
+
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 /// Provide a measure of extensibility
@@ -70,7 +73,7 @@ pub enum SearchAttribute {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
-pub enum SearchMode {
+pub enum LtreeSearchMode {
     #[strum(
         serialize = "down",
         serialize = "ancestor",
@@ -96,12 +99,107 @@ pub enum SearchMode {
     Exact,
 }
 
-impl SearchMode {
+impl LtreeSearchMode {
     pub fn to_symbol(&self) -> &'static str {
         match *self {
             Self::Ancestor => "<@",
             Self::Descendant => "@>",
             Self::Exact => "=",
+        }
+    }
+}
+
+#[derive(Debug, Snafu)]
+#[snafu(visibility = "pub(crate)")]
+pub enum SearchModeError {
+    #[snafu(display("Could construct LtreeSearchMode from {}", mode))]
+    InvalidLtreeSearchMode { mode: String },
+}
+
+#[derive(Debug, PartialEq, Eq, EnumString, AsRefStr, Display, IntoStaticStr, Clone, Copy)]
+pub enum JoinMode {
+    Where,
+    And,
+}
+
+/// Search mode
+#[derive(Debug, PartialEq, Eq)]
+pub enum SearchMode {
+    Equal,
+    // Ilike
+    Like,
+    // In(Vec<String>),
+    Ltree(LtreeSearchMode),
+}
+
+impl SearchMode {
+    /// Is the search mode Equal
+    pub fn is_equal(&self) -> bool {
+        *self == Self::Equal
+    }
+    /// Is the search mode Like
+    pub fn is_like(&self) -> bool {
+        *self == Self::Like
+    }
+    /// Convert to static str representation
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Like => "LIKE",
+            Self::Equal => "=",
+            Self::Ltree(op) => op.to_symbol(),
+        }
+    }
+    /// Convert from a string. This function is fallible.
+    pub fn try_from_str<I: AsRef<str>>(input: I) -> Result<SearchMode, SearchModeError> {
+        match input.as_ref() {
+            "=" | "equal" | "Equal" | "eq" | "EQ" => Ok(SearchMode::Equal),
+            "like" | "Like" | "LIKE" | "~" => Ok(SearchMode::Like),
+            "<" | "<@" | "ancestor" | "Ancestor" | "up" => {
+                Ok(Self::Ltree(LtreeSearchMode::Ancestor))
+            }
+            "." | "exact" | "Exact" | "e" | "E" => Ok(Self::Ltree(LtreeSearchMode::Exact)),
+            ">" | "@>" | "descendant" | "down" => Ok(Self::Ltree(LtreeSearchMode::Descendant)),
+            _ => Err(SearchModeError::InvalidLtreeSearchMode {
+                mode: input.as_ref().to_string(),
+            }),
+        }
+    }
+    /// Given the object of the comparison, as well as an operation and the
+    /// index of the prepared statement parameter, return a search string
+    ///
+    /// # Arguments
+    /// * `joinval` - WHERE or AND
+    /// * `this` - The name of the field that we are comparing against
+    /// * `op` - The comparison operation we are performing
+    /// * `params_cnt` - The index of the prepared statement parameter we are comparing against
+    ///
+    /// # Returns
+    /// * String - Statement fragment `this ? that`.
+    pub fn search_string(this: &str, op: &SearchMode, params_cnt: i32) -> String {
+        let joinval = if params_cnt == 1 {
+            JoinMode::Where
+        } else {
+            JoinMode::And
+        };
+        match op {
+            //Self::Like => format!(" {} {} LIKE ${}", joinval, this, params_cnt),
+            Self::Like => format!(" {} ${} LIKE {}", joinval, params_cnt, this),
+            //Self::Equal => format!(" {} {} = ${}", joinval, this, params_cnt),
+            Self::Equal => format!(" {} ${} = {}", joinval, params_cnt, this),
+            // Self::Ltree(op) => format!(
+            //     " {} {} {} text2ltree(${})",
+            //     joinval,
+            //     this,
+            //     op.to_symbol(),
+            //     params_cnt
+            // ),
+            Self::Ltree(op) => format!(
+                " {} text2ltree(${}) {} {}",
+                joinval,
+                params_cnt,
+                op.to_symbol(),
+                this,
+            ),
         }
     }
 }
