@@ -208,10 +208,10 @@ impl SearchMode {
             JoinMode::And
         };
         match op {
-            //Self::Like => format!(" {} {} LIKE ${}", joinval, this, params_cnt),
-            Self::Like => format!(" {} ${} LIKE {}", joinval, params_cnt, this),
-            //Self::Equal => format!(" {} {} = ${}", joinval, this, params_cnt),
-            Self::Equal => format!(" {} ${} = {}", joinval, params_cnt, this),
+            Self::Like => format!(" {} {} LIKE ${}", joinval, this, params_cnt),
+            //Self::Like => format!(" {} ${} LIKE {}", joinval, params_cnt, this),
+            Self::Equal => format!(" {} {} = ${}", joinval, this, params_cnt),
+            //Self::Equal => format!(" {} ${} = {}", joinval, params_cnt, this),
             // Self::Ltree(op) => format!(
             //     " {} {} {} text2ltree(${})",
             //     joinval,

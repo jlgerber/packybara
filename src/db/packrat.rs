@@ -94,9 +94,9 @@ impl PackratDb {
     }
     /// Find pkgcoords that meet a specific criteria
     pub fn find_pkgcoords<'b>(&'b mut self) -> find::pkgcoords::FindPkgCoords {
-        find::pkgcoords::FindPkgCoords::new(&mut self.client)
+        find::pkgcoords::FindPkgCoords::new(Some(&mut self.client))
     }
-    /// find withs of a distribution
+    /// find withs of a
     pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
         find::withs::FindWiths::new(&mut self.client, package)
     }

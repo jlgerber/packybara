@@ -62,6 +62,8 @@ pub enum FindPkgCoordsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    #[snafu(display("No CLient Error"))]
+    NoClientError,
 }
 
 /// A row returned from the FindPkgCoords.query
@@ -138,7 +140,7 @@ impl FindPkgCoordsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindPkgCoords<'a> {
-    client: &'a mut Client,
+    client: Option<&'a mut Client>,
     pub package: Option<&'a str>,
     pub level: Option<&'a str>,
     pub role: Option<&'a str>,
@@ -149,7 +151,7 @@ pub struct FindPkgCoords<'a> {
 }
 
 impl<'a> FindPkgCoords<'a> {
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new(client: Option<&'a mut Client>) -> Self {
         FindPkgCoords {
             client,
             package: None,
@@ -248,37 +250,41 @@ impl<'a> FindPkgCoords<'a> {
         self
     }
 
-    fn prep_query_str(default: &'static str, value: &str) -> String {
-        match value {
+    fn prep_query_str(default: &'static str, value: &str, substitute: bool) -> String {
+        let mut result = match value {
             _ if value == default => default.to_string(),
             _ if value.contains("%") => value.to_string(),
             _ => format!("{}.{}", default, value),
+        };
+        if substitute {
+            result = result.replace("_", ".");
         }
+        result
     }
     fn get_query_str(&mut self) -> (String, Vec<String>) {
         let package = self.package.unwrap_or("");
         let level = self.level.map_or("facility".to_string(), |x| {
-            Self::prep_query_str("facility", x)
+            Self::prep_query_str("facility", x, false)
         });
         let role = self
             .role
-            .map_or("any".to_string(), |x| Self::prep_query_str("any", x));
+            .map_or("any".to_string(), |x| Self::prep_query_str("any", x, true));
         let platform = self
             .platform
-            .map_or("any".to_string(), |x| Self::prep_query_str("any", x));
+            .map_or("any".to_string(), |x| Self::prep_query_str("any", x, false));
         let site = self
             .site
-            .map_or("any".to_string(), |x| Self::prep_query_str("any", x));
+            .map_or("any".to_string(), |x| Self::prep_query_str("any", x, false));
 
         let mut prepared = Vec::new();
-        let mut query_str = "SELECT 
-                        pkgcoord_id, 
-                        package, 
-                        level_name, 
-                        role_name, 
-                        platform_name,
-                        site_name
-                    FROM pkgcoord_view"
+        let mut query_str = "SELECT \n\
+                             pkgcoord_id, \n\
+                             package, \n\
+                             level_name, \n\
+                             role_name, \n\
+                             platform_name, \n\
+                             site_name \n\
+                             FROM pkgcoord_view"
             .to_string();
         let mut cnt = 1;
 
@@ -370,7 +376,12 @@ impl<'a> FindPkgCoords<'a> {
         }
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        for row in self.client.query(query_str.as_str(), &prepared_args[..])? {
+        let client = self.client.as_mut();
+        if client.is_none() {
+            return Err(FindPkgCoordsError::NoClientError)?;
+        }
+        let client = client.unwrap();
+        for row in client.query(query_str.as_str(), &prepared_args[..])? {
             let id: i32 = row.get(0);
             let package: &str = row.get(1);
             let level_name: &str = row.get(2);
@@ -387,5 +398,265 @@ impl<'a> FindPkgCoords<'a> {
             )?);
         }
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn get_query_string_default_works() {
+        let mut fpc = FindPkgCoords::new(None);
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility", "any", "any", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_level() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.level("bayou");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility.bayou", "any", "any", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_like_level() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.level("bayou%");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE level_name LIKE $1 AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["bayou%", "any", "any", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_subrole() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.role("fx_beta");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility", "any.fx.beta", "any", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_like_role() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.role("fx%");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND role_name LIKE $2 AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility", "fx%", "any", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_platform() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.platform("cent7_64");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility", "any", "any.cent7_64", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_like_platform() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.platform("cent7%");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND platform_name LIKE $3 AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility", "any", "cent7%", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_site() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.site("montreal");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND text2ltree($4) <@ site"
+        );
+        assert_eq!(ps, &["facility", "any", "any", "any.montreal"]);
+    }
+    #[test]
+    fn get_query_string_with_like_site() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.site("montreal%");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE text2ltree($1) <@ level AND text2ltree($2) <@ role AND text2ltree($3) <@ platform AND site_name LIKE $4"
+        );
+        assert_eq!(ps, &["facility", "any", "any", "montreal%"]);
+    }
+    #[test]
+    fn get_query_string_with_level_like_and_package() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.level("bayou%").package("maya");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE package = $1 AND level_name LIKE $2 AND text2ltree($3) <@ role AND text2ltree($4) <@ platform AND text2ltree($5) <@ site"
+        );
+        assert_eq!(ps, &["maya", "bayou%", "any", "any", "any"]);
+    }
+
+    // this one is important as it verifies that the subrole is being
+    // appropriately transformed
+    #[test]
+    fn get_query_string_with_level_like_and_package_and_role() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.level("bayou%").package("maya").role("fx_beta");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE package = $1 AND level_name LIKE $2 AND text2ltree($3) <@ role AND text2ltree($4) <@ platform AND text2ltree($5) <@ site"
+        );
+        assert_eq!(ps, &["maya", "bayou%", "any.fx.beta", "any", "any"]);
+    }
+    #[test]
+    fn get_query_string_with_level_like_and_package_role_and_platform() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.level("bayou%")
+            .package("maya")
+            .role("fx_beta")
+            .platform("cent7_64");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE package = $1 AND level_name LIKE $2 AND text2ltree($3) <@ role AND text2ltree($4) <@ platform AND text2ltree($5) <@ site"
+        );
+        assert_eq!(
+            ps,
+            &["maya", "bayou%", "any.fx.beta", "any.cent7_64", "any"]
+        );
+    }
+    #[test]
+    fn get_query_string_with_level_like_and_package_role_platform_and_site() {
+        let mut fpc = FindPkgCoords::new(None);
+        fpc.level("bayou%")
+            .package("maya")
+            .role("fx_beta")
+            .platform("cent7_64")
+            .site("montreal");
+        let (qs, ps) = fpc.get_query_str();
+        assert_eq!(
+            qs.as_str(),
+            "SELECT \n\
+        pkgcoord_id, \n\
+        package, \n\
+        level_name, \n\
+        role_name, \n\
+        platform_name, \n\
+        site_name \n\
+    FROM pkgcoord_view WHERE package = $1 AND level_name LIKE $2 AND text2ltree($3) <@ role AND text2ltree($4) <@ platform AND text2ltree($5) <@ site"
+        );
+        assert_eq!(
+            ps,
+            &[
+                "maya",
+                "bayou%",
+                "any.fx.beta",
+                "any.cent7_64",
+                "any.montreal"
+            ]
+        );
     }
 }
