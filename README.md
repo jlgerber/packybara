@@ -94,3 +94,14 @@ USING (transaction_id)
 GROUP BY
     transaction_id,action,table_name;
 ```
+
+## Edits
+### Transaction
+```
+ select transaction_id,table_name,action,row_data,changed_fields from audit.logged_actions where transaction_id = (select distinct transaction_id from audit.logged_actions order by transaction_id desc limit 1 offset 0);
+ ```
+
+ ```
+ insert platform(path) values ('any.cent8_128'),('any.cent9_128');
+ update platform set path='any.cent8_64' where path='any.cent8_128';
+ ```
