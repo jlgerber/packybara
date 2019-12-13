@@ -1,5 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
-pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, LtreeSearchMode};
+pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -36,6 +36,8 @@ pub enum FindAllVersionPinsError {
 pub struct FindAllVersionPinsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: i32,
+    pub distribution_id: i32,
+    pub pkgcoord_id: i32,
     pub distribution: Distribution,
     pub coords: Coords,
     pub withs: Option<Vec<String>>,
@@ -43,7 +45,15 @@ pub struct FindAllVersionPinsRow {
 
 impl fmt::Display for FindAllVersionPinsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut result = write!(f, "{} {}", self.distribution, self.coords);
+        let mut result = write!(
+            f,
+            "{} (vp id:{} dist id:{} pkgcoord id:{}) {}",
+            self.distribution,
+            self.versionpin_id,
+            self.distribution_id,
+            self.pkgcoord_id,
+            self.coords
+        );
         if result.is_err() {
             return result;
         }
@@ -64,12 +74,16 @@ impl FindAllVersionPinsRow {
     /// * `coords`: The location in package space that the distribution resides at
     pub fn new(
         versionpin_id: i32,
+        distribution_id: i32,
+        pkgcoord_id: i32,
         distribution: Distribution,
         coords: Coords,
         withs: Option<Vec<String>>,
     ) -> Self {
         FindAllVersionPinsRow {
             versionpin_id,
+            distribution_id,
+            pkgcoord_id,
             distribution,
             coords,
             withs,
@@ -81,6 +95,8 @@ impl FindAllVersionPinsRow {
     /// # Arguments
     pub fn try_from_parts(
         id: i32,
+        distribution_id: i32,
+        pkgcoord_id: i32,
         distribution: &str,
         level: &str,
         role: &str,
@@ -101,11 +117,20 @@ impl FindAllVersionPinsRow {
             },
         )?;
 
-        Ok(Self::new(id, new_distribution, coords, withs))
+        Ok(Self::new(
+            id,
+            distribution_id,
+            pkgcoord_id,
+            new_distribution,
+            coords,
+            withs,
+        ))
     }
 
     pub fn from_parts(
         id: i32,
+        distribution_id: i32,
+        pkgcoord_id: i32,
         distribution: &str,
         level: &str,
         role: &str,
@@ -116,7 +141,14 @@ impl FindAllVersionPinsRow {
         let distribution = Distribution::new_unchecked(distribution);
         let coords = Coords::try_from_parts(level, role, platform, site).unwrap();
 
-        Self::new(id, distribution, coords, withs)
+        Self::new(
+            id,
+            distribution_id,
+            pkgcoord_id,
+            distribution,
+            coords,
+            withs,
+        )
     }
 }
 /// Responsible for finding a distribution
@@ -194,6 +226,8 @@ impl<'a> FindAllVersionPins<'a> {
         let site = self.site.unwrap_or("any");
         let mut result = Vec::new();
         let mut query_str = "SELECT id, 
+        distribution_id,
+        pkgcoord_id,
         distribution, 
         level_name, 
         role_name, 
@@ -227,14 +261,18 @@ impl<'a> FindAllVersionPins<'a> {
         log::info!("Arguents\n{:?}", prepared_args);
         for row in self.client.query(qstr, prepared_args)? {
             let id: i32 = row.get(0);
-            let distribution: &str = row.get(1);
-            let level_name: &str = row.get(2);
-            let role_name: &str = row.get(3);
-            let site_name: &str = row.get(4);
-            let platform_name: &str = row.get(5);
-            let withs: Option<Vec<String>> = row.get(6);
+            let dist_id: i32 = row.get(1);
+            let pkgcoord_id: i32 = row.get(2);
+            let distribution: &str = row.get(3);
+            let level_name: &str = row.get(4);
+            let role_name: &str = row.get(5);
+            let site_name: &str = row.get(6);
+            let platform_name: &str = row.get(7);
+            let withs: Option<Vec<String>> = row.get(8);
             result.push(FindAllVersionPinsRow::try_from_parts(
                 id,
+                dist_id,
+                pkgcoord_id,
                 distribution,
                 level_name,
                 role_name,

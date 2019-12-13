@@ -449,6 +449,8 @@ CREATE OR REPLACE FUNCTION
 	) 
 RETURNS TABLE(
   versionpin_id integer,
+  distribution_id integer, 
+  pkgcoord_id integer,
   distribution text,
   package text,
   version ltree,
