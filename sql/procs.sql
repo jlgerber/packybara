@@ -362,6 +362,8 @@ CREATE OR REPLACE FUNCTION
 	) 
 RETURNS TABLE(
   versionpin_id integer,
+  distribution_id integer,
+  pkgcoord_id integer,
   distribution text,
   package text,
   version ltree,
@@ -402,6 +404,8 @@ BEGIN
 	END IF;
 	RETURN QUERY SELECT
 		v.id,
+		v.distribution_id,
+		v.pkgcoord_id,
 		v.distribution,
 		v.package,
 		v.version,
@@ -625,6 +629,8 @@ CREATE OR REPLACE FUNCTION
 	) 
 RETURNS TABLE(
   id integer,
+  distribution_id INTEGER,
+  pkgcoord_id INTEGER,
   package text,
   version ltree,
   distribution text,
@@ -670,6 +676,8 @@ BEGIN
 RETURN QUERY
 SELECT
   vp.id,
+  vp.distribution_id,
+  vp.pkgcoord_id,
   vp.package,
   vp.version,
   vp.distribution,

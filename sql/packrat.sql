@@ -341,6 +341,7 @@ CREATE OR REPLACE VIEW versionpin_view AS (
 	role_view.name AS role,
 	pkgcoord.role AS role_path,
 	site_view.name AS site,
+	pkgcoord.id as pkgcoord_id,
 	pkgcoord.site AS site_path, 
 	platform_view.name AS platform,
 	pkgcoord.platform AS platform_path,
