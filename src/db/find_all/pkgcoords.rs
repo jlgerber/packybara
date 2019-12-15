@@ -6,6 +6,7 @@ pub use crate::utils::pred_true_false;
 pub use crate::Coords;
 pub use crate::Distribution;
 
+use crate::types::IdType;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
@@ -53,11 +54,11 @@ pub enum OrderPkgCoordsBy {
     Site,
 }
 
-pub type FindPkgCoordsResult<T, E = FindPkgCoordsError> = std::result::Result<T, E>;
+pub type FindAllPkgCoordsResult<T, E = FindAllPkgCoordsError> = std::result::Result<T, E>;
 
-/// Error type returned from FindPkgCoordsError
+/// Error type returned from FindAllPkgCoordsError
 #[derive(Debug, Snafu)]
-pub enum FindPkgCoordsError {
+pub enum FindAllPkgCoordsError {
     ///  DistributionNewError - failure to new up a distribution.
     #[snafu(display("Error constructing Distribution from {}: {}", msg, source))]
     DistributionNewError { msg: String, source: CoordsError },
@@ -68,11 +69,11 @@ pub enum FindPkgCoordsError {
     NoClientError,
 }
 
-/// A row returned from the FindPkgCoords.query
+/// A row returned from the FindAllPkgCoords.query
 #[derive(Debug, PartialEq, Eq)]
-pub struct FindPkgCoordsRow {
+pub struct FindAllPkgCoordsRow {
     /// the id of result in the PkgCoord table
-    pub id: i32,
+    pub id: IdType,
     pub package: String,
     pub level: String,
     pub role: String,
@@ -80,7 +81,7 @@ pub struct FindPkgCoordsRow {
     pub site: String,
 }
 
-impl fmt::Display for FindPkgCoordsRow {
+impl fmt::Display for FindAllPkgCoordsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -90,22 +91,22 @@ impl fmt::Display for FindPkgCoordsRow {
     }
 }
 
-impl FindPkgCoordsRow {
-    /// New up a FindPkgCoordsRow instance
+impl FindAllPkgCoordsRow {
+    /// New up a FindAllPkgCoordsRow instance
     ///
     /// # Arguments
     /// * `pkgcoord_id`: The id of the relevant row in the pkgcoord table
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
     pub fn new<I: Into<String>>(
-        id: i32,
+        id: IdType,
         package: I,
         level: I,
         role: I,
         platform: I,
         site: I,
     ) -> Self {
-        FindPkgCoordsRow {
+        FindAllPkgCoordsRow {
             id,
             package: package.into(),
             level: level.into(),
@@ -119,29 +120,29 @@ impl FindPkgCoordsRow {
     ///
     /// Args
     pub fn try_from_parts(
-        id: i32,
+        id: IdType,
         package: &str,
         level: &str,
         role: &str,
         platform: &str,
         site: &str,
-    ) -> FindPkgCoordsResult<FindPkgCoordsRow> {
+    ) -> FindAllPkgCoordsResult<FindAllPkgCoordsRow> {
         Ok(Self::new(id, package, level, role, platform, site))
     }
 
     pub fn from_parts(
-        id: i32,
+        id: IdType,
         package: &str,
         level: &str,
         role: &str,
         platform: &str,
         site: &str,
-    ) -> FindPkgCoordsRow {
+    ) -> FindAllPkgCoordsRow {
         Self::new(id, package, level, role, platform, site)
     }
 }
 /// Responsible for finding a distribution
-pub struct FindPkgCoords<'a> {
+pub struct FindAllPkgCoords<'a> {
     client: Option<&'a mut Client>,
     pub package: Option<&'a str>,
     pub level: Option<&'a str>,
@@ -152,9 +153,9 @@ pub struct FindPkgCoords<'a> {
     pub order_by: Option<Vec<OrderPkgCoordsBy>>,
 }
 
-impl<'a> FindPkgCoords<'a> {
+impl<'a> FindAllPkgCoords<'a> {
     pub fn new(client: Option<&'a mut Client>) -> Self {
-        FindPkgCoords {
+        FindAllPkgCoords {
             client,
             package: None,
             level: None,
@@ -331,7 +332,7 @@ impl<'a> FindPkgCoords<'a> {
         (query_str, prepared)
     }
     /// execute the query
-    pub fn query(&mut self) -> Result<Vec<FindPkgCoordsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> Result<Vec<FindAllPkgCoordsRow>, Box<dyn std::error::Error>> {
         let (query_str, prep) = self.get_query_str();
         let mut result = Vec::new();
         let mut prepared_args: Vec<&(dyn ToSql + Sync)> = Vec::new();
@@ -342,17 +343,17 @@ impl<'a> FindPkgCoords<'a> {
         log::info!("Arguments\n{:?}", prepared_args);
         let client = self.client.as_mut();
         if client.is_none() {
-            return Err(FindPkgCoordsError::NoClientError)?;
+            return Err(FindAllPkgCoordsError::NoClientError)?;
         }
         let client = client.unwrap();
         for row in client.query(query_str.as_str(), &prepared_args[..])? {
-            let id: i32 = row.get(0);
+            let id: IdType = row.get(0);
             let package: &str = row.get(1);
             let level_name: &str = row.get(2);
             let role_name: &str = row.get(3);
             let platform_name: &str = row.get(4);
             let site_name: &str = row.get(5);
-            result.push(FindPkgCoordsRow::try_from_parts(
+            result.push(FindAllPkgCoordsRow::try_from_parts(
                 id,
                 package,
                 level_name,
@@ -370,7 +371,7 @@ mod tests {
     use super::*;
     #[test]
     fn get_query_string_default_works() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
             qs.as_str(),
@@ -387,7 +388,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_level() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.level("bayou");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -405,7 +406,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_like_level() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.level("bayou%");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -423,7 +424,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_subrole() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.role("fx_beta");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -441,7 +442,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_like_role() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.role("fx%");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -459,7 +460,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_platform() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.platform("cent7_64");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -477,7 +478,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_like_platform() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.platform("cent7%");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -495,7 +496,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_site() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.site("montreal");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -513,7 +514,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_like_site() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.site("montreal%");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -531,7 +532,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_level_like_and_package() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.level("bayou%").package("maya");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -552,7 +553,7 @@ mod tests {
     // appropriately transformed
     #[test]
     fn get_query_string_with_level_like_and_package_and_role() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.level("bayou%").package("maya").role("fx_beta");
         let (qs, ps) = fpc.get_query_str();
         assert_eq!(
@@ -570,7 +571,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_level_like_and_package_role_and_platform() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.level("bayou%")
             .package("maya")
             .role("fx_beta")
@@ -594,7 +595,7 @@ mod tests {
     }
     #[test]
     fn get_query_string_with_level_like_and_package_role_platform_and_site() {
-        let mut fpc = FindPkgCoords::new(None);
+        let mut fpc = FindAllPkgCoords::new(None);
         fpc.level("bayou%")
             .package("maya")
             .role("fx_beta")
