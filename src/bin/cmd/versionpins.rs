@@ -1,4 +1,4 @@
-use super::args::PbFind;
+use super::args::{PbFind, PbSet};
 use super::utils::extract_coords;
 use super::utils::truncate;
 use packybara::packrat::{Client, PackratDb};
@@ -78,5 +78,17 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         table.printstd();
     };
 
+    Ok(())
+}
+
+/// Add one or more roles
+pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbSet::VersionPins { mut dist_ids, .. } = cmd {
+        // let mut pb = PackratDb::new(client);
+        // let mut results = pb.add_roles();
+        //let results = results.roles(&mut dist_ids).create()?;
+        //println!("{}", results);
+        println!("{:?}", dist_ids);
+    }
     Ok(())
 }

@@ -83,6 +83,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 cmd::all_platforms::add(client, cmd)?;
             }
         },
+        PbCrud::Set { cmd } => match cmd {
+            PbSet::VersionPins { .. } => {
+                cmd::versionpins::set(client, cmd)?;
+            }
+        },
         _ => println!("Not implemented"),
     }
 
