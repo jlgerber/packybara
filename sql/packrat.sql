@@ -205,7 +205,7 @@ CREATE OR REPLACE VIEW pkgcoord_view AS (
 
 );
 ------------------
--- versionpin    --
+--  versionpin  --
 ------------------
 CREATE TABLE IF NOT EXISTS versionpin (
 	id SERIAL PRIMARY KEY,

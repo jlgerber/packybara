@@ -6,7 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::db::{add, find, find_all};
+use crate::db::{add, find, find_all, update};
 //use postgres::Client;
 pub use postgres::{Client, NoTls};
 
@@ -119,5 +119,10 @@ impl PackratDb {
     /// add platforms
     pub fn add_platforms<'b>(&'b mut self) -> add::platforms::AddPlatforms {
         add::platforms::AddPlatforms::new(&mut self.client)
+    }
+
+    /// update packages
+    pub fn update_versionpins<'b>(&'b mut self) -> update::versionpins::UpdateVersionPins {
+        update::versionpins::UpdateVersionPins::new(&mut self.client)
     }
 }

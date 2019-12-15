@@ -21,26 +21,33 @@ pub enum UpdateVersionPinsError {
     NoUpdatesError,
 }
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-pub struct VersionPinUpdate {
+pub struct VersionPinChange {
     pub versionpin_id: IdType,
-    pub distribution_id: IdType,
-    pub pkgcoord_id: IdType,
+    pub distribution_id: Option<IdType>,
+    pub pkgcoord_id: Option<IdType>,
 }
 
-impl VersionPinUpdate {
-    pub fn new(versionpin_id: IdType, distribution_id: IdType, pkgcoord_id: IdType) -> Self {
+impl VersionPinChange {
+    pub fn new(
+        versionpin_id: IdType,
+        distribution_id: Option<IdType>,
+        pkgcoord_id: Option<IdType>,
+    ) -> Self {
         Self {
             versionpin_id,
             distribution_id,
             pkgcoord_id,
         }
     }
+    pub fn has_changes(&self) -> bool {
+        self.distribution_id.is_some() || self.pkgcoord_id.is_some()
+    }
 }
 
 /// Responsible for creating packages
 pub struct UpdateVersionPins<'a> {
     pub client: &'a mut Client,
-    pub updates: Vec<VersionPinUpdate>,
+    pub changes: Vec<VersionPinChange>,
 }
 
 impl<'a> UpdateVersionPins<'a> {
@@ -54,7 +61,7 @@ impl<'a> UpdateVersionPins<'a> {
     pub fn new(client: &'a mut Client) -> Self {
         Self {
             client,
-            updates: Vec::new(),
+            changes: Vec::new(),
         }
     }
 
@@ -68,8 +75,8 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn update(&'a mut self, update: VersionPinUpdate) -> &mut Self {
-        self.updates.push(update);
+    pub fn change(&'a mut self, update: VersionPinChange) -> &mut Self {
+        self.changes.push(update);
         self
     }
 
@@ -83,32 +90,32 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn update_from_components(
+    pub fn change_from_components(
         &'a mut self,
         versionpin_id: IdType,
-        distribution_id: IdType,
-        pkgcoord_id: IdType,
+        distribution_id: Option<IdType>,
+        pkgcoord_id: Option<IdType>,
     ) -> &mut Self {
-        let update = VersionPinUpdate::new(versionpin_id, distribution_id, pkgcoord_id);
-        self.updates.push(update);
+        let change = VersionPinChange::new(versionpin_id, distribution_id, pkgcoord_id);
+        self.changes.push(change);
         self
     }
 
-    /// Add a vector of updates to the list of  updates we wish
+    /// Add a vector of changes to the list of  changes we wish
     /// to create in the database. Like, package, packages is an infallible
     /// call that does no validation. However, I am reconsidering this.
     ///
     /// # Arguments
-    /// * `updates` - A list of updates we wish to create in the db.
+    /// * `changes` - A list of changes we wish to create in the db.
     ///
     /// # Returns
     /// * a mutable reference to Self
-    pub fn updates(&'a mut self, updates: &mut Vec<VersionPinUpdate>) -> &mut Self {
-        self.updates.append(updates);
+    pub fn changes(&'a mut self, changes: &mut Vec<VersionPinChange>) -> &mut Self {
+        self.changes.append(changes);
         self
     }
 
-    /// Create previously registered package name(s) in the database. This call is
+    /// update previously registered versionpin in the database. This call is
     /// fallible, and may return either the number of new packages created, or a
     /// relevant error.
     ///
@@ -117,34 +124,67 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(UpdateVersionPinsError)
-    pub fn create(&mut self) -> Result<u64, UpdateVersionPinsError> {
-        if self.updates.len() == 0 {
+    pub fn update(&mut self) -> Result<usize, UpdateVersionPinsError> {
+        if self.changes.len() == 0 {
             return Err(UpdateVersionPinsError::NoUpdatesError);
         }
-        let mut updates_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        self.updates.iter().for_each(|x| {
-            updates_ref.push(&x.versionpin_id);
-            updates_ref.push(&x.distribution_id);
-            updates_ref.push(&x.pkgcoord_id);
+        let mut cnt = 0;
+        let mut tx = self.client.transaction().context(TokioPostgresError {
+            msg: "failed to create transaction",
+        })?;
+        let mut update_cnt = 0;
+        let mut failures = Vec::new();
+        self.changes.iter().for_each(|x| {
+            if x.has_changes() {
+                let mut maybe_comma = String::from("");
+                update_cnt += 1;
+                let mut updates_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
+                let mut prepared_line = "UPDATE versionpin ".to_string();
+                let mut pos_idx = 2;
+                updates_ref.push(&x.versionpin_id);
+                if let Some(ref dist_id) = x.distribution_id {
+                    updates_ref.push(dist_id);
+                    prepared_line.push_str(
+                        format!("{}SET distribution = ${}", maybe_comma, pos_idx).as_str(),
+                    );
+                    pos_idx += 1;
+                    maybe_comma.push_str(",");
+                }
+                if let Some(ref pkgcoord_id) = x.pkgcoord_id {
+                    updates_ref.push(pkgcoord_id);
+                    prepared_line
+                        .push_str(format!("{}SET coord = ${}", maybe_comma, pos_idx).as_str());
+                    //pos_idx += 1;
+                }
+                prepared_line.push_str(" WHERE id = $1");
+                log::info!("SQL\n{}", prepared_line.as_str());
+                log::info!("Prepared\n{:?}", &updates_ref);
+                let results = tx.execute(prepared_line.as_str(), &updates_ref[..]);
+                if results.is_err() {
+                    failures.push(results);
+                }
+                cnt += 1;
+            }
         });
-
-        let mut insert_str =
-            "INSERT INTO versionpin (id, distribution_id, versionpin_id) VALUES ".to_string();
-        let prepared = (1..=self.updates.len())
-            .into_iter()
-            .map(|x| format!(" (${}, ${}, ${})", x * 3, x * 3 + 1, x * 3 + 2))
-            .collect::<Vec<_>>();
-        let prepared = prepared.join(",");
-        insert_str.push_str(prepared.as_str());
-        insert_str.push_str(" ON CONFLICT (name) DO NOTHING");
-        log::info!("SQL\n{}", insert_str.as_str());
-        log::info!("Prepared\n{:?}", &updates_ref);
-        let results = self
-            .client
-            .execute(insert_str.as_str(), &updates_ref[..])
-            .context(TokioPostgresError {
-                msg: "failed to add packages",
+        if failures.len() > 0 {
+            tx.rollback().context(TokioPostgresError {
+                msg: "failed to rollback",
             })?;
-        Ok(results)
+            return Err(UpdateVersionPinsError::TokioPostgresError {
+                msg: "failed to update db.",
+                source: failures.pop().unwrap().unwrap_err(),
+            });
+        } else if update_cnt == 0 {
+            tx.rollback().context(TokioPostgresError {
+                msg: "failed to rollback",
+            })?;
+            return Err(UpdateVersionPinsError::NoUpdatesError);
+        } else {
+            tx.commit().context(TokioPostgresError {
+                msg: "failed to commit",
+            })?;
+        }
+
+        Ok(update_cnt)
     }
 }

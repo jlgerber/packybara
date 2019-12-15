@@ -1,6 +1,7 @@
 use super::args::{PbFind, PbSet};
 use super::utils::extract_coords;
 use super::utils::truncate;
+use packybara::db::update::versionpins::VersionPinChange;
 use packybara::packrat::{Client, PackratDb};
 use packybara::{LtreeSearchMode, SearchAttribute};
 use prettytable::{cell, format, row, table};
@@ -82,15 +83,20 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
 }
 
 /// Add one or more roles
-pub fn set(_client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
+pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
     let PbSet::VersionPins {
         dist_ids, vpin_ids, ..
     } = cmd;
     assert_eq!(dist_ids.len(), vpin_ids.len());
-    // let mut pb = PackratDb::new(client);
-    // let mut results = pb.add_roles();
-    //let results = results.roles(&mut dist_ids).create()?;
-    //println!("{}", results);
-    println!("{:?} {:?}", dist_ids, vpin_ids);
+    let mut pb = PackratDb::new(client);
+    let mut results = pb.update_versionpins();
+    log::debug!("versionpins: {:?} distribtions: {:?}", dist_ids, vpin_ids);
+    let mut updates = Vec::new();
+    for cnt in 0..dist_ids.len() {
+        let change = VersionPinChange::new(vpin_ids[cnt], Some(dist_ids[cnt]), None);
+        updates.push(change);
+    }
+    let results = results.changes(&mut updates).update()?;
+    println!("{}", results);
     Ok(())
 }
