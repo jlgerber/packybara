@@ -1,4 +1,5 @@
 //use snafu::ResultExt;
+use crate::types::IdType;
 use snafu::Snafu;
 
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
@@ -201,7 +202,7 @@ impl SearchMode {
     ///
     /// # Returns
     /// * String - Statement fragment `this ? that`.
-    pub fn search_string(this: &str, op: &SearchMode, params_cnt: i32) -> String {
+    pub fn search_string(this: &str, op: &SearchMode, params_cnt: IdType) -> String {
         let joinval = if params_cnt == 1 {
             JoinMode::Where
         } else {

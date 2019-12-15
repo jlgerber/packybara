@@ -1,5 +1,6 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
+use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -25,7 +26,7 @@ pub enum FindWithsError {
 #[derive(Debug, PartialEq, Eq)]
 pub struct FindWithsRow {
     /// the id of result in the VersionPin table
-    pub versionpin_id: i32,
+    pub versionpin_id: IdType,
     pub distribution: Distribution,
     pub coords: Coords,
 }
@@ -47,7 +48,7 @@ impl FindWithsRow {
     /// * `versionpin_id`: The id of the relevant row in the versionpin table
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
-    pub fn new(versionpin_id: i32, distribution: Distribution, coords: Coords) -> Self {
+    pub fn new(versionpin_id: IdType, distribution: Distribution, coords: Coords) -> Self {
         FindWithsRow {
             versionpin_id,
             distribution,
@@ -59,7 +60,7 @@ impl FindWithsRow {
     ///
     /// Args
     pub fn try_from_parts(
-        id: i32,
+        id: IdType,
         distribution: &str,
         level: &str,
         role: &str,
@@ -83,7 +84,7 @@ impl FindWithsRow {
     }
 
     pub fn from_parts(
-        id: i32,
+        id: IdType,
         distribution: &str,
         level: &str,
         role: &str,
@@ -196,7 +197,7 @@ impl<'a> FindWiths<'a> {
         log::info!("Arguments\n{:?}", prep_vals);
 
         for row in self.client.query(query_str.as_str(), prep_vals)? {
-            let id: i32 = row.get(0);
+            let id: IdType = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);
             let role_name: &str = row.get(3);

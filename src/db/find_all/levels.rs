@@ -1,5 +1,6 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
+use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -7,6 +8,7 @@ use postgres::types::ToSql;
 use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
+
 //use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
@@ -102,7 +104,7 @@ pub struct FindAllLevels<'a> {
     show: Option<&'a str>,
     order_by: Option<Vec<OrderLevelBy>>,
     order_direction: Option<OrderDirection>,
-    limit: Option<i32>,
+    limit: Option<IdType>,
 }
 
 impl fmt::Debug for FindAllLevels<'_> {
@@ -162,7 +164,7 @@ impl<'a> FindAllLevels<'a> {
         self
     }
 
-    pub fn limit(&mut self, limit: i32) -> &mut Self {
+    pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }

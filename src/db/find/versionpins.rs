@@ -1,4 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
+use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -24,7 +25,7 @@ pub enum FindVersionPinsError {
 #[derive(Debug, PartialEq, Eq)]
 pub struct FindVersionPinsRow {
     /// the id of result in the VersionPin table
-    pub versionpin_id: i32,
+    pub versionpin_id: IdType,
     pub distribution: Distribution,
     pub coords: Coords,
     pub withs: Option<Vec<String>>,
@@ -53,7 +54,7 @@ impl FindVersionPinsRow {
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
     pub fn new(
-        versionpin_id: i32,
+        versionpin_id: IdType,
         distribution: Distribution,
         coords: Coords,
         withs: Option<Vec<String>>,
@@ -70,7 +71,7 @@ impl FindVersionPinsRow {
     ///
     /// Args
     pub fn try_from_parts(
-        id: i32,
+        id: IdType,
         distribution: &str,
         level: &str,
         role: &str,
@@ -95,7 +96,7 @@ impl FindVersionPinsRow {
     }
 
     pub fn from_parts(
-        id: i32,
+        id: IdType,
         distribution: &str,
         level: &str,
         role: &str,
@@ -174,7 +175,7 @@ impl<'a> FindVersionPins<'a> {
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
         for row in self.client.query(query_str, prepared_args)? {
-            let id: i32 = row.get(0);
+            let id: IdType = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);
             let role_name: &str = row.get(3);

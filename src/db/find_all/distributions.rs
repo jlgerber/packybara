@@ -1,5 +1,6 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
+use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -7,6 +8,7 @@ use postgres::types::ToSql;
 use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
+
 //use std::str::FromStr;
 //use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
@@ -37,6 +39,7 @@ pub enum FindAllDistributionsError {
 /// A row returned from the  FindAllDistributions.query
 #[derive(Debug, PartialEq, Eq)]
 pub struct FindAllDistributionsRow {
+    pub id: IdType,
     pub package: String,
     pub version: String,
 }
@@ -55,8 +58,12 @@ impl FindAllDistributionsRow {
     ///
     /// # Returns
     /// - FindAllDistributionsRow instance
-    pub fn new(package: String, version: String) -> Self {
-        FindAllDistributionsRow { package, version }
+    pub fn new(id: IdType, package: String, version: String) -> Self {
+        FindAllDistributionsRow {
+            id,
+            package,
+            version,
+        }
     }
     /// Attempt to construct a distribution from &strs. This is a fallible operation
     /// returning a result.
@@ -70,11 +77,12 @@ impl FindAllDistributionsRow {
     /// - Ok - FindAllDistributionsRow instance
     /// - Err - FindAllDistributionsError
     pub fn try_from_parts(
+        id: IdType,
         package: &str,
         version: &str,
     ) -> FindAllDistributionsResult<FindAllDistributionsRow> {
         // TODO: police category
-        Ok(Self::new(package.to_string(), version.to_string()))
+        Ok(Self::new(id, package.to_string(), version.to_string()))
     }
 
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
@@ -84,8 +92,8 @@ impl FindAllDistributionsRow {
     ///
     /// # Returns
     /// - FindAllDistributionsRow instance
-    pub fn from_parts(package: &str, version: &str) -> FindAllDistributionsRow {
-        Self::try_from_parts(package, version).unwrap()
+    pub fn from_parts(id: IdType, package: &str, version: &str) -> FindAllDistributionsRow {
+        Self::try_from_parts(id, package, version).unwrap()
     }
 }
 /// Responsible for finding a distribution
@@ -95,7 +103,7 @@ pub struct FindAllDistributions<'a> {
     version: Option<&'a str>,
     //order_by: Vec<OrderDistributionBy>,
     order_direction: Option<OrderDirection>,
-    // limit: Option<i32>,
+    // limit: Option<IdType>,
 }
 
 impl fmt::Debug for FindAllDistributions<'_> {
@@ -153,7 +161,7 @@ impl<'a> FindAllDistributions<'a> {
         self
     }
 
-    // pub fn limit(&mut self, limit: i32) -> &mut Self {
+    // pub fn limit(&mut self, limit: IdType) -> &mut Self {
     //     self.limit = Some(limit);
     //     self
     // }
@@ -161,6 +169,7 @@ impl<'a> FindAllDistributions<'a> {
     pub fn query(&mut self) -> Result<Vec<FindAllDistributionsRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
+                distribution_id,
                 package,
                 version_name
             FROM 
@@ -198,9 +207,12 @@ impl<'a> FindAllDistributions<'a> {
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
         for row in self.client.query(query_str.as_str(), &params[..])? {
-            let package = row.get(0);
-            let version = row.get(1);
-            result.push(FindAllDistributionsRow::try_from_parts(package, version)?);
+            let id = row.get(0);
+            let package = row.get(1);
+            let version = row.get(2);
+            result.push(FindAllDistributionsRow::try_from_parts(
+                id, package, version,
+            )?);
         }
         Ok(result)
     }

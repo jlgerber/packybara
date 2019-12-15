@@ -1,10 +1,12 @@
 use super::versionpins::{FindVersionPinsError, FindVersionPinsRow};
 use crate::coords_error::CoordsError;
+use crate::types::IdType;
 pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
 use snafu::{ResultExt, Snafu};
+
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
 pub enum FindVersionPinError {
@@ -98,7 +100,7 @@ impl<'a> FindVersionPin<'a> {
             })?
             .pop()
             .ok_or(FindVersionPinError::NoQueryResults)?;
-        let id: i32 = row.get(0);
+        let id: IdType = row.get(0);
         let distribution: &str = row.get(1);
         let level_name: &str = row.get(2);
         let role_name: &str = row.get(3);

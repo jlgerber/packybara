@@ -8,6 +8,7 @@ use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
 //use std::str::FromStr;
+//use crate::types::IdType;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
@@ -89,7 +90,7 @@ pub struct FindAllPackages<'a> {
     client: &'a mut Client,
     //order_by: Vec<OrderPackageBy>,
     // order_direction: Option<OrderDirection>,
-    // limit: Option<i32>,
+    // limit: Option<IdType>,
 }
 
 impl fmt::Debug for FindAllPackages<'_> {
@@ -118,7 +119,7 @@ impl<'a> FindAllPackages<'a> {
     //     self
     // }
 
-    // pub fn limit(&mut self, limit: i32) -> &mut Self {
+    // pub fn limit(&mut self, limit: IdType) -> &mut Self {
     //     self.limit = Some(limit);
     //     self
     // }

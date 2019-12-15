@@ -1,5 +1,6 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
 pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
+use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -127,7 +128,7 @@ pub struct FindAllRoles<'a> {
     category: Option<&'a str>,
     order_by: Option<Vec<OrderRoleBy>>,
     order_direction: Option<OrderDirection>,
-    limit: Option<i32>,
+    limit: Option<IdType>,
 }
 
 impl fmt::Debug for FindAllRoles<'_> {
@@ -187,7 +188,7 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
-    pub fn limit(&mut self, limit: i32) -> &mut Self {
+    pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }

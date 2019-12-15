@@ -1,5 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
-pub use crate::db::search_attribute::{OrderDirection, SearchAttribute, LtreeSearchMode};
+pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
@@ -8,6 +8,7 @@ use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
 //use std::str::FromStr;
+use crate::types::IdType;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
@@ -91,7 +92,7 @@ pub struct FindAllPlatforms<'a> {
     name: Option<&'a str>,
     order_by: Option<Vec<OrderPlatformBy>>,
     order_direction: Option<OrderDirection>,
-    limit: Option<i32>,
+    limit: Option<IdType>,
 }
 
 impl fmt::Debug for FindAllPlatforms<'_> {
@@ -139,7 +140,7 @@ impl<'a> FindAllPlatforms<'a> {
         self
     }
 
-    pub fn limit(&mut self, limit: i32) -> &mut Self {
+    pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }

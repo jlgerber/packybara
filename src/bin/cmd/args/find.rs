@@ -1,3 +1,4 @@
+use packybara::types::IdType;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, PartialEq)]
@@ -27,7 +28,7 @@ pub enum PbFind {
         search_mode: Option<String>,
         /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
-        limit: Option<i32>,
+        limit: Option<IdType>,
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
@@ -59,7 +60,7 @@ pub enum PbFind {
         search_mode: Option<String>,
         /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
-        limit: Option<i32>,
+        limit: Option<IdType>,
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
@@ -92,7 +93,7 @@ pub enum PbFind {
         search_mode: Option<String>,
         /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
-        limit: Option<i32>,
+        limit: Option<IdType>,
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
@@ -117,7 +118,7 @@ pub enum PbFind {
         search_mode: Option<String>,
         /// Limit the number of returned items.
         #[structopt(short, long, display_order = 6)]
-        limit: Option<i32>,
+        limit: Option<IdType>,
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
@@ -210,7 +211,7 @@ pub enum PbFind {
         search_mode: Option<String>,
         // /// Limit the number of returned items.
         // #[structopt(short, long, display_order = 6)]
-        // limit: Option<i32>,
+        // limit: Option<IdType>,
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,

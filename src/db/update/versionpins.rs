@@ -2,6 +2,7 @@
 pbk update versionpins --versionpin 22 --distribution 22 --pkgcoord 84 -v 432 -d 22 -p 32
 */
 //use itertools::Itertools;
+use crate::types::IdType;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
@@ -35,7 +36,7 @@ impl VersionPinUpdate {
         }
     }
 }
-type IdType = i32;
+
 /// Responsible for creating packages
 pub struct UpdateVersionPins<'a> {
     pub client: &'a mut Client,
