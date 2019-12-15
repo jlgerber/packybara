@@ -82,13 +82,15 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
 }
 
 /// Add one or more roles
-pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
-    if let PbSet::VersionPins { mut dist_ids, .. } = cmd {
-        // let mut pb = PackratDb::new(client);
-        // let mut results = pb.add_roles();
-        //let results = results.roles(&mut dist_ids).create()?;
-        //println!("{}", results);
-        println!("{:?}", dist_ids);
-    }
+pub fn set(_client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
+    let PbSet::VersionPins {
+        dist_ids, vpin_ids, ..
+    } = cmd;
+    assert_eq!(dist_ids.len(), vpin_ids.len());
+    // let mut pb = PackratDb::new(client);
+    // let mut results = pb.add_roles();
+    //let results = results.roles(&mut dist_ids).create()?;
+    //println!("{}", results);
+    println!("{:?} {:?}", dist_ids, vpin_ids);
     Ok(())
 }
