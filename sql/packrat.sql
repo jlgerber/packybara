@@ -162,11 +162,7 @@ CREATE OR REPLACE VIEW distribution_view AS (
 CREATE TABLE IF NOT EXISTS revision (
 	id SERIAL PRIMARY KEY,
 	author TEXT NOT NULL,
-	-- consider making this a timestamp without time zone and 
-	-- making the applications convert
-	created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-	comment text NOT NULL,
-	changeset jsonb NOT NULL
+	comment text NOT NULL
 );
 
 ------------------

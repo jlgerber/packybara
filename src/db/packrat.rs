@@ -122,7 +122,15 @@ impl PackratDb {
     }
 
     /// update packages
-    pub fn update_versionpins<'b>(&'b mut self) -> update::versionpins::UpdateVersionPins {
-        update::versionpins::UpdateVersionPins::new(&mut self.client)
+    ///
+    /// # Arguments
+    /// * `comment` - A comment describing the update
+    /// * `user` - The name of the user making the update
+    pub fn update_versionpins<'b>(
+        &'b mut self,
+        comment: &'b str,
+        author: &'b str,
+    ) -> update::versionpins::UpdateVersionPins {
+        update::versionpins::UpdateVersionPins::new(&mut self.client, comment, author)
     }
 }

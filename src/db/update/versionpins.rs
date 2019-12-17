@@ -20,6 +20,8 @@ pub enum UpdateVersionPinsError {
     #[snafu(display("No update data supplied"))]
     NoUpdatesError,
 }
+/// Models a change to a versionpin as optional new distribution and/or
+/// pkgcoord_ids
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct VersionPinChange {
     pub versionpin_id: IdType,
@@ -28,6 +30,16 @@ pub struct VersionPinChange {
 }
 
 impl VersionPinChange {
+    /// New up a VersionPinChange given a versionpin id, and
+    /// an option wrapped distribution id and pkgcoord id.
+    ///
+    /// # Arguments
+    /// * `versionpin_id` The database id of the versionpin
+    /// * `distribution_id` - The database id of the distribution wrapped in Some, or None
+    /// * `pkgcoord_id` - The database id of the pkgcoord wrapped in Some, or None.
+    ///
+    /// # Returns
+    /// * VersionPinChange instance
     pub fn new(
         versionpin_id: IdType,
         distribution_id: Option<IdType>,
@@ -39,6 +51,14 @@ impl VersionPinChange {
             pkgcoord_id,
         }
     }
+    /// Detect whether the VersionPinChange instance has Some
+    /// distribution id or Some pkgcoord id.
+    ///
+    /// # Arguments
+    /// - None
+    ///
+    /// # Returns
+    /// * bool
     pub fn has_changes(&self) -> bool {
         self.distribution_id.is_some() || self.pkgcoord_id.is_some()
     }
@@ -48,6 +68,8 @@ impl VersionPinChange {
 pub struct UpdateVersionPins<'a> {
     pub client: &'a mut Client,
     pub changes: Vec<VersionPinChange>,
+    pub comment: &'a str,
+    pub author: &'a str,
 }
 
 impl<'a> UpdateVersionPins<'a> {
@@ -58,10 +80,13 @@ impl<'a> UpdateVersionPins<'a> {
     /// * `client` - A reference to a postgres::Client instance, which
     /// stores the connection to the database, and provides crud methods
     /// for us.
-    pub fn new(client: &'a mut Client) -> Self {
+    ///
+    pub fn new(client: &'a mut Client, comment: &'a str, author: &'a str) -> Self {
         Self {
             client,
             changes: Vec::new(),
+            comment,
+            author,
         }
     }
 
@@ -180,6 +205,13 @@ impl<'a> UpdateVersionPins<'a> {
             })?;
             return Err(UpdateVersionPinsError::NoUpdatesError);
         } else {
+            tx.execute(
+                "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
+                &[&self.author, &self.comment],
+            )
+            .context(TokioPostgresError {
+                msg: "failed to update revision entity",
+            })?;
             tx.commit().context(TokioPostgresError {
                 msg: "failed to commit",
             })?;

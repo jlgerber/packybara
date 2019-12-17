@@ -15,5 +15,8 @@ pub enum PbSet {
         /// form pairs.
         #[structopt(short, long = "dist-id", display_order = 2)]
         dist_ids: Vec<IdType>,
+        /// Comment associated with revision
+        #[structopt(short, long, display_order = 3)]
+        comment: String,
     },
 }

@@ -6,6 +6,7 @@ use packybara::packrat::{Client, PackratDb};
 use packybara::{LtreeSearchMode, SearchAttribute};
 use prettytable::{cell, format, row, table};
 use std::str::FromStr;
+use whoami;
 
 pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::VersionPins {
@@ -85,11 +86,15 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
 /// Add one or more roles
 pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
     let PbSet::VersionPins {
-        dist_ids, vpin_ids, ..
+        dist_ids,
+        vpin_ids,
+        comment,
+        ..
     } = cmd;
     assert_eq!(dist_ids.len(), vpin_ids.len());
     let mut pb = PackratDb::new(client);
-    let mut results = pb.update_versionpins();
+    let username = whoami::username();
+    let mut results = pb.update_versionpins(&comment, &username);
     log::debug!("versionpins: {:?} distribtions: {:?}", dist_ids, vpin_ids);
     let mut updates = Vec::new();
     for cnt in 0..dist_ids.len() {
