@@ -10,3 +10,5 @@ pub use levels::OrderLevelBy;
 pub mod distributions;
 pub mod packages;
 pub mod pkgcoords;
+pub mod revisions;
+pub use revisions::OrderRevisionBy;

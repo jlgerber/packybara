@@ -2,3 +2,4 @@
 /// we could change to BIGINTEGER at some point, an this would be
 /// changed to i64
 pub type IdType = i32;
+pub type LongIdType = i64;

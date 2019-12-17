@@ -1,4 +1,4 @@
-use packybara::types::IdType;
+use packybara::types::{IdType, LongIdType};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, PartialEq)]
@@ -215,5 +215,27 @@ pub enum PbFind {
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
+    },
+    #[structopt(display_order = 11)]
+    /// Search for revisions.
+    Revisions {
+        /// The revision id.
+        #[structopt(short, long, display_order = 1)]
+        id: Option<IdType>,
+        /// The transaction id
+        #[structopt(short, long = "tx-id", display_order = 2)]
+        transaction_id: Option<LongIdType>,
+        /// The author of the transaction
+        #[structopt(short, long, display_order = 3)]
+        author: Option<String>,
+        ///  Order by
+        #[structopt(short, long = "order-by", display_order = 4)]
+        order_by: Option<String>,
+        /// The order direction. may be "asc" or "desc".
+        #[structopt(short = "D", long = "order-direction", display_order = 5)]
+        order_direction: Option<String>,
+        // Limit the number of returned items.
+        #[structopt(short, long, display_order = 6)]
+        limit: Option<IdType>,
     },
 }

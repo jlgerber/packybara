@@ -67,6 +67,10 @@ impl PackratDb {
         find_all::roles::FindAllRoles::new(&mut self.client)
     }
 
+    pub fn find_all_revisions<'b>(&'b mut self) -> find_all::revisions::FindAllRevisions {
+        find_all::revisions::FindAllRevisions::new(&mut self.client)
+    }
+
     pub fn find_all_platforms<'b>(&'b mut self) -> find_all::platforms::FindAllPlatforms {
         find_all::platforms::FindAllPlatforms::new(&mut self.client)
     }

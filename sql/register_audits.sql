@@ -12,7 +12,8 @@ SELECT audit.audit_table('withpackage');
 CREATE OR REPLACE VIEW revision_view AS (
     WITH cte AS 
         (
-            SELECT 
+            SELECT
+                transaction_id,
                 row_data->'id' AS revision_id 
             FROM 
                 audit.logged_actions 
@@ -20,7 +21,10 @@ CREATE OR REPLACE VIEW revision_view AS (
                 table_name ='revision'
         ) 
     SELECT 
-        * 
+        id,
+        transaction_id, 
+        author, 
+        comment
     FROM 
         revision 
     JOIN 
