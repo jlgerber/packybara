@@ -26,5 +26,5 @@ CREATE OR REPLACE VIEW revision_view AS (
     JOIN 
         cte 
     ON 
-        revision.id = cte.revision_id::INTEGER;
+        revision.id = cte.revision_id::INTEGER
 );

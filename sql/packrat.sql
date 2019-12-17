@@ -22,7 +22,8 @@ DROP VIEW IF EXISTS site_view CASCADE;
 DROP TABLE IF EXISTS site CASCADE;
 DROP TABLE IF EXISTS changeset CASCADE;
 DROP TABLE IF EXISTS withpackage CASCADE;
-DROP VIEW IF EXISTS revision_view CASCADE; -- creation of view in register_audits
+DROP VIEW IF EXISTS revision_view CASCADE; 
+-- creation of view in register_audits
 -------------
 --  SITE   --
 -------------
