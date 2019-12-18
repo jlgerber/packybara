@@ -1060,6 +1060,7 @@ RETURNS TABLE(
   level_name text,
   site_name text,
   platform_name text,
+  package text,
   old text,
   new text
 ) AS $$ 
@@ -1088,6 +1089,7 @@ SELECT
     pkgcoord.level_name,
     pkgcoord.site_name,
     pkgcoord.platform_name,
+	pkgcoord.package,
     CASE 
         WHEN auditvals.action = 'UPDATE' THEN distribution.name
         ELSE ''
