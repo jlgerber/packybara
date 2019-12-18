@@ -150,47 +150,48 @@ on auditvals.new_dist::INTEGER = distribution2.distribution_id;
 
 # How to handle inserts and updates
 ```
-with auditvals as 
+WITH auditvals AS 
     (
-        select 
-            row_data->'id' as id,
-            row_data->'coord' as coord, 
-            row_data->'distribution' as old_dist,
-            changed_fields->'distribution' as new_dist,
+        SELECT 
+            row_data->'id' AS id,
+            row_data->'coord' AS coord, 
+            row_data->'distribution' AS old_dist,
+            changed_fields->'distribution' AS new_dist,
             transaction_id,
             action
-        from 
+        FROM 
             audit.logged_actions
-        where 
+        WHERE 
             table_name='versionpin' and 
             row_data is not null
     ) 
-select 
-    auditvals.id as auditvals_id,
+SELECT 
+    auditvals.id AS auditvals_id,
     auditvals.action,
+    auditvals.transaction_id,
     pkgcoord.role_name,
     pkgcoord.level_name,
     pkgcoord.site_name,
     pkgcoord.platform_name,
-    distribution.name as old_distribution,
-    distribution2.name as new_distribution
-from 
+    distribution.name AS old_distribution,
+    distribution2.name AS new_distribution
+FROM 
     pkgcoord_view as pkgcoord
-inner join 
+INNER JOIN 
     auditvals 
-on 
+ON 
     auditvals.coord::integer = pkgcoord.pkgcoord_id 
-inner join 
-    distribution_view as distribution 
-on 
+INNER JOIN 
+    distribution_view AS distribution 
+ON 
     auditvals.old_dist::INTEGER = distribution.distribution_id
-inner join 
+INNER JOIN 
     distribution_view as distribution2
-on 
-   case when auditvals.action = 'UPDATE' 
-   then 
+ON 
+   CASE WHEN auditvals.action = 'UPDATE' 
+   THEN 
         auditvals.new_dist::INTEGER 
-    else
+    ELSE
         auditvals.old_dist::INTEGER
-    end = distribution2.distribution_id;
+    END = distribution2.distribution_id;
 ```
