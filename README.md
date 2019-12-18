@@ -195,3 +195,53 @@ ON
         auditvals.old_dist::INTEGER
     END = distribution2.distribution_id;
 ```
+
+```
+WITH auditvals AS 
+    (
+        SELECT 
+            row_data->'id' AS id,
+            row_data->'coord' AS coord, 
+            row_data->'distribution' AS old_dist,
+            changed_fields->'distribution' AS new_dist,
+            transaction_id,
+            action
+        FROM 
+            audit.logged_actions
+        WHERE 
+            table_name='versionpin' and 
+            row_data is not null
+    ) 
+SELECT 
+    auditvals.id AS id,
+    auditvals.action,
+    auditvals.transaction_id,
+    pkgcoord.role_name,
+    pkgcoord.level_name,
+    pkgcoord.site_name,
+    pkgcoord.platform_name,
+    CASE 
+        WHEN auditvals.action = 'UPDATE' THEN distribution.name
+        ELSE ''
+    END AS old,
+    distribution2.name AS new
+FROM 
+    pkgcoord_view as pkgcoord
+INNER JOIN 
+    auditvals 
+ON 
+    auditvals.coord::integer = pkgcoord.pkgcoord_id 
+INNER JOIN 
+    distribution_view AS distribution 
+ON 
+    auditvals.old_dist::INTEGER = distribution.distribution_id
+INNER JOIN 
+    distribution_view as distribution2
+ON 
+   CASE WHEN auditvals.action = 'UPDATE' 
+   THEN 
+        auditvals.new_dist::INTEGER 
+    ELSE
+        auditvals.old_dist::INTEGER
+    END = distribution2.distribution_id;
+    ```

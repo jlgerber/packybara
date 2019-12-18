@@ -1,6 +1,7 @@
 --- Procedures
 drop function if exists find_distribution;
 drop function if exists search_distributions;
+drop function if exists find_vpin_audit;
 ---------------
 -- DISTRIBUTION
 ---------------
@@ -1044,4 +1045,71 @@ BEGIN
 		AND v.role_path @> role_ltree
 		AND v.platform_path @> platform_ltree
 		AND v.site_path @> site_ltree;
+END $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION 
+	find_vpin_audit(
+		tx_id integer
+	) 
+RETURNS TABLE(
+  id INTEGER,
+  action text,
+  transaction_id integer,
+  role_name text,
+  level_name text,
+  site_name text,
+  platform_name text,
+  old text,
+  new text
+) AS $$ 
+BEGIN 
+	RETURN QUERY WITH auditvals AS 
+    (
+        SELECT 
+            row_data->'id' AS id,
+            row_data->'coord' AS coord, 
+            row_data->'distribution' AS old_dist,
+            audit.logged_actions.changed_fields->'distribution' AS new_dist,
+            audit.logged_actions.transaction_id,
+            audit.logged_actions.action
+        FROM 
+            audit.logged_actions
+        WHERE 
+            table_name='versionpin' AND 
+            row_data is not null AND 
+			audit.logged_actions.transaction_id = tx_id
+    ) 
+SELECT 
+    auditvals.id::integer AS id,
+    auditvals.action,
+    auditvals.transaction_id::INTEGER,
+    pkgcoord.role_name, 
+    pkgcoord.level_name,
+    pkgcoord.site_name,
+    pkgcoord.platform_name,
+    CASE 
+        WHEN auditvals.action = 'UPDATE' THEN distribution.name
+        ELSE ''
+    END AS old,
+    distribution2.name AS new
+FROM 
+    pkgcoord_view as pkgcoord
+INNER JOIN 
+    auditvals 
+ON 
+    auditvals.coord::integer = pkgcoord.pkgcoord_id 
+INNER JOIN 
+    distribution_view AS distribution 
+ON 
+    auditvals.old_dist::INTEGER = distribution.distribution_id
+INNER JOIN 
+    distribution_view as distribution2
+ON 
+   CASE WHEN auditvals.action = 'UPDATE' 
+   THEN 
+        auditvals.new_dist::INTEGER 
+    ELSE
+        auditvals.old_dist::INTEGER
+    END = distribution2.distribution_id;
 END $$ LANGUAGE plpgsql;
