@@ -3,6 +3,7 @@ pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAtt
 use crate::types::{IdType, LongIdType};
 pub use crate::Coords;
 pub use crate::Distribution;
+use chrono::{DateTime, Local, TimeZone};
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
@@ -21,6 +22,13 @@ pub enum OrderRevisionBy {
         to_string = "author"
     )]
     Author,
+    #[strum(
+        serialize = "datetime",
+        serialize = "DateTime",
+        serialize = "DATETIME",
+        to_string = "datetime"
+    )]
+    DateTime,
 }
 
 pub type FindAllRevisionsResult<T, E = FindAllRevisionsError> = std::result::Result<T, E>;
@@ -43,14 +51,15 @@ pub struct FindAllRevisionsRow {
     pub transaction_id: LongIdType,
     pub author: String,
     pub comment: String,
+    pub datetime: DateTime<Local>,
 }
 
 impl fmt::Display for FindAllRevisionsRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {}",
-            self.id, self.transaction_id, self.author, self.comment
+            "{} {} {} {} {}",
+            self.id, self.transaction_id, self.author, self.datetime, self.comment
         )
     }
 }
@@ -70,12 +79,14 @@ impl FindAllRevisionsRow {
         id: IdType,
         transaction_id: LongIdType,
         author: S,
+        datetime: DateTime<Local>,
         comment: S,
     ) -> Self {
         FindAllRevisionsRow {
             id,
             transaction_id,
             author: author.into(),
+            datetime,
             comment: comment.into(),
         }
     }
@@ -87,6 +98,7 @@ impl FindAllRevisionsRow {
     /// * `id`
     /// * `transaction_id`
     /// * `author`
+    /// * `datetime`
     /// * `comment`
     ///
     /// # Returns
@@ -97,10 +109,17 @@ impl FindAllRevisionsRow {
         id: IdType,
         transaction_id: LongIdType,
         author: S,
+        datetime: DateTime<Local>,
         comment: S,
     ) -> FindAllRevisionsResult<FindAllRevisionsRow> {
         // TODO: police category
-        Ok(Self::new(id, transaction_id, author.into(), comment.into()))
+        Ok(Self::new(
+            id,
+            transaction_id,
+            author.into(),
+            datetime,
+            comment.into(),
+        ))
     }
 
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
@@ -109,6 +128,7 @@ impl FindAllRevisionsRow {
     /// * `id`
     /// * `transaction_id`
     /// * `author`
+    /// * `datetime`
     /// * `comment`
     ///
     /// # Returns
@@ -117,9 +137,10 @@ impl FindAllRevisionsRow {
         id: IdType,
         transaction_id: LongIdType,
         author: S,
+        datetime: DateTime<Local>,
         comment: S,
     ) -> FindAllRevisionsRow {
-        Self::try_from_parts(id, transaction_id, author.into(), comment.into()).unwrap()
+        Self::try_from_parts(id, transaction_id, author.into(), datetime, comment.into()).unwrap()
     }
 }
 /// Responsible for finding a distribution
@@ -240,7 +261,7 @@ impl<'a> FindAllRevisions<'a> {
     pub fn query(&mut self) -> Result<Vec<FindAllRevisionsRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
-                id, transaction_id, author, comment
+                id, transaction_id, author, datetime, comment
             FROM 
                 revision_view"
             .to_string();
@@ -289,9 +310,10 @@ impl<'a> FindAllRevisions<'a> {
             let id: IdType = row.get(0);
             let txid: LongIdType = row.get(1);
             let author: &str = row.get(2);
-            let comment: &str = row.get(3);
+            let datetime: DateTime<Local> = row.get(3);
+            let comment: &str = row.get(4);
             result.push(FindAllRevisionsRow::try_from_parts(
-                id, txid, author, comment,
+                id, txid, author, datetime, comment,
             )?);
         }
         Ok(result)

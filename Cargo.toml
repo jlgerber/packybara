@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.20.0"
+version = "0.21.0"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
@@ -15,8 +15,8 @@ path = "src/bin/setupdb.rs"
 
 [dependencies]
 tokio-postgres = "0.5.0-alpha.2"
-tokio = "0.2.1"
-postgres = "0.17.0-alpha.2"
+tokio = "0.2.4"
+#postgres = "0.17.0-alpha.2"
 levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.7.0"}
 strum = "0.16.0"
 strum_macros = "0.16.0"
@@ -28,3 +28,8 @@ log = "0.4.8"
 env_logger = "0.7.1"
 itertools = "0.8.2"
 whoami = "0.6.0"
+chrono = "0.4.10"
+
+[dependencies.postgres]
+version = "0.17.0-alpha.2"
+features = ["with-chrono-0_4"]

@@ -41,12 +41,13 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         let results = results.query()?;
         // For now I do this. I need to add packge handling into the query
         // either by switching functions or handling the sql on this end
-        let mut table = table!([bFg => "ID","TRANSACTION ID", "AUTHOR", "COMMENT"]);
+        let mut table = table!([bFg => "ID","TRANSACTION ID", "AUTHOR", "DATETIME", "COMMENT"]);
         for result in results {
             table.add_row(row![
                 result.id,
                 result.transaction_id,
                 result.author,
+                result.datetime.format("%F %r"),
                 result.comment,
             ]);
         }
