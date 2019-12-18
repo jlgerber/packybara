@@ -71,6 +71,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbFind::Revisions { .. } => {
                 cmd::all_revisions::process(client, cmd)?;
             }
+            PbFind::Changes { .. } => {
+                cmd::all_changes::process(client, cmd)?;
+            }
         },
         PbCrud::Add { cmd } => match cmd {
             PbAdd::Packages { .. } => {

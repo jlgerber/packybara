@@ -238,4 +238,11 @@ pub enum PbFind {
         #[structopt(short, long, display_order = 6)]
         limit: Option<IdType>,
     },
+    #[structopt(display_order = 11)]
+    /// Search for revisions.
+    Changes {
+        /// The transaction id
+        #[structopt(name = "TX_ID", display_order = 1)]
+        transaction_id: LongIdType,
+    },
 }

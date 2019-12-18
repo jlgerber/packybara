@@ -12,3 +12,4 @@ pub mod packages;
 pub mod pkgcoords;
 pub mod revisions;
 pub use revisions::OrderRevisionBy;
+pub mod changes;

@@ -1050,12 +1050,12 @@ END $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION 
 	find_vpin_audit(
-		tx_id integer
+		tx_id BIGINT
 	) 
 RETURNS TABLE(
   id INTEGER,
   action text,
-  transaction_id integer,
+  transaction_id bigint,
   role_name text,
   level_name text,
   site_name text,
@@ -1084,7 +1084,7 @@ BEGIN
 SELECT 
     auditvals.id::integer AS id,
     auditvals.action,
-    auditvals.transaction_id::INTEGER,
+    auditvals.transaction_id::BIGINT,
     pkgcoord.role_name, 
     pkgcoord.level_name,
     pkgcoord.site_name,

@@ -34,6 +34,11 @@ pub enum FindAllDistributionsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    #[snafu(display(
+        "provided distribution not parseable. try_from called with {}",
+        distribution,
+    ))]
+    DistributionError { distribution: String },
 }
 
 /// A row returned from the  FindAllDistributions.query
@@ -84,7 +89,19 @@ impl FindAllDistributionsRow {
         // TODO: police category
         Ok(Self::new(id, package.to_string(), version.to_string()))
     }
-
+    pub fn try_from(
+        id: IdType,
+        distribution: &str,
+    ) -> FindAllDistributionsResult<FindAllDistributionsRow> {
+        // TODO: police category
+        let pieces = distribution.split("-").collect::<Vec<_>>(); //FIX
+        if pieces.len() != 2 {
+            return Err(FindAllDistributionsError::DistributionError {
+                distribution: distribution.to_string(),
+            })?;
+        }
+        Ok(Self::new(id, pieces[0].to_string(), pieces[1].to_string()))
+    }
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
     ///
     /// # Arguments

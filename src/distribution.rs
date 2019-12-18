@@ -7,7 +7,9 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::{CoordsError, CoordsResult};
+use std::convert::TryFrom;
 use std::fmt;
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Distribution {
     name: String,
@@ -51,6 +53,14 @@ fn validate(name: String) -> CoordsResult<String> {
         });
     }
     Ok(name)
+}
+
+impl TryFrom<&str> for Distribution {
+    type Error = CoordsError;
+    ///
+    fn try_from(distribution: &str) -> CoordsResult<Distribution> {
+        Self::new(distribution)
+    }
 }
 
 impl Distribution {
