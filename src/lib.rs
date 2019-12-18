@@ -15,7 +15,7 @@ pub use db::packrat;
 pub use db::search_attribute::{
     JoinMode, LtreeSearchMode, OrderDirection, SearchAttribute, SearchMode,
 };
-pub use db::{OrderLevelBy, OrderPlatformBy, OrderRoleBy};
+pub use db::{OrderLevelBy, OrderPlatformBy, OrderRevisionBy, OrderRoleBy};
 pub mod coords;
 pub use coords::Coords;
 pub mod version_pin;
