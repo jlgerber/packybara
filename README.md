@@ -105,3 +105,45 @@ GROUP BY
  insert platform(path) values ('any.cent8_128'),('any.cent9_128');
  update platform set path='any.cent8_64' where path='any.cent8_128';
  ```
+
+ ## Pulling what i need
+ 
+```
+with auditvals as 
+    (
+        select 
+            row_data->'id' as id,
+            row_data->'coord' as coord, 
+            row_data->'distribution' as old_dist,
+            changed_fields->'distribution' as new_dist,
+            transaction_id 
+        from 
+            audit.logged_actions
+        where 
+            table_name='versionpin' and 
+            row_data is not null and
+            action = 'UPDATE' and
+        transaction_id = 13351
+    ) 
+select 
+    auditvals.id as auditvals_id,
+    pkgcoord.role_name,
+    pkgcoord.level_name,
+    pkgcoord.site_name,
+    pkgcoord.platform_name,
+    distribution.name as old_distribution,
+    distribution2.name as new_distribution
+from 
+    pkgcoord_view as pkgcoord
+inner join 
+    auditvals 
+on 
+    auditvals.coord::integer = pkgcoord.pkgcoord_id 
+inner join 
+    distribution_view as distribution 
+on 
+    auditvals.old_dist::INTEGER = distribution.distribution_id
+inner join 
+    distribution_view as distribution2
+on auditvals.new_dist::INTEGER = distribution2.distribution_id;
+```
