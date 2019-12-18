@@ -116,7 +116,7 @@ with auditvals as
             row_data->'coord' as coord, 
             row_data->'distribution' as old_dist,
             changed_fields->'distribution' as new_dist,
-            transaction_id 
+            transaction_id
         from 
             audit.logged_actions
         where 
@@ -146,4 +146,51 @@ on
 inner join 
     distribution_view as distribution2
 on auditvals.new_dist::INTEGER = distribution2.distribution_id;
+```
+
+# How to handle inserts and updates
+```
+with auditvals as 
+    (
+        select 
+            row_data->'id' as id,
+            row_data->'coord' as coord, 
+            row_data->'distribution' as old_dist,
+            changed_fields->'distribution' as new_dist,
+            transaction_id,
+            action
+        from 
+            audit.logged_actions
+        where 
+            table_name='versionpin' and 
+            row_data is not null
+    ) 
+select 
+    auditvals.id as auditvals_id,
+    auditvals.action,
+    pkgcoord.role_name,
+    pkgcoord.level_name,
+    pkgcoord.site_name,
+    pkgcoord.platform_name,
+    distribution.name as old_distribution,
+    distribution2.name as new_distribution
+from 
+    pkgcoord_view as pkgcoord
+inner join 
+    auditvals 
+on 
+    auditvals.coord::integer = pkgcoord.pkgcoord_id 
+inner join 
+    distribution_view as distribution 
+on 
+    auditvals.old_dist::INTEGER = distribution.distribution_id
+inner join 
+    distribution_view as distribution2
+on 
+   case when auditvals.action = 'UPDATE' 
+   then 
+        auditvals.new_dist::INTEGER 
+    else
+        auditvals.old_dist::INTEGER
+    end = distribution2.distribution_id;
 ```
