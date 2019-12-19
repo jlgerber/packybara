@@ -239,9 +239,10 @@ pub enum PbFind {
         limit: Option<IdType>,
     },
     #[structopt(display_order = 11)]
-    /// Search for revisions.
+    /// Search for changes given a transaction id. The revision provides answers
+    /// about' who' and 'when', while he Changes provide the 'what'.
     Changes {
-        /// The transaction id
+        /// The transaction_id
         #[structopt(name = "TX_ID", display_order = 1)]
         transaction_id: LongIdType,
     },
