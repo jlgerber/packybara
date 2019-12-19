@@ -217,7 +217,8 @@ pub enum PbFind {
         order_by: Option<String>,
     },
     #[structopt(display_order = 11)]
-    /// Search for revisions.
+    /// Search for revisions. One revision exists per transactional state change
+    /// of the database. The revision tracks the author, comments, and datetime.
     Revisions {
         /// The revision id.
         #[structopt(short, long, display_order = 1)]
@@ -238,7 +239,7 @@ pub enum PbFind {
         #[structopt(short, long, display_order = 6)]
         limit: Option<IdType>,
     },
-    #[structopt(display_order = 11)]
+    #[structopt(display_order = 12)]
     /// Search for changes given a transaction id. The revision provides answers
     /// about' who' and 'when', while he Changes provide the 'what'.
     Changes {
