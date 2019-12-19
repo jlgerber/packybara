@@ -281,10 +281,19 @@ impl<'a> FindAllChanges<'a> {
 
     pub fn query(&mut self) -> Result<Vec<FindAllChangesRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        let query_str = "SELECT 
-                id, transaction_id, level_name, role_name, platform_name, site_name, package, old, new
+        let query_str = "SELECT
+                id,
+                transaction_id,
+                action,
+                level_name,
+                role_name,
+                platform_name,
+                site_name,
+                package,
+                old,
+                new
             FROM 
-            find_vpin_audit($1)"
+                find_vpin_audit($1)"
             .to_string();
         if self.transaction_id.is_none() {
             return Err(FindAllChangesError::TransactionIdMissingError)?;
