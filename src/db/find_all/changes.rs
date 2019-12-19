@@ -11,8 +11,37 @@ use snafu::ResultExt;
 use snafu::Snafu;
 use std::convert::TryFrom;
 use std::fmt;
+use std::str::FromStr;
+use strum::ParseError;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
+/// Logged activity in audit log may be one of
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr, Clone,
+)]
+pub enum ChangeAction {
+    #[strum(
+        serialize = "insert",
+        serialize = "Insert",
+        serialize = "INSERT",
+        to_string = "INSERT"
+    )]
+    Insert,
+    #[strum(
+        serialize = "update",
+        serialize = "Update",
+        serialize = "UPDATE",
+        to_string = "UPDATE"
+    )]
+    Update,
+    #[strum(
+        serialize = "truncate",
+        serialize = "TRUNCATE",
+        serialize = "TRUNCATE",
+        to_string = "TRUNCATE"
+    )]
+    Truncate,
+}
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
 pub enum OrderChangeBy {
     #[strum(
@@ -35,6 +64,8 @@ pub enum FindAllChangesError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    #[snafu(display("Error creating ChangeAction from '{}': {}", input, source))]
+    ChangeActionError { input: String, source: ParseError },
     #[snafu(display("transaction_id not set"))]
     TransactionIdMissingError,
 }
@@ -44,6 +75,7 @@ pub enum FindAllChangesError {
 pub struct FindAllChangesRow {
     pub id: LongIdType,
     pub transaction_id: LongIdType,
+    pub action: ChangeAction,
     pub level: Level,
     pub role: Role,
     pub platform: Platform,
@@ -59,9 +91,10 @@ impl fmt::Display for FindAllChangesRow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} ({} {} {} {}) {} {}",
+            "{} {} {} ({} {} {} {}) {} {}",
             self.id,
             self.transaction_id,
+            self.action,
             self.level,
             self.role,
             self.platform,
@@ -86,6 +119,7 @@ impl FindAllChangesRow {
     pub fn new<S: Into<String>>(
         id: LongIdType,
         transaction_id: LongIdType,
+        action: ChangeAction,
         level: Level,
         role: Role,
         platform: Platform,
@@ -97,6 +131,7 @@ impl FindAllChangesRow {
         FindAllChangesRow {
             id,
             transaction_id,
+            action,
             level,
             role,
             platform,
@@ -124,6 +159,7 @@ impl FindAllChangesRow {
     pub fn try_from_parts<'b>(
         id: LongIdType,
         transaction_id: LongIdType,
+        action: &'b str,
         level: &'b str,
         role: &'b str,
         platform: &'b str,
@@ -133,6 +169,9 @@ impl FindAllChangesRow {
         new: &'b str,
     ) -> FindAllChangesResult<FindAllChangesRow> {
         // TODO: police category
+        let action = ChangeAction::from_str(action).context(ChangeActionError {
+            input: action.to_string(),
+        })?;
         let level = Level::try_from(level).context(CoordsTryFromPartsError {
             coords: "unable to create from supplied str",
         })?;
@@ -154,6 +193,7 @@ impl FindAllChangesRow {
         Ok(Self::new(
             id,
             transaction_id,
+            action,
             level,
             role,
             platform,
@@ -178,6 +218,7 @@ impl FindAllChangesRow {
     pub fn from_parts<'b>(
         id: LongIdType,
         transaction_id: LongIdType,
+        action: &'b str,
         level: &'b str,
         role: &'b str,
         platform: &'b str,
@@ -189,6 +230,7 @@ impl FindAllChangesRow {
         Self::try_from_parts(
             id,
             transaction_id,
+            action,
             level,
             role,
             platform,
@@ -257,17 +299,19 @@ impl<'a> FindAllChanges<'a> {
         for row in self.client.query(query_str.as_str(), &params[..])? {
             let id: IdType = row.get(0);
             let txid: LongIdType = row.get(1);
-            let level: &str = row.get(2);
-            let role: &str = row.get(3);
-            let platform: &str = row.get(4);
-            let site: &str = row.get(5);
-            let package: &str = row.get(6);
-            let old: &str = row.get(7);
-            let new: &str = row.get(8);
+            let action: &str = row.get(2);
+            let level: &str = row.get(3);
+            let role: &str = row.get(4);
+            let platform: &str = row.get(5);
+            let site: &str = row.get(6);
+            let package: &str = row.get(7);
+            let old: &str = row.get(8);
+            let new: &str = row.get(9);
 
             result.push(FindAllChangesRow::try_from_parts(
                 id as LongIdType,
                 txid,
+                action,
                 level,
                 role,
                 platform,

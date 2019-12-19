@@ -1,9 +1,9 @@
 use super::args::PbFind;
-use packybara::db::find_all::changes::{OrderChangeBy, OrderDirection};
+//use packybara::db::find_all::changes::{OrderChangeBy, OrderDirection};
 use packybara::packrat::{Client, PackratDb};
 use prettytable::{cell, format, row, table};
-use std::ops::Deref;
-use std::str::FromStr;
+//use std::ops::Deref;
+//use std::str::FromStr;
 
 pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Changes { transaction_id, .. } = cmd {
@@ -12,11 +12,12 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         let results = results.transaction_id(transaction_id).query()?;
         // For now I do this. I need to add packge handling into the query
         // either by switching functions or handling the sql on this end
-        let mut table = table!([bFg => "ID","TX ID", "LEVEL", "ROLE", "PLATFORM","SITE", "PACKAGE", "OLD", "NEW"]);
+        let mut table = table!([bFg => "ID","TX ID", "ACTION", "LEVEL", "ROLE", "PLATFORM","SITE", "PACKAGE", "OLD", "NEW"]);
         for result in results {
             table.add_row(row![
                 result.id,
                 result.transaction_id,
+                result.action,
                 result.level,
                 result.role,
                 result.platform,
