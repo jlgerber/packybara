@@ -8,8 +8,8 @@
  *******************************************************/
 use crate::db::{add, find, find_all, update};
 //use postgres::Client;
+use crate::types::IdType;
 pub use postgres::{Client, NoTls};
-
 pub struct PackratDb {
     client: Client,
 }
@@ -90,7 +90,13 @@ impl PackratDb {
     pub fn find_all_packages<'b>(&'b mut self) -> find_all::packages::FindAllPackages {
         find_all::packages::FindAllPackages::new(&mut self.client)
     }
-
+    /// find withs for a particular versionpin
+    pub fn find_all_versionpin_withs<'b>(
+        &'b mut self,
+        versionpin_id: IdType,
+    ) -> find_all::versionpin_withs::FindAllWiths {
+        find_all::versionpin_withs::FindAllWiths::new(&mut self.client, versionpin_id)
+    }
     pub fn find_all_distributions<'b>(
         &'b mut self,
     ) -> find_all::distributions::FindAllDistributions {

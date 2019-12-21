@@ -11,5 +11,6 @@ pub mod pins;
 pub mod pkgcoords;
 pub mod utils;
 pub mod versionpin;
+pub mod versionpin_withs;
 pub mod versionpins;
 pub mod withs;

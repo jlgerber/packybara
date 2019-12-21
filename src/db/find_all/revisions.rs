@@ -3,7 +3,7 @@ pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAtt
 use crate::types::{IdType, LongIdType};
 pub use crate::Coords;
 pub use crate::Distribution;
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local /*TimeZone*/};
 use log;
 use postgres::types::ToSql;
 use postgres::Client;

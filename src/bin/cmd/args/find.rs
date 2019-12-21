@@ -69,6 +69,14 @@ pub enum PbFind {
         full_withs: bool,
     },
     #[structopt(display_order = 3)]
+    /// Find all withs for a given versionpin.
+    VersionPinWiths {
+        /// The name of the package.
+        //#[structopt(short, long, display_order = 1)]
+        #[structopt(name = "VERSIONPIN ID")]
+        versionpin_id: IdType,
+    },
+    #[structopt(display_order = 4)]
     /// Find a distribution's withs' distributions,
     /// based on a supplied package name and pin coords
     /// (level, role, platform, site).
@@ -98,7 +106,7 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
     },
-    #[structopt(display_order = 4)]
+    #[structopt(display_order = 5)]
     /// Search for pins. Discover what pin coordinates are being used.
     Pins {
         /// The role (eg model or anim_beta). Defaults to 'any'.
@@ -123,7 +131,7 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
     },
-    #[structopt(display_order = 5)]
+    #[structopt(display_order = 6)]
     /// Get a simple list of all roles.
     Roles {
         /// The role (eg model or anim_beta). Defaults to 'any'.
@@ -136,7 +144,7 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 3)]
         order_by: Option<String>,
     },
-    #[structopt(display_order = 6)]
+    #[structopt(display_order = 7)]
     /// Get a simple list of all platforms.
     Platforms {
         /// The platform (eg model or anim_beta). Defaults to 'any'.
@@ -146,14 +154,14 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 2)]
         order_by: Option<String>,
     },
-    #[structopt(display_order = 7)]
+    #[structopt(display_order = 8)]
     /// Get a simple list of all sites.
     Sites {
         /// The location name (eg portland). Defaults to 'any'.
         #[structopt(short = "S", long)]
         site: Option<String>,
     },
-    #[structopt(display_order = 8)]
+    #[structopt(display_order = 9)]
     /// Get a simple list of all levels.
     Levels {
         /// The jobsystem level (facility or show[.seq[.shot]]). Defaults to 'any'.
@@ -166,10 +174,10 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 3)]
         order_by: Option<String>,
     },
-    #[structopt(display_order = 9)]
+    #[structopt(display_order = 10)]
     /// Get a simple list of all packages.
     Packages {},
-    #[structopt(display_order = 8)]
+    #[structopt(display_order = 11)]
     /// Get a list of distributions
     Distributions {
         /// The package name. Otherwise we search for all packages.
@@ -185,7 +193,7 @@ pub enum PbFind {
         #[structopt(short = "D", long = "order-direction", display_order = 3)]
         order_direction: Option<String>,
     },
-    #[structopt(display_order = 10)]
+    #[structopt(display_order = 12)]
     /// Search for package coordinates. Package coordinates are simply
     /// a package name and a set of Coords (Level, Role, Platform, Site).
     PkgCoords {
@@ -216,7 +224,7 @@ pub enum PbFind {
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
     },
-    #[structopt(display_order = 11)]
+    #[structopt(display_order = 13)]
     /// Search for revisions. One revision exists per transactional state change
     /// of the database. The revision tracks the author, comments, and datetime.
     Revisions {
@@ -239,7 +247,7 @@ pub enum PbFind {
         #[structopt(short, long, display_order = 6)]
         limit: Option<IdType>,
     },
-    #[structopt(display_order = 12)]
+    #[structopt(display_order = 14)]
     /// Search for changes given a transaction id. The revision provides answers
     /// about' who' and 'when', while he Changes provide the 'what'.
     Changes {

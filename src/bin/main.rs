@@ -56,6 +56,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbFind::Pins { .. } => {
                 cmd::pins::process(client, cmd)?;
             }
+            PbFind::VersionPinWiths { .. } => {
+                cmd::versionpin_withs::process(client, cmd)?;
+            }
             PbFind::Withs { .. } => {
                 cmd::withs::process(client, cmd)?;
             }
