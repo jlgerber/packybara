@@ -156,6 +156,7 @@ impl FindAllVersionPinsRow {
 pub struct FindAllVersionPins<'a> {
     client: &'a mut Client,
     level: Option<&'a str>,
+    isolate_facility: bool,
     role: Option<&'a str>,
     platform: Option<&'a str>,
     site: Option<&'a str>,
@@ -170,6 +171,7 @@ impl<'a> FindAllVersionPins<'a> {
         FindAllVersionPins {
             client,
             level: None,
+            isolate_facility: false,
             role: None,
             platform: None,
             site: None,
@@ -182,6 +184,12 @@ impl<'a> FindAllVersionPins<'a> {
 
     pub fn level(&mut self, level_n: &'a str) -> &mut Self {
         self.level = Some(level_n);
+        self
+    }
+    /// If isolate_facility is True, then we scope our search to
+    /// the current show when taking search_mode into account
+    pub fn isolate_facility(&mut self, isolate: bool) -> &mut Self {
+        self.isolate_facility = isolate;
         self
     }
 
@@ -221,10 +229,10 @@ impl<'a> FindAllVersionPins<'a> {
     }
 
     pub fn query(&mut self) -> Result<Vec<FindAllVersionPinsRow>, Box<dyn std::error::Error>> {
-        let level = self.level.unwrap_or("facility");
-        let role = self.role.unwrap_or("any");
-        let platform = self.platform.unwrap_or("any");
-        let site = self.site.unwrap_or("any");
+        let level = self.level.unwrap_or("facility").to_string();
+        let role = self.role.unwrap_or("any").to_string();
+        let platform = self.platform.unwrap_or("any").to_string();
+        let site = self.site.unwrap_or("any").to_string();
         let mut result = Vec::new();
         let mut query_str = "SELECT id, 
         distribution_id,
@@ -254,18 +262,36 @@ impl<'a> FindAllVersionPins<'a> {
         if let Some(limit) = self.limit {
             query_str.push_str(format!(" LIMIT {}", limit).as_str());
         }
-
+        let smode = self.search_mode.to_string();
+        // commented out for now
+        //let facility_search_mode = String::from("exact");
         let qstr = query_str.as_str();
-        let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
-            &[&role, &platform, &level, &site, &self.search_mode.as_ref()];
+        let /*mut*/ prepared_args: Vec<&(dyn ToSql + Sync)> =
+            vec![&role, &platform, &level, &site, &smode];
+        // we do something special here if we are looking for facility.
+        // if self.isolate_facility == true && &level == "facility" {
+        //     prepared_args.push(&facility_search_mode);
+        // } else {
+        //     prepared_args.push(&smode);
+        // };
+
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in self.client.query(qstr, prepared_args)? {
+        for row in self.client.query(qstr, &prepared_args[..])? {
+            let level_name: &str = row.get(4);
+            // this should be done at the query level, but i have to switch this
+            // from using a function to raw sql. Or alter the function
+            if self.isolate_facility == true {
+                if (level == "facility" && level_name != "facility")
+                    || (level != "facility" && level_name == "facility")
+                {
+                    continue;
+                }
+            }
             let id: IdType = row.get(0);
             let dist_id: IdType = row.get(1);
             let pkgcoord_id: IdType = row.get(2);
             let distribution: &str = row.get(3);
-            let level_name: &str = row.get(4);
             let role_name: &str = row.get(5);
             let site_name: &str = row.get(6);
             let platform_name: &str = row.get(7);

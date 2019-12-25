@@ -12,6 +12,7 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
     if let PbFind::VersionPins {
         package,
         level,
+        isolate_facility,
         role,
         platform,
         site,
@@ -31,6 +32,7 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         let mut results = pb.find_all_versionpins();
         results
             .level(level.as_str())
+            .isolate_facility(isolate_facility)
             .role(role.as_str())
             .platform(platform.as_str())
             .site(site.as_str())

@@ -46,6 +46,10 @@ pub enum PbFind {
         /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
         #[structopt(short = "L", long, display_order = 1)]
         level: Option<String>,
+        /// When searching "up", if the level is facility, treat the
+        /// search direction for facility as current
+        #[structopt(short = "i", long, display_order = 1)]
+        isolate_facility: bool,
         /// The role (eg model or anim_beta). Defaults to 'any'.
         #[structopt(short = "R", long, display_order = 2)]
         role: Option<String>,
