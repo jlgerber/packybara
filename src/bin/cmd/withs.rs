@@ -1,4 +1,4 @@
-use super::args::PbFind;
+use super::args::{PbAdd, PbFind};
 use super::utils::extract_coords;
 use packybara::packrat::{Client, PackratDb};
 use packybara::SearchAttribute;
@@ -54,5 +54,22 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
         table.printstd();
     };
 
+    Ok(())
+}
+
+/// Add withs
+pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+    if let PbAdd::Withs {
+        withs,
+        comment,
+        vpin_id,
+        ..
+    } = cmd
+    {
+        let author = whoami::username();
+        let mut pb = PackratDb::new(client);
+        let results = pb.add_withs().create(vpin_id, withs, author, comment)?;
+        println!("{}", results);
+    }
     Ok(())
 }

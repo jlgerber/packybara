@@ -91,6 +91,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PbAdd::Platforms { .. } => {
                 cmd::all_platforms::add(client, cmd)?;
             }
+            PbAdd::Withs { .. } => {
+                cmd::withs::add(client, cmd)?;
+            }
         },
         PbCrud::Set { cmd } => match cmd {
             PbSet::VersionPins { .. } => {

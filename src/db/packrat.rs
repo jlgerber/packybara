@@ -135,6 +135,11 @@ impl PackratDb {
         add::platforms::AddPlatforms::new(&mut self.client)
     }
 
+    /// add with
+    pub fn add_withs<'b>(&'b mut self) -> add::withs::AddWiths {
+        add::withs::AddWiths::new(&mut self.client)
+    }
+
     /// update packages
     ///
     /// # Arguments
