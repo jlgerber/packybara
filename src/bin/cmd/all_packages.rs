@@ -1,9 +1,9 @@
 use super::args::{PbAdd, PbFind};
 use packybara::packrat::{Client, PackratDb};
-//use packybara::OrderSiteBy;
+use packybara::traits::TransactionHandler;
 use prettytable::{cell, format, row, table};
-//use std::ops::Deref;
-//use std::str::FromStr;
+use whoami;
+
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Packages { .. } = cmd {
         //let (level, role, site, site, mode) =
@@ -28,11 +28,18 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
 
 /// Add one or more packages
 pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+    let mut pb = PackratDb::new(client);
     if let PbAdd::Packages { mut names, .. } = cmd {
-        let mut pb = PackratDb::new(client);
-        let mut results = pb.add_packages();
-        let results = results.packages(&mut names).create()?;
-        println!("{}", results);
+        let comment = "Auto Comment - packages added";
+        let username = whoami::username();
+
+        //let results =
+        let result = pb
+            .add_packages()
+            .packages(&mut names)
+            .create()?
+            .commit(&username, &comment)?;
+        println!("{:?}", result);
     }
     Ok(())
 }

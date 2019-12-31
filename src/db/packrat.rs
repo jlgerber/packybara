@@ -33,7 +33,7 @@ impl PackratDb {
         PackratDb { client }
     }
     /// Generate a transaction for updates and adds
-    pub fn transaction(&mut self) -> Transaction {
+    pub fn transaction<'a>(&'a mut self) -> Transaction<'a> {
         self.client.transaction().unwrap()
     }
     /// Find the most appropriate versionpin for a request. `find_versionpin`
@@ -133,8 +133,8 @@ impl PackratDb {
     }
 
     /// add packages
-    pub fn add_packages<'b>(&'b mut self) -> add::packages::AddPackages {
-        add::packages::AddPackages::new(&mut self.client)
+    pub fn add_packages<'b>(&'b mut self) -> add::packages::AddPackages<'b> {
+        add::packages::AddPackages::new(self.transaction())
     }
 
     /// add levels

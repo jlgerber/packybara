@@ -1,7 +1,8 @@
+use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
 use postgres::types::ToSql;
-use postgres::Client;
+use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
 
 /// Error type returned from FindVersionPinsError
@@ -19,8 +20,28 @@ pub enum AddPackagesError {
 
 /// Responsible for creating packages
 pub struct AddPackages<'a> {
-    client: &'a mut Client,
+    tx: Option<Transaction<'a>>,
     names: Vec<String>,
+    result_cnt: u64,
+}
+
+impl<'a> TransactionHandler<'a> for AddPackages<'a> {
+    type Error = tokio_postgres::error::Error;
+    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
+        self.tx.as_mut()
+    }
+
+    fn take_tx(&mut self) -> Transaction<'a> {
+        self.tx.take().unwrap()
+    }
+
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+
+    fn get_result_cnt(&self) -> u64 {
+        self.result_cnt
+    }
 }
 
 impl<'a> AddPackages<'a> {
@@ -31,10 +52,11 @@ impl<'a> AddPackages<'a> {
     /// * `client` - A reference to a postgres::Client instance, which
     /// stores the connection to the database, and provides crud methods
     /// for us.
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new(tx: Transaction<'a>) -> Self {
         Self {
-            client,
+            tx: Some(tx),
             names: Vec::new(),
+            result_cnt: 0,
         }
     }
 
@@ -48,7 +70,7 @@ impl<'a> AddPackages<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn package<I: Into<String>>(&'a mut self, name: I) -> &mut Self {
+    pub fn package<I: Into<String>>(mut self, name: I) -> Self {
         self.names.push(name.into());
         self
     }
@@ -62,11 +84,10 @@ impl<'a> AddPackages<'a> {
     ///
     /// # Returns
     /// * a mutable reference to Self
-    pub fn packages(&'a mut self, names: &mut Vec<String>) -> &mut Self {
+    pub fn packages(mut self, names: &mut Vec<String>) -> Self {
         self.names.append(names);
         self
     }
-
     /// Create previously registered package name(s) in the database. This call is
     /// fallible, and may return either the number of new packages created, or a
     /// relevant error.
@@ -76,7 +97,7 @@ impl<'a> AddPackages<'a> {
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(AddPackagesError)
-    pub fn create(&mut self) -> Result<u64, AddPackagesError> {
+    pub fn create(mut self) -> Result<Self, AddPackagesError> {
         let packages = self.names.iter().unique().cloned().collect::<Vec<String>>();
         if packages.len() == 0 {
             return Err(AddPackagesError::NoPackageNamesError);
@@ -97,11 +118,13 @@ impl<'a> AddPackages<'a> {
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &packages_ref);
         let results = self
-            .client
+            .tx()
+            .unwrap()
             .execute(insert_str.as_str(), &packages_ref[..])
             .context(TokioPostgresError {
                 msg: "failed to add packages",
             })?;
-        Ok(results)
+        self.result_cnt = results;
+        Ok(self)
     }
 }
