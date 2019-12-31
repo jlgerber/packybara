@@ -7,10 +7,9 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::db::{add, find, find_all, update};
-//use postgres::Client;
 use crate::types::IdType;
 pub use postgres::{Client, NoTls, Transaction};
-use snafu::{ResultExt, Snafu};
+use snafu::Snafu;
 
 #[derive(Debug, Snafu)]
 pub enum PackratDbError {
@@ -29,6 +28,7 @@ pub struct PackratDb {
 }
 
 impl PackratDb {
+    /// New up a PackratDb instance given a Client
     pub fn new(client: Client) -> Self {
         PackratDb { client }
     }
@@ -36,24 +36,6 @@ impl PackratDb {
     pub fn transaction(&mut self) -> Transaction {
         self.client.transaction().unwrap()
     }
-    /// commit the transaction
-    // pub fn commit<'a>(
-    //     tx: &mut Transaction<'a>,
-    //     author: &str,
-    //     comment: &str,
-    // ) -> Result<(), PackratDbError> {
-    //     tx.execute(
-    //         "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
-    //         &[&author, &comment],
-    //     )
-    //     .context(TokioPostgresError {
-    //         msg: "failed to update revision entity",
-    //     })?;
-    //     tx.commit().context(TokioPostgresError {
-    //         msg: "failed to commit",
-    //     })?;
-    //     Ok(())
-    // }
     /// Find the most appropriate versionpin for a request. `find_versionpin`
     /// returns an instance of `FindVersionPinBuilder`, which provides
     /// setter methods providing a fluent api.

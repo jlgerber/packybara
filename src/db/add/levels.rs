@@ -2,7 +2,7 @@ use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
 use postgres::types::ToSql;
-use postgres::{Client, Transaction};
+use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
 /// An enum which defines the kinds of InvalidLevelErrors we may encounter. .
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]

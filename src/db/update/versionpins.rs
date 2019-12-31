@@ -2,11 +2,10 @@
 pbk update versionpins --versionpin 22 --distribution 22 --pkgcoord 84 -v 432 -d 22 -p 32
 */
 //use itertools::Itertools;
-use crate::traits::{PackratDbError, TransactionHandler};
+use crate::traits::TransactionHandler;
 use crate::types::IdType;
 use log;
 use postgres::types::ToSql;
-use postgres::Client;
 use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
 /// Error type returned from FindVersionPinsError
@@ -68,25 +67,28 @@ impl VersionPinChange {
 /// Responsible for creating packages
 pub struct UpdateVersionPins<'a> {
     tx: Option<Transaction<'a>>,
+    /// vector of VersionPinChanges which will be applied to the database
     pub changes: Vec<VersionPinChange>,
     result_cnt: u64,
 }
 
 impl<'a> TransactionHandler<'a> for UpdateVersionPins<'a> {
     type Error = tokio_postgres::error::Error;
-
+    /// retrieve an Option wrapped mutable reference to the
+    /// transaction
     fn tx(&mut self) -> Option<&mut Transaction<'a>> {
         self.tx.as_mut()
     }
-
+    /// Extract the transaction from Self.
     fn take_tx(&mut self) -> Transaction<'a> {
         self.tx.take().unwrap()
     }
 
+    /// Return the result count to 0
     fn reset_result_cnt(&mut self) {
         self.result_cnt = 0;
     }
-
+    /// Retrieve th result count
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
@@ -97,10 +99,7 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - A reference to a postgres::Client instance, which
-    /// stores the connection to the database, and provides crud methods
-    /// for us.
-    ///
+    /// * `tx` - A Transaction instance
     pub fn new(tx: Transaction<'a>) -> Self {
         Self {
             tx: Some(tx),
@@ -159,6 +158,8 @@ impl<'a> UpdateVersionPins<'a> {
         self
     }
 
+    /// Inject updates into the internal transaction. The database update is deferred
+    /// until one calls self.commit(...)
     pub fn update(&mut self) -> Result<&mut Self, UpdateVersionPinsError> {
         let mut update_cnt = 0;
         let changes = {
