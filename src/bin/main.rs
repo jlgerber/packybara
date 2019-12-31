@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::set_var("RUST_LOG", level);
     }
     env_logger::from_env(Env::default().default_filter_or("warn")).init();
-    let client = Client::connect(
+    let mut client = Client::connect(
         "host=127.0.0.1 user=postgres dbname=packrat password=example port=5432",
         NoTls,
     )?;
@@ -80,24 +80,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         PbCrud::Add { cmd } => match cmd {
             PbAdd::Packages { .. } => {
-                cmd::all_packages::add(client, cmd)?;
+                let tx = client.transaction().unwrap();
+                cmd::all_packages::add(tx, cmd)?;
             }
             PbAdd::Levels { .. } => {
-                cmd::all_levels::add(client, cmd)?;
+                let tx = client.transaction().unwrap();
+                cmd::all_levels::add(tx, cmd)?;
             }
             PbAdd::Roles { .. } => {
-                cmd::all_roles::add(client, cmd)?;
+                let tx = client.transaction().unwrap();
+                cmd::all_roles::add(tx, cmd)?;
             }
             PbAdd::Platforms { .. } => {
-                cmd::all_platforms::add(client, cmd)?;
+                let tx = client.transaction().unwrap();
+                cmd::all_platforms::add(tx, cmd)?;
             }
             PbAdd::Withs { .. } => {
-                cmd::withs::add(client, cmd)?;
+                let tx = client.transaction().unwrap();
+                cmd::withs::add(tx, cmd)?;
             }
         },
         PbCrud::Set { cmd } => match cmd {
             PbSet::VersionPins { .. } => {
-                cmd::versionpins::set(client, cmd)?;
+                let tx = client.transaction().unwrap();
+                cmd::versionpins::set(tx, cmd)?;
             }
         },
         _ => println!("Not implemented"),

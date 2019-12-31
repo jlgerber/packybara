@@ -133,28 +133,28 @@ impl PackratDb {
     }
 
     /// add packages
-    pub fn add_packages<'b>(&'b mut self) -> add::packages::AddPackages<'b> {
-        add::packages::AddPackages::new(self.transaction())
+    pub fn add_packages<'b>(tx: Transaction<'b>) -> add::packages::AddPackages<'b> {
+        add::packages::AddPackages::new(tx)
     }
 
     /// add levels
-    pub fn add_levels<'b>(&'b mut self) -> add::levels::AddLevels {
-        add::levels::AddLevels::new(self.transaction())
+    pub fn add_levels<'b>(tx: Transaction<'b>) -> add::levels::AddLevels {
+        add::levels::AddLevels::new(tx)
     }
 
     /// add roles
-    pub fn add_roles<'b>(&'b mut self) -> add::roles::AddRoles {
-        add::roles::AddRoles::new(self.transaction())
+    pub fn add_roles<'b>(tx: Transaction<'b>) -> add::roles::AddRoles {
+        add::roles::AddRoles::new(tx)
     }
 
     /// add platforms
-    pub fn add_platforms<'b>(&'b mut self) -> add::platforms::AddPlatforms {
-        add::platforms::AddPlatforms::new(self.transaction())
+    pub fn add_platforms<'b>(tx: Transaction<'b>) -> add::platforms::AddPlatforms {
+        add::platforms::AddPlatforms::new(tx)
     }
 
     /// add with
-    pub fn add_withs<'b>(&'b mut self) -> add::withs::AddWiths {
-        add::withs::AddWiths::new(self.transaction())
+    pub fn add_withs<'b>(tx: Transaction<'b>) -> add::withs::AddWiths {
+        add::withs::AddWiths::new(tx)
     }
 
     /// update packages
@@ -162,7 +162,7 @@ impl PackratDb {
     /// # Arguments
     /// * `comment` - A comment describing the update
     /// * `user` - The name of the user making the update
-    pub fn update_versionpins<'b>(&'b mut self) -> update::versionpins::UpdateVersionPins {
-        update::versionpins::UpdateVersionPins::new(self.transaction())
+    pub fn update_versionpins<'b>(tx: Transaction<'b>) -> update::versionpins::UpdateVersionPins {
+        update::versionpins::UpdateVersionPins::new(tx)
     }
 }

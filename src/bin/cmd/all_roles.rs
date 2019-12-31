@@ -1,5 +1,5 @@
 use super::args::{PbAdd, PbFind};
-use packybara::packrat::{Client, PackratDb};
+use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;
 use packybara::OrderRoleBy;
 use prettytable::{cell, format, row, table};
@@ -49,13 +49,11 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
 }
 
 /// Add one or more roles
-pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+pub fn add<'a>(tx: Transaction<'a>, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
     if let PbAdd::Roles { mut names, .. } = cmd {
         let comment = "Auto Comment - Roles added";
         let username = whoami::username();
-        let mut pb = PackratDb::new(client);
-        let results = pb
-            .add_roles()
+        let results = PackratDb::add_roles(tx)
             .roles(&mut names)
             .create()?
             .commit(&username, &comment)?;

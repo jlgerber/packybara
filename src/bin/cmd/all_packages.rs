@@ -1,5 +1,5 @@
 use super::args::{PbAdd, PbFind};
-use packybara::packrat::{Client, PackratDb};
+use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;
 use prettytable::{cell, format, row, table};
 use whoami;
@@ -27,15 +27,13 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
 }
 
 /// Add one or more packages
-pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
-    let mut pb = PackratDb::new(client);
+pub fn add<'a>(tx: Transaction<'a>, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
+    //let mut pb = PackratDb::new(client);
     if let PbAdd::Packages { mut names, .. } = cmd {
         let comment = "Auto Comment - packages added";
         let username = whoami::username();
-
-        //let results =
-        let result = pb
-            .add_packages()
+        //let resu  lts =
+        let result = PackratDb::add_packages(tx)
             .packages(&mut names)
             .create()?
             .commit(&username, &comment)?;

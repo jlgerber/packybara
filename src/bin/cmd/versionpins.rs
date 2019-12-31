@@ -2,7 +2,7 @@ use super::args::{PbFind, PbSet};
 use super::utils::extract_coords;
 use super::utils::truncate;
 use packybara::db::update::versionpins::VersionPinChange;
-use packybara::packrat::{Client, PackratDb};
+use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;
 use packybara::{LtreeSearchMode, SearchAttribute};
 use prettytable::{cell, format, row, table};
@@ -87,7 +87,7 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
 }
 
 /// Add one or more versionpin changes
-pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
+pub fn set<'a>(tx: Transaction<'a>, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
     let PbSet::VersionPins {
         dist_ids,
         vpin_ids,
@@ -96,8 +96,7 @@ pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>>
     } = cmd;
     assert_eq!(dist_ids.len(), vpin_ids.len());
     let username = whoami::username();
-    let mut pb = PackratDb::new(client);
-    let mut update_versionpins = pb.update_versionpins();
+    let mut update_versionpins = PackratDb::update_versionpins(tx);
     for cnt in 0..dist_ids.len() {
         let change = VersionPinChange::new(vpin_ids[cnt], Some(dist_ids[cnt]), None);
         update_versionpins.change(change);
