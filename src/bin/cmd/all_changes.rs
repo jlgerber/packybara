@@ -5,7 +5,7 @@ use prettytable::{cell, format, row, table};
 //use std::ops::Deref;
 //use std::str::FromStr;
 
-pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Changes { transaction_id, .. } = cmd {
         let mut pb = PackratDb::new(client);
         let mut results = pb.find_all_changes();

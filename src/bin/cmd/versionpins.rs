@@ -9,7 +9,7 @@ use prettytable::{cell, format, row, table};
 use std::str::FromStr;
 use whoami;
 
-pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::VersionPins {
         package,
         level,

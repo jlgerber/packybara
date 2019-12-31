@@ -36,46 +36,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match crud {
         PbCrud::Find { cmd } => match cmd {
             PbFind::VersionPin { .. } => {
-                cmd::versionpin::process(client, cmd)?;
+                cmd::versionpin::find(client, cmd)?;
             }
             PbFind::VersionPins { .. } => {
-                cmd::versionpins::process(client, cmd)?;
+                cmd::versionpins::find(client, cmd)?;
             }
             PbFind::Roles { .. } => {
-                cmd::all_roles::process(client, cmd)?;
+                cmd::all_roles::find(client, cmd)?;
             }
             PbFind::Platforms { .. } => {
-                cmd::all_platforms::process(client, cmd)?;
+                cmd::all_platforms::find(client, cmd)?;
             }
             PbFind::Sites { .. } => {
-                cmd::all_sites::process(client, cmd)?;
+                cmd::all_sites::find(client, cmd)?;
             }
             PbFind::Levels { .. } => {
-                cmd::all_levels::process(client, cmd)?;
+                cmd::all_levels::find(client, cmd)?;
             }
             PbFind::Pins { .. } => {
-                cmd::pins::process(client, cmd)?;
+                cmd::pins::find(client, cmd)?;
             }
             PbFind::VersionPinWiths { .. } => {
-                cmd::versionpin_withs::process(client, cmd)?;
+                cmd::versionpin_withs::find(client, cmd)?;
             }
             PbFind::Withs { .. } => {
-                cmd::withs::process(client, cmd)?;
+                cmd::withs::find(client, cmd)?;
             }
             PbFind::Packages { .. } => {
-                cmd::all_packages::process(client, cmd)?;
+                cmd::all_packages::find(client, cmd)?;
             }
             PbFind::Distributions { .. } => {
-                cmd::all_distributions::process(client, cmd)?;
+                cmd::all_distributions::find(client, cmd)?;
             }
             PbFind::PkgCoords { .. } => {
-                cmd::pkgcoords::process(client, cmd)?;
+                cmd::pkgcoords::find(client, cmd)?;
             }
             PbFind::Revisions { .. } => {
-                cmd::all_revisions::process(client, cmd)?;
+                cmd::all_revisions::find(client, cmd)?;
             }
             PbFind::Changes { .. } => {
-                cmd::all_changes::process(client, cmd)?;
+                cmd::all_changes::find(client, cmd)?;
             }
         },
         PbCrud::Add { cmd } => match cmd {

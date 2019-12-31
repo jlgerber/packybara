@@ -4,7 +4,7 @@ use super::utils::truncate;
 use packybara::packrat::{Client, PackratDb};
 use prettytable::{cell, format, row, table};
 
-pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::VersionPin {
         package,
         level,

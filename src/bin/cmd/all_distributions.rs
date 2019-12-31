@@ -4,7 +4,7 @@ use packybara::OrderDirection;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
-pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
+pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Distributions {
         package,
         version,
