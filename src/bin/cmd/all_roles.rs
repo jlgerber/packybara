@@ -1,9 +1,11 @@
 use super::args::{PbAdd, PbFind};
 use packybara::packrat::{Client, PackratDb};
+use packybara::traits::TransactionHandler;
 use packybara::OrderRoleBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
+
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Roles {
         role,
@@ -49,9 +51,14 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
 /// Add one or more roles
 pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
     if let PbAdd::Roles { mut names, .. } = cmd {
+        let comment = "Auto Comment - Roles added";
+        let username = whoami::username();
         let mut pb = PackratDb::new(client);
-        let mut results = pb.add_roles();
-        let results = results.roles(&mut names).create()?;
+        let results = pb
+            .add_roles()
+            .roles(&mut names)
+            .create()?
+            .commit(&username, &comment)?;
         println!("{}", results);
     }
     Ok(())

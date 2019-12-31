@@ -1,7 +1,8 @@
+use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
 use postgres::types::ToSql;
-use postgres::Client;
+use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
@@ -26,8 +27,28 @@ pub enum AddRolesError {
 
 /// Responsible for creating roles
 pub struct AddRoles<'a> {
-    client: &'a mut Client,
+    tx: Option<Transaction<'a>>,
     names: Vec<String>,
+    result_cnt: u64,
+}
+
+impl<'a> TransactionHandler<'a> for AddRoles<'a> {
+    type Error = tokio_postgres::error::Error;
+    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
+        self.tx.as_mut()
+    }
+
+    fn take_tx(&mut self) -> Transaction<'a> {
+        self.tx.take().unwrap()
+    }
+
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+
+    fn get_result_cnt(&self) -> u64 {
+        self.result_cnt
+    }
 }
 
 impl<'a> AddRoles<'a> {
@@ -39,10 +60,11 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * instance of Self
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new(tx: Transaction<'a>) -> Self {
         Self {
-            client,
+            tx: Some(tx),
             names: Vec::new(),
+            result_cnt: 0,
         }
     }
 
@@ -54,7 +76,7 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * Mutable reference of Self
-    pub fn role<I>(&'a mut self, name: I) -> &mut Self
+    pub fn role<I>(mut self, name: I) -> Self
     where
         I: Into<String>,
     {
@@ -70,7 +92,7 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn roles(&'a mut self, names: &mut Vec<String>) -> &mut Self {
+    pub fn roles(mut self, names: &mut Vec<String>) -> Self {
         self.names.append(names);
         self
     }
@@ -93,7 +115,7 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddRolesError)
-    pub fn create(&mut self) -> Result<u64, AddRolesError> {
+    pub fn create(mut self) -> Result<Self, AddRolesError> {
         let mut expand_roles = Vec::new();
         let roles = self
             .names
@@ -131,11 +153,14 @@ impl<'a> AddRoles<'a> {
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &roles_ref);
         let results = self
-            .client
+            .tx()
+            .unwrap()
             .execute(insert_str.as_str(), &roles_ref[..])
             .context(TokioPostgresError {
                 msg: "failed to add roles",
             })?;
-        Ok(results)
+        self.result_cnt = results;
+
+        Ok(self)
     }
 }

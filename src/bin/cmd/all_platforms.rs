@@ -1,5 +1,6 @@
 use super::args::{PbAdd, PbFind};
 use packybara::packrat::{Client, PackratDb};
+use packybara::traits::TransactionHandler;
 use packybara::OrderPlatformBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
@@ -46,9 +47,14 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
 /// Add one or more roles
 pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
     if let PbAdd::Platforms { mut names, .. } = cmd {
+        let comment = "Auto Comment - Platforms added";
+        let username = whoami::username();
         let mut pb = PackratDb::new(client);
-        let mut results = pb.add_platforms();
-        let results = results.platforms(&mut names).create()?;
+        let results = pb
+            .add_platforms()
+            .platforms(&mut names)
+            .create()?
+            .commit(&username, &comment)?;
         println!("{}", results);
     }
     Ok(())

@@ -1,9 +1,11 @@
 use itertools::Itertools;
 use postgres::types::ToSql;
-use postgres::Client;
+//use postgres::Client;
 use snafu::{ResultExt, Snafu};
 //use std::fmt;
+use crate::traits::TransactionHandler;
 use log;
+use postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidPlatformKind {
@@ -30,8 +32,28 @@ pub enum AddPlatformsError {
 
 /// Responsible for creating platforms
 pub struct AddPlatforms<'a> {
-    client: &'a mut Client,
+    tx: Option<Transaction<'a>>,
     names: Vec<String>,
+    result_cnt: u64,
+}
+
+impl<'a> TransactionHandler<'a> for AddPlatforms<'a> {
+    type Error = tokio_postgres::error::Error;
+    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
+        self.tx.as_mut()
+    }
+
+    fn take_tx(&mut self) -> Transaction<'a> {
+        self.tx.take().unwrap()
+    }
+
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+
+    fn get_result_cnt(&self) -> u64 {
+        self.result_cnt
+    }
 }
 
 impl<'a> AddPlatforms<'a> {
@@ -44,10 +66,11 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * an instance of AddPlatforms
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new(tx: Transaction<'a>) -> Self {
         Self {
-            client,
+            tx: Some(tx),
             names: Vec::new(),
+            result_cnt: 0,
         }
     }
 
@@ -60,7 +83,7 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn platform<I>(&'a mut self, name: I) -> &mut Self
+    pub fn platform<I>(mut self, name: I) -> Self
     where
         I: Into<String>,
     {
@@ -77,7 +100,7 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * a mutable reference to Self
-    pub fn platforms(&'a mut self, names: &mut Vec<String>) -> &mut Self {
+    pub fn platforms(mut self, names: &mut Vec<String>) -> Self {
         self.names.append(names);
         self
     }
@@ -110,7 +133,7 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddPlatformsError)
-    pub fn create(&mut self) -> Result<u64, AddPlatformsError> {
+    pub fn create(mut self) -> Result<Self, AddPlatformsError> {
         // convert the self.names of platforms to lowercase after
         // making sure the list is unique, and prefixing with 'any.'
         let platforms = self
@@ -146,11 +169,13 @@ impl<'a> AddPlatforms<'a> {
         log::info!("Prepared\n{:?}", &platforms_ref);
         // execute the query, capture the results and provide a failure context.
         let results = self
-            .client
+            .tx()
+            .unwrap()
             .execute(insert_str.as_str(), &platforms_ref[..])
             .context(TokioPostgresError {
                 msg: "failed to add platforms",
             })?;
-        Ok(results)
+        self.result_cnt = results;
+        Ok(self)
     }
 }

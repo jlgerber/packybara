@@ -144,12 +144,12 @@ impl PackratDb {
 
     /// add roles
     pub fn add_roles<'b>(&'b mut self) -> add::roles::AddRoles {
-        add::roles::AddRoles::new(&mut self.client)
+        add::roles::AddRoles::new(self.transaction())
     }
 
     /// add platforms
     pub fn add_platforms<'b>(&'b mut self) -> add::platforms::AddPlatforms {
-        add::platforms::AddPlatforms::new(&mut self.client)
+        add::platforms::AddPlatforms::new(self.transaction())
     }
 
     /// add with
