@@ -75,11 +75,7 @@ impl<'a> AddWiths<'a> {
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(AddWithsError)
-    pub fn create(
-        &mut self,
-        vpin_id: IdType,
-        withs: Vec<String>,
-    ) -> Result<&mut Self, AddWithsError> {
+    pub fn create(mut self, vpin_id: IdType, withs: Vec<String>) -> Result<Self, AddWithsError> {
         if withs.len() == 0 {
             return Err(AddWithsError::NoUpdatesError);
         }
