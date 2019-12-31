@@ -1,5 +1,6 @@
 use super::args::{PbAdd, PbFind};
 use packybara::packrat::{Client, PackratDb};
+use packybara::traits::TransactionHandler;
 use packybara::OrderLevelBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
@@ -53,9 +54,11 @@ pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>>
         let username = whoami::username();
 
         let mut pb = PackratDb::new(client);
-        let mut tx = pb.transaction();
-        let results = PackratDb::add_levels().levels(&mut names).create(&mut tx)?;
-        PackratDb::commit(tx, &username, &comment)?;
+        let results = pb
+            .add_levels()
+            .levels(&mut names)
+            .create()?
+            .commit(&username, &comment)?;
         println!("{}", results);
     }
     Ok(())

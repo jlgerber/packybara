@@ -1,11 +1,9 @@
-use crate::packrat::PackratDb;
-use crate::packrat::PackratDbError;
+use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
 use postgres::types::ToSql;
-use postgres::Transaction;
+use postgres::{Client, Transaction};
 use snafu::{ResultExt, Snafu};
-
 /// An enum which defines the kinds of InvalidLevelErrors we may encounter. .
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidLevelKind {
@@ -33,31 +31,24 @@ pub enum AddLevelsError {
         kind: InvalidLevelKind,
     },
 }
-pub trait TransactionHandler {
-    fn get_result_cnt(&self) -> u64;
-    /// Retrieve the populated transaction. One would generally
-    /// store the transaction as an Option<Transaction> and use
-    /// self.tx.take()
-    fn take_tx(&mut self) -> Transaction;
-    /// Retrieve the user
-    fn get_user(&self) -> String;
-    /// Retrieve thde
-    fn get_comment(&self) -> String;
+/// The AddLevels struct is responsible for creating levels.
+pub struct AddLevels<'a> {
+    client: &'a mut Client,
+    names: Vec<String>,
+    result_cnt: u64,
+    tx: Option<Transaction<'a>>,
+}
 
-    fn commit(&mut self) -> Result<u64, PackratDbError> {
-        let user = self.get_user();
-        let comment = self.get_comment();
-        let tx = self.take_tx();
-        PackratDb::commit(tx, user.as_str(), comment.as_str())?;
-        Ok(self.get_result_cnt())
+impl<'a> TransactionHandler for AddLevels<'a> {
+    fn take_tx(&mut self) -> Option<Transaction> {
+        self.tx.take()
+    }
+    fn get_result_cnt(&self) -> u64 {
+        self.result_cnt
     }
 }
-/// The AddLevels struct is responsible for creating levels.
-pub struct AddLevels {
-    names: Vec<String>,
-}
 
-impl AddLevels {
+impl<'a> AddLevels<'a> {
     /// New up an AddLevels instance
     ///
     /// # Arguments
@@ -66,8 +57,13 @@ impl AddLevels {
     ///
     /// # Returns
     /// * An instance of Self
-    pub fn new() -> Self {
-        Self { names: Vec::new() }
+    pub fn new(client: &'a mut Client) -> Self {
+        Self {
+            client,
+            names: Vec::new(),
+            result_cnt: 0,
+            tx: None,
+        }
     }
 
     /// Add a level to the levels we will attempt to add to th DB.
@@ -103,7 +99,7 @@ impl AddLevels {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddLevelsError)
-    pub fn create(&mut self, tx: &mut Transaction) -> Result<u64, AddLevelsError> {
+    pub fn create(&mut self) -> Result<&mut Self, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
             .names
@@ -140,14 +136,18 @@ impl AddLevels {
         let prepared = prepared.join(",");
         insert_str.push_str(prepared.as_str());
         insert_str.push_str(" ON CONFLICT (path) DO NOTHING");
-
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &levels_ref);
-        let results =
-            tx.execute(insert_str.as_str(), &levels_ref[..])
-                .context(TokioPostgresError {
-                    msg: "failed to add levels",
-                })?;
-        Ok(results)
+        // here we limit the lifetime of tx, so that we can return &mut self
+        {
+            let mut tx = self.client.transaction().unwrap();
+            let results =
+                tx.execute(insert_str.as_str(), &levels_ref[..])
+                    .context(TokioPostgresError {
+                        msg: "failed to add levels",
+                    })?;
+            self.result_cnt = results;
+        }
+        Ok(self)
     }
 }

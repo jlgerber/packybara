@@ -29,5 +29,6 @@ pub use site::Site;
 pub mod role;
 pub use role::Role;
 pub mod coords_error;
+pub mod traits;
 pub mod types;
 pub(crate) mod utils;
