@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use postgres::types::ToSql;
-//use postgres::Client;
 use snafu::{ResultExt, Snafu};
 //use std::fmt;
 use crate::traits::TransactionHandler;
