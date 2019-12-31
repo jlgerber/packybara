@@ -84,7 +84,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn level<I: Into<String>>(&mut self, name: I) -> &mut Self {
+    pub fn level<I: Into<String>>(mut self, name: I) -> Self {
         self.names.push(name.into());
         self
     }
@@ -98,7 +98,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn levels(&mut self, names: &mut Vec<String>) -> &mut Self {
+    pub fn levels(mut self, names: &mut Vec<String>) -> Self {
         self.names.append(names);
         self
     }
@@ -107,7 +107,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * Ok(&mut Self) | Err(AddLevelsError)
-    pub fn create(&mut self) -> Result<&mut Self, AddLevelsError> {
+    pub fn create(mut self) -> Result<Self, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
             .names
