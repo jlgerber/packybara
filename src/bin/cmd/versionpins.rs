@@ -85,7 +85,7 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
-/// Add one or more roles
+/// Add one or more versionpin changes
 pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>> {
     let PbSet::VersionPins {
         dist_ids,
@@ -94,16 +94,17 @@ pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>>
         ..
     } = cmd;
     assert_eq!(dist_ids.len(), vpin_ids.len());
-    let mut pb = PackratDb::new(client);
     let username = whoami::username();
-    let mut results = pb.update_versionpins(&comment, &username);
-    log::debug!("versionpins: {:?} distribtions: {:?}", dist_ids, vpin_ids);
-    let mut updates = Vec::new();
+    let mut pb = PackratDb::new(client);
+    let mut update_versionpins = pb.update_versionpins();
+    let mut tx = pb.transaction();
     for cnt in 0..dist_ids.len() {
         let change = VersionPinChange::new(vpin_ids[cnt], Some(dist_ids[cnt]), None);
-        updates.push(change);
+        update_versionpins.change(change);
     }
-    let results = results.changes(&mut updates).update()?;
-    println!("{}", results);
+
+    let update_cnt = update_versionpins.update(&mut tx)?;
+    PackratDb::commit(tx, &username, &comment)?;
+    println!("{}", update_cnt);
     Ok(())
 }

@@ -9,7 +9,21 @@
 use crate::db::{add, find, find_all, update};
 //use postgres::Client;
 use crate::types::IdType;
-pub use postgres::{Client, NoTls};
+pub use postgres::{Client, NoTls, Transaction};
+use snafu::{ResultExt, Snafu};
+
+#[derive(Debug, Snafu)]
+pub enum PackratDbError {
+    /// When constructing a query, postgres has thrown an error
+    #[snafu(display("Postgres Error: {} {:#?}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
+    #[snafu(display("No update data supplied"))]
+    NoUpdatesError,
+}
+
 pub struct PackratDb {
     client: Client,
 }
@@ -18,7 +32,24 @@ impl PackratDb {
     pub fn new(client: Client) -> Self {
         PackratDb { client }
     }
-
+    /// Generate a transaction for updates and adds
+    pub fn transaction(&mut self) -> Transaction {
+        self.client.transaction().unwrap()
+    }
+    /// commit the transaction
+    pub fn commit(mut tx: Transaction, author: &str, comment: &str) -> Result<(), PackratDbError> {
+        tx.execute(
+            "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
+            &[&author, &comment],
+        )
+        .context(TokioPostgresError {
+            msg: "failed to update revision entity",
+        })?;
+        tx.commit().context(TokioPostgresError {
+            msg: "failed to commit",
+        })?;
+        Ok(())
+    }
     /// Find the most appropriate versionpin for a request. `find_versionpin`
     /// returns an instance of `FindVersionPinBuilder`, which provides
     /// setter methods providing a fluent api.
@@ -121,8 +152,8 @@ impl PackratDb {
     }
 
     /// add levels
-    pub fn add_levels<'b>(&'b mut self) -> add::levels::AddLevels {
-        add::levels::AddLevels::new(&mut self.client)
+    pub fn add_levels() -> add::levels::AddLevels {
+        add::levels::AddLevels::new()
     }
 
     /// add roles
@@ -145,11 +176,7 @@ impl PackratDb {
     /// # Arguments
     /// * `comment` - A comment describing the update
     /// * `user` - The name of the user making the update
-    pub fn update_versionpins<'b>(
-        &'b mut self,
-        comment: &'b str,
-        author: &'b str,
-    ) -> update::versionpins::UpdateVersionPins {
-        update::versionpins::UpdateVersionPins::new(&mut self.client, comment, author)
+    pub fn update_versionpins(&self) -> update::versionpins::UpdateVersionPins {
+        update::versionpins::UpdateVersionPins::new()
     }
 }

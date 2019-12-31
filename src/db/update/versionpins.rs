@@ -6,6 +6,7 @@ use crate::types::IdType;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
 
 /// Error type returned from FindVersionPinsError
@@ -65,14 +66,11 @@ impl VersionPinChange {
 }
 
 /// Responsible for creating packages
-pub struct UpdateVersionPins<'a> {
-    pub client: &'a mut Client,
+pub struct UpdateVersionPins {
     pub changes: Vec<VersionPinChange>,
-    pub comment: &'a str,
-    pub author: &'a str,
 }
 
-impl<'a> UpdateVersionPins<'a> {
+impl UpdateVersionPins {
     /// new up an UpdateVersionPins instance
     ///
     /// # Arguments
@@ -81,12 +79,9 @@ impl<'a> UpdateVersionPins<'a> {
     /// stores the connection to the database, and provides crud methods
     /// for us.
     ///
-    pub fn new(client: &'a mut Client, comment: &'a str, author: &'a str) -> Self {
+    pub fn new() -> Self {
         Self {
-            client,
             changes: Vec::new(),
-            comment,
-            author,
         }
     }
 
@@ -100,7 +95,7 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn change(&'a mut self, update: VersionPinChange) -> &mut Self {
+    pub fn change(&mut self, update: VersionPinChange) -> &mut Self {
         self.changes.push(update);
         self
     }
@@ -116,7 +111,7 @@ impl<'a> UpdateVersionPins<'a> {
     /// # Returns
     /// * A mutable reference to Self
     pub fn change_from_components(
-        &'a mut self,
+        &mut self,
         versionpin_id: IdType,
         distribution_id: Option<IdType>,
         pkgcoord_id: Option<IdType>,
@@ -135,31 +130,14 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns
     /// * a mutable reference to Self
-    pub fn changes(&'a mut self, changes: &mut Vec<VersionPinChange>) -> &mut Self {
+    pub fn changes(&mut self, changes: &mut Vec<VersionPinChange>) -> &mut Self {
         self.changes.append(changes);
         self
     }
 
-    /// update previously registered versionpin in the database. This call is
-    /// fallible, and may return either the number of new packages created, or a
-    /// relevant error.
-    ///
-    /// # Arguments
-    /// None
-    ///
-    /// # Returns Result
-    /// * Ok(u64) | Err(UpdateVersionPinsError)
-    pub fn update(&mut self) -> Result<usize, UpdateVersionPinsError> {
-        if self.changes.len() == 0 {
-            return Err(UpdateVersionPinsError::NoUpdatesError);
-        }
-        let mut cnt = 0;
-        let mut tx = self.client.transaction().context(TokioPostgresError {
-            msg: "failed to create transaction",
-        })?;
+    pub fn update(&mut self, tx: &mut Transaction) -> Result<u64, UpdateVersionPinsError> {
         let mut update_cnt = 0;
-        let mut failures = Vec::new();
-        self.changes.iter().for_each(|x| {
+        for x in &self.changes {
             if x.has_changes() {
                 let mut maybe_comma = String::from("");
                 update_cnt += 1;
@@ -179,44 +157,16 @@ impl<'a> UpdateVersionPins<'a> {
                     updates_ref.push(pkgcoord_id);
                     prepared_line
                         .push_str(format!("{}SET coord = ${}", maybe_comma, pos_idx).as_str());
-                    //pos_idx += 1;
                 }
                 prepared_line.push_str(" WHERE id = $1");
                 log::info!("SQL\n{}", prepared_line.as_str());
                 log::info!("Prepared\n{:?}", &updates_ref);
-                let results = tx.execute(prepared_line.as_str(), &updates_ref[..]);
-                if results.is_err() {
-                    failures.push(results);
-                }
-                cnt += 1;
+                tx.execute(prepared_line.as_str(), &updates_ref[..])
+                    .context(TokioPostgresError {
+                        msg: "failed to execute statement in transaction",
+                    })?;
             }
-        });
-        if failures.len() > 0 {
-            tx.rollback().context(TokioPostgresError {
-                msg: "failed to rollback",
-            })?;
-            return Err(UpdateVersionPinsError::TokioPostgresError {
-                msg: "failed to update db.",
-                source: failures.pop().unwrap().unwrap_err(),
-            });
-        } else if update_cnt == 0 {
-            tx.rollback().context(TokioPostgresError {
-                msg: "failed to rollback",
-            })?;
-            return Err(UpdateVersionPinsError::NoUpdatesError);
-        } else {
-            tx.execute(
-                "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
-                &[&self.author, &self.comment],
-            )
-            .context(TokioPostgresError {
-                msg: "failed to update revision entity",
-            })?;
-            tx.commit().context(TokioPostgresError {
-                msg: "failed to commit",
-            })?;
         }
-
         Ok(update_cnt)
     }
 }

@@ -1,7 +1,9 @@
+use crate::packrat::PackratDb;
+use crate::packrat::PackratDbError;
 use itertools::Itertools;
 use log;
 use postgres::types::ToSql;
-use postgres::Client;
+use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
 
 /// An enum which defines the kinds of InvalidLevelErrors we may encounter. .
@@ -31,14 +33,31 @@ pub enum AddLevelsError {
         kind: InvalidLevelKind,
     },
 }
+pub trait TransactionHandler {
+    fn get_result_cnt(&self) -> u64;
+    /// Retrieve the populated transaction. One would generally
+    /// store the transaction as an Option<Transaction> and use
+    /// self.tx.take()
+    fn take_tx(&mut self) -> Transaction;
+    /// Retrieve the user
+    fn get_user(&self) -> String;
+    /// Retrieve thde
+    fn get_comment(&self) -> String;
 
+    fn commit(&mut self) -> Result<u64, PackratDbError> {
+        let user = self.get_user();
+        let comment = self.get_comment();
+        let tx = self.take_tx();
+        PackratDb::commit(tx, user.as_str(), comment.as_str())?;
+        Ok(self.get_result_cnt())
+    }
+}
 /// The AddLevels struct is responsible for creating levels.
-pub struct AddLevels<'a> {
-    client: &'a mut Client,
+pub struct AddLevels {
     names: Vec<String>,
 }
 
-impl<'a> AddLevels<'a> {
+impl AddLevels {
     /// New up an AddLevels instance
     ///
     /// # Arguments
@@ -47,11 +66,8 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * An instance of Self
-    pub fn new(client: &'a mut Client) -> Self {
-        Self {
-            client,
-            names: Vec::new(),
-        }
+    pub fn new() -> Self {
+        Self { names: Vec::new() }
     }
 
     /// Add a level to the levels we will attempt to add to th DB.
@@ -64,7 +80,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn level<I: Into<String>>(&'a mut self, name: I) -> &mut Self {
+    pub fn level<I: Into<String>>(&mut self, name: I) -> &mut Self {
         self.names.push(name.into());
         self
     }
@@ -78,7 +94,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn levels(&'a mut self, names: &mut Vec<String>) -> &mut Self {
+    pub fn levels(&mut self, names: &mut Vec<String>) -> &mut Self {
         self.names.append(names);
         self
     }
@@ -87,7 +103,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddLevelsError)
-    pub fn create(&mut self) -> Result<u64, AddLevelsError> {
+    pub fn create(&mut self, tx: &mut Transaction) -> Result<u64, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
             .names
@@ -127,12 +143,11 @@ impl<'a> AddLevels<'a> {
 
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &levels_ref);
-        let results = self
-            .client
-            .execute(insert_str.as_str(), &levels_ref[..])
-            .context(TokioPostgresError {
-                msg: "failed to add levels",
-            })?;
+        let results =
+            tx.execute(insert_str.as_str(), &levels_ref[..])
+                .context(TokioPostgresError {
+                    msg: "failed to add levels",
+                })?;
         Ok(results)
     }
 }

@@ -4,6 +4,7 @@ use packybara::OrderLevelBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
+use whoami;
 
 pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Levels {
@@ -48,9 +49,13 @@ pub fn process(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Er
 /// Add one or more levels
 pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>> {
     if let PbAdd::Levels { mut names, .. } = cmd {
+        let comment = "Auto Comment - levels added";
+        let username = whoami::username();
+
         let mut pb = PackratDb::new(client);
-        let mut results = pb.add_levels();
-        let results = results.levels(&mut names).create()?;
+        let mut tx = pb.transaction();
+        let results = PackratDb::add_levels().levels(&mut names).create(&mut tx)?;
+        PackratDb::commit(tx, &username, &comment)?;
         println!("{}", results);
     }
     Ok(())
