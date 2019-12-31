@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.29.0"
+version = "0.29.1"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
@@ -16,7 +16,6 @@ path = "src/bin/setupdb.rs"
 [dependencies]
 tokio-postgres = "0.5.1"
 tokio = "0.2.6"
-#postgres = "0.17.0-alpha.2"
 levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.7.0"}
 strum = "0.17.1"
 strum_macros = "0.17.1"

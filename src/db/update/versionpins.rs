@@ -118,7 +118,7 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns
     /// * A mutable reference to Self
-    pub fn change(&mut self, update: VersionPinChange) -> &mut Self {
+    pub fn change(mut self, update: VersionPinChange) -> Self {
         self.changes.push(update);
         self
     }
@@ -134,11 +134,11 @@ impl<'a> UpdateVersionPins<'a> {
     /// # Returns
     /// * A mutable reference to Self
     pub fn change_from_components(
-        &mut self,
+        mut self,
         versionpin_id: IdType,
         distribution_id: Option<IdType>,
         pkgcoord_id: Option<IdType>,
-    ) -> &mut Self {
+    ) -> Self {
         let change = VersionPinChange::new(versionpin_id, distribution_id, pkgcoord_id);
         self.changes.push(change);
         self
@@ -153,14 +153,14 @@ impl<'a> UpdateVersionPins<'a> {
     ///
     /// # Returns
     /// * a mutable reference to Self
-    pub fn changes(&mut self, changes: &mut Vec<VersionPinChange>) -> &mut Self {
+    pub fn changes(mut self, changes: &mut Vec<VersionPinChange>) -> Self {
         self.changes.append(changes);
         self
     }
 
     /// Inject updates into the internal transaction. The database update is deferred
     /// until one calls self.commit(...)
-    pub fn update(&mut self) -> Result<&mut Self, UpdateVersionPinsError> {
+    pub fn update(mut self) -> Result<Self, UpdateVersionPinsError> {
         let mut update_cnt = 0;
         let changes = {
             let mut empty = Vec::new();
