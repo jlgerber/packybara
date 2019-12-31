@@ -1,4 +1,4 @@
-use crate::traits::{PackratDbError, TransactionHandler};
+use crate::traits::TransactionHandler;
 use crate::types::IdType;
 use log;
 use postgres::types::ToSql;
