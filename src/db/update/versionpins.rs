@@ -2,13 +2,13 @@
 pbk update versionpins --versionpin 22 --distribution 22 --pkgcoord 84 -v 432 -d 22 -p 32
 */
 //use itertools::Itertools;
+use crate::traits::{PackratDbError, TransactionHandler};
 use crate::types::IdType;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
 use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
-
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
 pub enum UpdateVersionPinsError {
@@ -66,11 +66,33 @@ impl VersionPinChange {
 }
 
 /// Responsible for creating packages
-pub struct UpdateVersionPins {
+pub struct UpdateVersionPins<'a> {
+    tx: Option<Transaction<'a>>,
     pub changes: Vec<VersionPinChange>,
+    result_cnt: u64,
 }
 
-impl UpdateVersionPins {
+impl<'a> TransactionHandler<'a> for UpdateVersionPins<'a> {
+    type Error = tokio_postgres::error::Error;
+
+    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
+        self.tx.as_mut()
+    }
+
+    fn take_tx(&mut self) -> Transaction<'a> {
+        self.tx.take().unwrap()
+    }
+
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+
+    fn get_result_cnt(&self) -> u64 {
+        self.result_cnt
+    }
+}
+
+impl<'a> UpdateVersionPins<'a> {
     /// new up an UpdateVersionPins instance
     ///
     /// # Arguments
@@ -79,9 +101,11 @@ impl UpdateVersionPins {
     /// stores the connection to the database, and provides crud methods
     /// for us.
     ///
-    pub fn new() -> Self {
+    pub fn new(tx: Transaction<'a>) -> Self {
         Self {
+            tx: Some(tx),
             changes: Vec::new(),
+            result_cnt: 0,
         }
     }
 
@@ -135,9 +159,14 @@ impl UpdateVersionPins {
         self
     }
 
-    pub fn update(&mut self, tx: &mut Transaction) -> Result<u64, UpdateVersionPinsError> {
+    pub fn update(&mut self) -> Result<&mut Self, UpdateVersionPinsError> {
         let mut update_cnt = 0;
-        for x in &self.changes {
+        let changes = {
+            let mut empty = Vec::new();
+            std::mem::swap(&mut empty, &mut self.changes);
+            empty
+        };
+        for x in &changes {
             if x.has_changes() {
                 let mut maybe_comma = String::from("");
                 update_cnt += 1;
@@ -161,12 +190,19 @@ impl UpdateVersionPins {
                 prepared_line.push_str(" WHERE id = $1");
                 log::info!("SQL\n{}", prepared_line.as_str());
                 log::info!("Prepared\n{:?}", &updates_ref);
-                tx.execute(prepared_line.as_str(), &updates_ref[..])
-                    .context(TokioPostgresError {
-                        msg: "failed to execute statement in transaction",
-                    })?;
+
+                // todo guard against possible emp
+                {
+                    self.tx()
+                        .unwrap()
+                        .execute(prepared_line.as_str(), &updates_ref[..])
+                        .context(TokioPostgresError {
+                            msg: "failed to execute statement in transaction",
+                        })?;
+                }
             }
         }
-        Ok(update_cnt)
+        self.result_cnt = update_cnt;
+        Ok(self)
     }
 }

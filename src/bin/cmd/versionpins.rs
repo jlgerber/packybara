@@ -3,6 +3,7 @@ use super::utils::extract_coords;
 use super::utils::truncate;
 use packybara::db::update::versionpins::VersionPinChange;
 use packybara::packrat::{Client, PackratDb};
+use packybara::traits::TransactionHandler;
 use packybara::{LtreeSearchMode, SearchAttribute};
 use prettytable::{cell, format, row, table};
 use std::str::FromStr;
@@ -97,14 +98,12 @@ pub fn set(client: Client, cmd: PbSet) -> Result<(), Box<dyn std::error::Error>>
     let username = whoami::username();
     let mut pb = PackratDb::new(client);
     let mut update_versionpins = pb.update_versionpins();
-    let mut tx = pb.transaction();
     for cnt in 0..dist_ids.len() {
         let change = VersionPinChange::new(vpin_ids[cnt], Some(dist_ids[cnt]), None);
         update_versionpins.change(change);
     }
 
-    let update_cnt = update_versionpins.update(&mut tx)?;
-    PackratDb::commit(tx, &username, &comment)?;
+    let update_cnt = update_versionpins.update()?.commit(&username, &comment)?;
     println!("{}", update_cnt);
     Ok(())
 }

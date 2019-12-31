@@ -37,19 +37,23 @@ impl PackratDb {
         self.client.transaction().unwrap()
     }
     /// commit the transaction
-    pub fn commit(mut tx: Transaction, author: &str, comment: &str) -> Result<(), PackratDbError> {
-        tx.execute(
-            "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
-            &[&author, &comment],
-        )
-        .context(TokioPostgresError {
-            msg: "failed to update revision entity",
-        })?;
-        tx.commit().context(TokioPostgresError {
-            msg: "failed to commit",
-        })?;
-        Ok(())
-    }
+    // pub fn commit<'a>(
+    //     tx: &mut Transaction<'a>,
+    //     author: &str,
+    //     comment: &str,
+    // ) -> Result<(), PackratDbError> {
+    //     tx.execute(
+    //         "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
+    //         &[&author, &comment],
+    //     )
+    //     .context(TokioPostgresError {
+    //         msg: "failed to update revision entity",
+    //     })?;
+    //     tx.commit().context(TokioPostgresError {
+    //         msg: "failed to commit",
+    //     })?;
+    //     Ok(())
+    // }
     /// Find the most appropriate versionpin for a request. `find_versionpin`
     /// returns an instance of `FindVersionPinBuilder`, which provides
     /// setter methods providing a fluent api.
@@ -153,7 +157,7 @@ impl PackratDb {
 
     /// add levels
     pub fn add_levels<'b>(&'b mut self) -> add::levels::AddLevels {
-        add::levels::AddLevels::new(&mut self.client)
+        add::levels::AddLevels::new(self.transaction())
     }
 
     /// add roles
@@ -176,7 +180,7 @@ impl PackratDb {
     /// # Arguments
     /// * `comment` - A comment describing the update
     /// * `user` - The name of the user making the update
-    pub fn update_versionpins(&self) -> update::versionpins::UpdateVersionPins {
-        update::versionpins::UpdateVersionPins::new()
+    pub fn update_versionpins<'b>(&'b mut self) -> update::versionpins::UpdateVersionPins {
+        update::versionpins::UpdateVersionPins::new(self.transaction())
     }
 }

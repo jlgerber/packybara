@@ -33,16 +33,25 @@ pub enum AddLevelsError {
 }
 /// The AddLevels struct is responsible for creating levels.
 pub struct AddLevels<'a> {
-    client: &'a mut Client,
+    tx: Option<Transaction<'a>>,
     names: Vec<String>,
     result_cnt: u64,
-    tx: Option<Transaction<'a>>,
 }
 
-impl<'a> TransactionHandler for AddLevels<'a> {
-    fn take_tx(&mut self) -> Option<Transaction> {
-        self.tx.take()
+impl<'a> TransactionHandler<'a> for AddLevels<'a> {
+    type Error = tokio_postgres::error::Error;
+    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
+        self.tx.as_mut()
     }
+
+    fn take_tx(&mut self) -> Transaction<'a> {
+        self.tx.take().unwrap()
+    }
+
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
@@ -57,12 +66,11 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * An instance of Self
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new(tx: Transaction<'a>) -> Self {
         Self {
-            client,
+            tx: Some(tx),
             names: Vec::new(),
             result_cnt: 0,
-            tx: None,
         }
     }
 
@@ -98,7 +106,7 @@ impl<'a> AddLevels<'a> {
     /// new instances created.
     ///
     /// # Returns
-    /// * Ok(u64) | Err(AddLevelsError)
+    /// * Ok(&mut Self) | Err(AddLevelsError)
     pub fn create(&mut self) -> Result<&mut Self, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
@@ -139,15 +147,15 @@ impl<'a> AddLevels<'a> {
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &levels_ref);
         // here we limit the lifetime of tx, so that we can return &mut self
-        {
-            let mut tx = self.client.transaction().unwrap();
-            let results =
-                tx.execute(insert_str.as_str(), &levels_ref[..])
-                    .context(TokioPostgresError {
-                        msg: "failed to add levels",
-                    })?;
-            self.result_cnt = results;
-        }
+
+        let results = self
+            .tx()
+            .unwrap()
+            .execute(insert_str.as_str(), &levels_ref[..])
+            .context(TokioPostgresError {
+                msg: "failed to add levels",
+            })?;
+        self.result_cnt = results;
         Ok(self)
     }
 }
