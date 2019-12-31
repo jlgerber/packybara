@@ -9,8 +9,7 @@
 use crate::db::{add, find, find_all, update};
 use crate::types::IdType;
 pub use postgres::{Client, NoTls, Transaction};
-use snafu::Snafu;
-
+use snafu::{ResultExt, Snafu};
 #[derive(Debug, Snafu)]
 pub enum PackratDbError {
     /// When constructing a query, postgres has thrown an error
@@ -31,6 +30,27 @@ impl PackratDb {
     /// New up a PackratDb instance given a Client
     pub fn new(client: Client) -> Self {
         PackratDb { client }
+    }
+    pub fn commit<'a>(
+        mut tx: Transaction<'a>,
+        author: &str,
+        comment: &str,
+        commits: u64,
+    ) -> Result<u64, PackratDbError> {
+        {
+            tx.execute(
+                "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
+                &[&author, &comment],
+            )
+            .context(TokioPostgresError {
+                msg: "failed to insert Revisions",
+            })?;
+        }
+
+        tx.commit().context(TokioPostgresError {
+            msg: "failed to commit transaction",
+        })?;
+        Ok(commits)
     }
     /// Generate a transaction for updates and adds
     pub fn transaction<'a>(&'a mut self) -> Transaction<'a> {
