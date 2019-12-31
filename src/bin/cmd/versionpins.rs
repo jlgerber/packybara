@@ -99,7 +99,7 @@ pub fn set<'a>(tx: Transaction<'a>, cmd: PbSet) -> Result<(), Box<dyn std::error
     let mut update_versionpins = PackratDb::update_versionpins(tx);
     for cnt in 0..dist_ids.len() {
         let change = VersionPinChange::new(vpin_ids[cnt], Some(dist_ids[cnt]), None);
-        update_versionpins.change(change);
+        update_versionpins = update_versionpins.change(change);
     }
 
     let update_cnt = update_versionpins.update()?.commit(&username, &comment)?;
