@@ -154,7 +154,7 @@ impl PackratDb {
 
     /// add with
     pub fn add_withs<'b>(&'b mut self) -> add::withs::AddWiths {
-        add::withs::AddWiths::new(&mut self.client)
+        add::withs::AddWiths::new(self.transaction())
     }
 
     /// update packages

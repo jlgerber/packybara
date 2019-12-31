@@ -1,6 +1,7 @@
 use super::args::{PbAdd, PbFind};
 use super::utils::extract_coords;
 use packybara::packrat::{Client, PackratDb};
+use packybara::traits::TransactionHandler;
 use packybara::SearchAttribute;
 use prettytable::{cell, format, row, table};
 use std::str::FromStr;
@@ -68,7 +69,10 @@ pub fn add(client: Client, cmd: PbAdd) -> Result<(), Box<dyn std::error::Error>>
     {
         let author = whoami::username();
         let mut pb = PackratDb::new(client);
-        let results = pb.add_withs().create(vpin_id, withs, author, comment)?;
+        let results = pb
+            .add_withs()
+            .create(vpin_id, withs)?
+            .commit(&author, &comment)?;
         println!("{}", results);
     }
     Ok(())
