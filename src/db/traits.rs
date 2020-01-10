@@ -37,16 +37,18 @@ pub trait PBFind {
     fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths;
 }
 
-pub trait PBAdd {
-    fn add_packages<'b>(tx: Transaction<'b>) -> add::packages::AddPackages<'b>;
+pub trait PBAdd<'b> {
+    type TransactionType;
 
-    fn add_levels<'b>(tx: Transaction<'b>) -> add::levels::AddLevels;
+    fn add_packages(tx: Self::TransactionType) -> add::packages::AddPackages<'b>;
 
-    fn add_roles<'b>(tx: Transaction<'b>) -> add::roles::AddRoles;
+    fn add_levels(tx: Self::TransactionType) -> add::levels::AddLevels<'b>;
 
-    fn add_platforms<'b>(tx: Transaction<'b>) -> add::platforms::AddPlatforms;
+    fn add_roles(tx: Self::TransactionType) -> add::roles::AddRoles<'b>;
 
-    fn add_withs<'b>(tx: Transaction<'b>) -> add::withs::AddWiths;
+    fn add_platforms(tx: Self::TransactionType) -> add::platforms::AddPlatforms<'b>;
+
+    fn add_withs(tx: Self::TransactionType) -> add::withs::AddWiths<'b>;
 }
 
 pub trait PBUpdate<'a> {

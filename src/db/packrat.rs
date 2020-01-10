@@ -152,35 +152,39 @@ impl PBFind for PackratDb {
         find::withs::FindWiths::new(&mut self.client, package)
     }
 }
-impl PBAdd for PackratDb {
+
+impl<'b> PBAdd<'b> for PackratDb {
+    type TransactionType = Transaction<'b>;
+
     /// add packages
-    fn add_packages<'b>(tx: Transaction<'b>) -> add::packages::AddPackages<'b> {
+    fn add_packages(tx: Self::TransactionType) -> add::packages::AddPackages<'b> {
         add::packages::AddPackages::new(tx)
     }
 
     /// add levels
-    fn add_levels<'b>(tx: Transaction<'b>) -> add::levels::AddLevels {
+    fn add_levels(tx: Self::TransactionType) -> add::levels::AddLevels<'b> {
         add::levels::AddLevels::new(tx)
     }
 
     /// add roles
-    fn add_roles<'b>(tx: Transaction<'b>) -> add::roles::AddRoles {
+    fn add_roles(tx: Self::TransactionType) -> add::roles::AddRoles<'b> {
         add::roles::AddRoles::new(tx)
     }
 
     /// add platforms
-    fn add_platforms<'b>(tx: Transaction<'b>) -> add::platforms::AddPlatforms {
+    fn add_platforms(tx: Self::TransactionType) -> add::platforms::AddPlatforms<'b> {
         add::platforms::AddPlatforms::new(tx)
     }
 
-    /// add with
-    fn add_withs<'b>(tx: Transaction<'b>) -> add::withs::AddWiths {
+    /// Add withs to the transaction
+    fn add_withs(tx: Self::TransactionType) -> add::withs::AddWiths<'b> {
         add::withs::AddWiths::new(tx)
     }
 }
 
 impl<'a> PBUpdate<'a> for PackratDb {
     type TransactionType = Transaction<'a>;
+
     /// update packages
     ///
     /// # Arguments
