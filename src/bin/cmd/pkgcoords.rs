@@ -1,9 +1,9 @@
 use super::args::PbFind;
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb};
 use packybara::SearchMode;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
-//use std::str::FromStr;
 
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::PkgCoords {

@@ -6,10 +6,12 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
+use crate::db::traits::{PBAdd, PBFind, PBUpdate};
 use crate::db::{add, find, find_all, update};
 use crate::types::IdType;
 pub use postgres::{Client, NoTls, Transaction};
 use snafu::{ResultExt, Snafu};
+
 #[derive(Debug, Snafu)]
 pub enum PackratDbError {
     /// When constructing a query, postgres has thrown an error
@@ -56,6 +58,9 @@ impl PackratDb {
     pub fn transaction<'a>(&'a mut self) -> Transaction<'a> {
         self.client.transaction().unwrap()
     }
+}
+
+impl PBFind for PackratDb {
     /// Find the most appropriate versionpin for a request. `find_versionpin`
     /// returns an instance of `FindVersionPinBuilder`, which provides
     /// setter methods providing a fluent api.
@@ -85,104 +90,103 @@ impl PackratDb {
     ///                     .site("portland")
     ///                     .query().unwrap();
     /// ```
-    pub fn find_versionpin<'b>(&'b mut self, package: &'b str) -> find::versionpin::FindVersionPin {
+    fn find_versionpin<'b>(&'b mut self, package: &'b str) -> find::versionpin::FindVersionPin {
         find::versionpin::FindVersionPin::new(&mut self.client, package)
     }
 
-    pub fn find_versionpins<'b>(
-        &'b mut self,
-        package: &'b str,
-    ) -> find::versionpins::FindVersionPins {
+    fn find_versionpins<'b>(&'b mut self, package: &'b str) -> find::versionpins::FindVersionPins {
         find::versionpins::FindVersionPins::new(&mut self.client, package)
     }
 
-    pub fn find_all_versionpins<'b>(&'b mut self) -> find_all::versionpins::FindAllVersionPins {
+    fn find_all_versionpins<'b>(&'b mut self) -> find_all::versionpins::FindAllVersionPins {
         find_all::versionpins::FindAllVersionPins::new(&mut self.client)
     }
 
-    pub fn find_all_roles<'b>(&'b mut self) -> find_all::roles::FindAllRoles {
+    fn find_all_roles<'b>(&'b mut self) -> find_all::roles::FindAllRoles {
         find_all::roles::FindAllRoles::new(&mut self.client)
     }
 
-    pub fn find_all_revisions<'b>(&'b mut self) -> find_all::revisions::FindAllRevisions {
+    fn find_all_revisions<'b>(&'b mut self) -> find_all::revisions::FindAllRevisions {
         find_all::revisions::FindAllRevisions::new(&mut self.client)
     }
 
-    pub fn find_all_changes<'b>(&'b mut self) -> find_all::changes::FindAllChanges {
+    fn find_all_changes<'b>(&'b mut self) -> find_all::changes::FindAllChanges {
         find_all::changes::FindAllChanges::new(&mut self.client)
     }
 
-    pub fn find_all_platforms<'b>(&'b mut self) -> find_all::platforms::FindAllPlatforms {
+    fn find_all_platforms<'b>(&'b mut self) -> find_all::platforms::FindAllPlatforms {
         find_all::platforms::FindAllPlatforms::new(&mut self.client)
     }
 
-    pub fn find_all_sites<'b>(&'b mut self) -> find_all::sites::FindAllSites {
+    fn find_all_sites<'b>(&'b mut self) -> find_all::sites::FindAllSites {
         find_all::sites::FindAllSites::new(&mut self.client)
     }
 
-    pub fn find_all_levels<'b>(&'b mut self) -> find_all::levels::FindAllLevels {
+    fn find_all_levels<'b>(&'b mut self) -> find_all::levels::FindAllLevels {
         find_all::levels::FindAllLevels::new(&mut self.client)
     }
 
-    pub fn find_all_packages<'b>(&'b mut self) -> find_all::packages::FindAllPackages {
+    fn find_all_packages<'b>(&'b mut self) -> find_all::packages::FindAllPackages {
         find_all::packages::FindAllPackages::new(&mut self.client)
     }
     /// find withs for a particular versionpin
-    pub fn find_all_versionpin_withs<'b>(
+    fn find_all_versionpin_withs<'b>(
         &'b mut self,
         versionpin_id: IdType,
     ) -> find_all::versionpin_withs::FindAllWiths {
         find_all::versionpin_withs::FindAllWiths::new(&mut self.client, versionpin_id)
     }
-    pub fn find_all_distributions<'b>(
-        &'b mut self,
-    ) -> find_all::distributions::FindAllDistributions {
+    fn find_all_distributions<'b>(&'b mut self) -> find_all::distributions::FindAllDistributions {
         find_all::distributions::FindAllDistributions::new(&mut self.client)
     }
     /// Find pins that meet a specific criteria
-    pub fn find_pins<'b>(&'b mut self) -> find::pins::FindPins {
+    fn find_pins<'b>(&'b mut self) -> find::pins::FindPins {
         find::pins::FindPins::new(&mut self.client)
     }
     /// Find pkgcoords that meet a specific criteria
-    pub fn find_pkgcoords<'b>(&'b mut self) -> find_all::pkgcoords::FindAllPkgCoords {
+    fn find_pkgcoords<'b>(&'b mut self) -> find_all::pkgcoords::FindAllPkgCoords {
         find_all::pkgcoords::FindAllPkgCoords::new(Some(&mut self.client))
     }
     /// find withs of a
-    pub fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
+    fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
         find::withs::FindWiths::new(&mut self.client, package)
     }
-
+}
+impl PBAdd for PackratDb {
     /// add packages
-    pub fn add_packages<'b>(tx: Transaction<'b>) -> add::packages::AddPackages<'b> {
+    fn add_packages<'b>(tx: Transaction<'b>) -> add::packages::AddPackages<'b> {
         add::packages::AddPackages::new(tx)
     }
 
     /// add levels
-    pub fn add_levels<'b>(tx: Transaction<'b>) -> add::levels::AddLevels {
+    fn add_levels<'b>(tx: Transaction<'b>) -> add::levels::AddLevels {
         add::levels::AddLevels::new(tx)
     }
 
     /// add roles
-    pub fn add_roles<'b>(tx: Transaction<'b>) -> add::roles::AddRoles {
+    fn add_roles<'b>(tx: Transaction<'b>) -> add::roles::AddRoles {
         add::roles::AddRoles::new(tx)
     }
 
     /// add platforms
-    pub fn add_platforms<'b>(tx: Transaction<'b>) -> add::platforms::AddPlatforms {
+    fn add_platforms<'b>(tx: Transaction<'b>) -> add::platforms::AddPlatforms {
         add::platforms::AddPlatforms::new(tx)
     }
 
     /// add with
-    pub fn add_withs<'b>(tx: Transaction<'b>) -> add::withs::AddWiths {
+    fn add_withs<'b>(tx: Transaction<'b>) -> add::withs::AddWiths {
         add::withs::AddWiths::new(tx)
     }
+}
 
+impl<'a> PBUpdate<'a> for PackratDb {
+    type TransactionType = Transaction<'a>;
     /// update packages
     ///
     /// # Arguments
     /// * `comment` - A comment describing the update
     /// * `user` - The name of the user making the update
-    pub fn update_versionpins<'b>(tx: Transaction<'b>) -> update::versionpins::UpdateVersionPins {
+    fn update_versionpins(tx: Transaction<'a>) -> update::versionpins::UpdateVersionPins<'a> {
         update::versionpins::UpdateVersionPins::new(tx)
     }
 }

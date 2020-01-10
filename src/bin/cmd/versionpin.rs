@@ -1,6 +1,7 @@
 use super::args::PbFind;
 use super::utils::extract_coords;
 use super::utils::truncate;
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb};
 use prettytable::{cell, format, row, table};
 

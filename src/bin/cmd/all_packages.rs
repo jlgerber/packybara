@@ -1,4 +1,5 @@
 use super::args::{PbAdd, PbFind};
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;
 use prettytable::{cell, format, row, table};

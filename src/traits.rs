@@ -1,3 +1,5 @@
+/// reexport the db traits
+pub use crate::db::traits::*;
 pub use crate::packrat::PackratDbError;
 use postgres::Transaction;
 
@@ -22,7 +24,7 @@ pub trait TransactionHandler<'a> {
     /// zero out the result count
     fn reset_result_cnt(&mut self);
 
-    /// Given a user adn comment, commit the internal transaction, returning the
+    /// Given a user and comment, commit the internal transaction, returning the
     /// number of results, if successful, or an error if not.
     /// The default implementation, as provided, should suffice.
     fn commit(&mut self, author: &str, comment: &str) -> Result<u64, Self::Error> {

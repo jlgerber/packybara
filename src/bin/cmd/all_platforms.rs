@@ -1,10 +1,12 @@
 use super::args::{PbAdd, PbFind};
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;
 use packybara::OrderPlatformBy;
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
+
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Platforms {
         platform, order_by, ..

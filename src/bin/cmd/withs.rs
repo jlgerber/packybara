@@ -1,5 +1,6 @@
 use super::args::{PbAdd, PbFind};
 use super::utils::extract_coords;
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;
 use packybara::SearchAttribute;

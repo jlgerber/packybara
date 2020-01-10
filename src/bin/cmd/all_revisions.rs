@@ -1,5 +1,6 @@
 use super::args::PbFind;
 use packybara::db::find_all::revisions::{OrderDirection, OrderRevisionBy};
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb};
 use prettytable::{cell, format, row, table};
 use std::ops::Deref;

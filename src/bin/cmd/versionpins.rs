@@ -1,6 +1,7 @@
 use super::args::{PbFind, PbSet};
 use super::utils::extract_coords;
 use super::utils::truncate;
+use packybara::db::traits::*;
 use packybara::db::update::versionpins::VersionPinChange;
 use packybara::packrat::{Client, PackratDb, Transaction};
 use packybara::traits::TransactionHandler;

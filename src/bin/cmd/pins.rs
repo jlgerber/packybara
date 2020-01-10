@@ -1,4 +1,5 @@
 use super::args::PbFind;
+use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb};
 use packybara::{LtreeSearchMode, SearchAttribute};
 use prettytable::{cell, format, row, table};
