@@ -15,7 +15,7 @@ path = "src/bin/setupdb.rs"
 
 [dependencies]
 tokio-postgres = "0.5.1"
-tokio = "0.2.8"
+tokio = "0.2.9"
 levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.7.0"}
 strum = "0.17.1"
 strum_macros = "0.17.1"
