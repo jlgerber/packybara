@@ -102,6 +102,7 @@ pub struct FindAllLevels<'a> {
     client: &'a mut Client,
     level: Option<&'a str>,
     show: Option<&'a str>,
+    depth: Option<u8>,
     order_by: Option<Vec<OrderLevelBy>>,
     order_direction: Option<OrderDirection>,
     limit: Option<IdType>,
@@ -120,6 +121,7 @@ impl<'a> FindAllLevels<'a> {
             client,
             show: None,
             level: None,
+            depth: None,
             order_by: None,
             order_direction: None,
             limit: None,
@@ -136,6 +138,10 @@ impl<'a> FindAllLevels<'a> {
         self
     }
 
+    pub fn depth(&mut self, depth_n: u8) -> &mut Self {
+        self.depth = Some(depth_n);
+        self
+    }
     /// Set an optional show.
     ///
     /// This is generally accomplished by calling
@@ -151,6 +157,12 @@ impl<'a> FindAllLevels<'a> {
     /// Set an optional level
     pub fn level_opt(&mut self, level: Option<&'a str>) -> &mut Self {
         self.level = level;
+        self
+    }
+
+    /// Set an optional depht
+    pub fn depth_opt(&mut self, depth: Option<u8>) -> &mut Self {
+        self.depth = depth;
         self
     }
 
@@ -178,11 +190,19 @@ impl<'a> FindAllLevels<'a> {
                 level_view WHERE name <> 'any'"
             .to_string();
         let show = self.show.unwrap_or("any");
+        let mut cnt = 1;
         if self.show.is_some() {
             if show != "any" {
-                query_str = format!("{} AND show = $1", query_str);
+                query_str = format!("{} AND show = ${}", query_str, cnt);
                 params.push(&show);
+                cnt += 1;
             }
+        }
+        let depth = (self.depth.unwrap_or(0) + 1) as i32;
+        if self.depth.is_some() {
+            query_str = format!("{} AND nlevel(path) = ${}", query_str, cnt);
+            params.push(&depth);
+            cnt += 1;
         }
 
         if let Some(ref orderby) = self.order_by {

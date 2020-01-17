@@ -12,6 +12,7 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
     if let PbFind::Levels {
         level,
         show,
+        depth,
         order_by,
         ..
     } = cmd
@@ -20,7 +21,8 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
         let mut results = pb.find_all_levels();
         results
             .level_opt(level.as_ref().map(Deref::deref))
-            .show_opt(show.as_ref().map(Deref::deref));
+            .show_opt(show.as_ref().map(Deref::deref))
+            .depth_opt(depth);
         if let Some(ref order) = order_by {
             let orders = order
                 .split(",")
