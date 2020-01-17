@@ -174,7 +174,8 @@ pub enum PbFind {
         ///  The name of the show.
         #[structopt(short = "S", long, display_order = 2)]
         show: Option<String>,
-        ///  The dpeth of the show.
+        ///  Specify the number of elements that a level should have. EG 1 for show, 2 for sequence,
+        /// 3 for shot.
         #[structopt(short = "D", long, display_order = 3)]
         depth: Option<u8>,
         /// Provide one or more comma separated items to order the return by.
