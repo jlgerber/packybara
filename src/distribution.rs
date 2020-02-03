@@ -10,7 +10,7 @@ use crate::coords_error::{CoordsError, CoordsResult};
 use std::convert::TryFrom;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Distribution {
     name: String,
 }

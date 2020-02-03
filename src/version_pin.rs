@@ -101,7 +101,7 @@ impl VersionPinBuilder {
     }
 }
 /// Struct that pairs a Distribution with a  Coords
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct VersionPin {
     pub distribution: Distribution,
     pub coords: Coords,

@@ -142,7 +142,7 @@ impl CoordsBuilder {
 /// Enchiladas.
 ///
 /// Too bad.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Coords {
     /// The Facility, or Show, Sequence, or Shot
     pub level: Level,

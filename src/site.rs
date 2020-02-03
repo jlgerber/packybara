@@ -50,7 +50,9 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// let site_string = format!("{}", site);
 /// assert_eq!(site_string.as_str(), "vancouver");
 /// ```
-#[derive(Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone,
+)]
 pub enum Site {
     #[strum(
         serialize = "any",

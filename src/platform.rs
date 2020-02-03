@@ -52,7 +52,9 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// let platform_string = format!("{}", platform);
 /// assert_eq!(platform_string.as_str(), "cent7_64");
 /// ```
-#[derive(Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone,
+)]
 pub enum Platform {
     #[strum(
         serialize = "any",

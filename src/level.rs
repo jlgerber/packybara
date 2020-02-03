@@ -13,7 +13,7 @@ use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Level {
     Facility,
     LevelSpec(LevelSpec),
