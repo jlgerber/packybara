@@ -1,6 +1,7 @@
 use super::args::{PbFind, PbSet};
 use super::utils::extract_coords;
 use super::utils::truncate;
+use packybara::db::search_attribute::OrderDirection;
 use packybara::db::traits::*;
 use packybara::db::update::versionpins::VersionPinChange;
 use packybara::packrat::{Client, PackratDb, Transaction};
@@ -20,6 +21,7 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
         site,
         search_mode,
         order_by,
+        order_direction,
         full_withs,
         ..
     } = cmd
@@ -45,6 +47,15 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
                 .map(|x| SearchAttribute::from_str(x).unwrap_or(SearchAttribute::Unknown))
                 .collect::<Vec<SearchAttribute>>();
             results.order_by(orders);
+        }
+        if let Some(ref dir) = order_direction {
+            let direction = OrderDirection::from_str(dir);
+            if direction.is_ok() {
+                let direction = direction.unwrap();
+                results.order_direction(direction);
+            } else {
+                log::warn!("unable to apply search direction request {} to query", dir);
+            }
         }
         let results = results.query()?;
         // For now I do this. I need to add packge handling into the query

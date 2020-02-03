@@ -1,4 +1,5 @@
 pub use crate::coords_error::{CoordsError, CoordsResult};
+pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
 use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
@@ -118,6 +119,8 @@ pub struct FindVersionPins<'a> {
     role: Option<&'a str>,
     platform: Option<&'a str>,
     site: Option<&'a str>,
+    order_by: Option<Vec<SearchAttribute>>,
+    order_direction: Option<OrderDirection>,
 }
 
 impl<'a> FindVersionPins<'a> {
@@ -129,6 +132,8 @@ impl<'a> FindVersionPins<'a> {
             role: None,
             platform: None,
             site: None,
+            order_by: None,
+            order_direction: None,
         }
     }
 
@@ -151,6 +156,16 @@ impl<'a> FindVersionPins<'a> {
         self.site = Some(site_n);
         self
     }
+
+    pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
+        self.order_by = Some(attributes);
+        self
+    }
+
+    pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
+        self.order_direction = Some(direction);
+        self
+    }
     pub fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
@@ -159,7 +174,7 @@ impl<'a> FindVersionPins<'a> {
         let mut result = Vec::new();
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] =
             &[&self.package, &role, &platform, &level, &site];
-        let query_str = "SELECT versionpin_id, 
+        let mut query_str = "SELECT versionpin_id, 
                         distribution, 
                         level_name, 
                         role_name, 
@@ -171,10 +186,26 @@ impl<'a> FindVersionPins<'a> {
                         role => $2, 
                         platform => $3, 
                         level=>$4, 
-                        site => $5)";
+                        site => $5)"
+            .to_string();
+
+        let direction = match self.order_direction {
+            Some(ref dir) => dir.as_ref(),
+            None => "ASC",
+        };
+
+        if let Some(ref orderby) = self.order_by {
+            if orderby.len() > 0 {
+                let orderby = orderby
+                    .iter()
+                    .map(|x| format!("{} {}", x.as_ref(), direction))
+                    .collect::<Vec<_>>();
+                query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
+            }
+        }
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        for row in self.client.query(query_str, prepared_args)? {
+        for row in self.client.query(query_str.as_str(), prepared_args)? {
             let id: IdType = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);

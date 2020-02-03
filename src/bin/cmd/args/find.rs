@@ -68,8 +68,11 @@ pub enum PbFind {
         /// Provide one or more comma separated items to order the return by.
         #[structopt(short, long = "order-by", display_order = 7)]
         order_by: Option<String>,
+        /// Provide direction to search in
+        #[structopt(short = "D", long = "order-direction", display_order = 8)]
+        order_direction: Option<String>,
         /// Do not truncate the withs if true. Defaults to false.
-        #[structopt(short = "w", long = "withs", display_order = 8)]
+        #[structopt(short = "w", long = "withs", display_order = 9)]
         full_withs: bool,
     },
     #[structopt(display_order = 3)]
