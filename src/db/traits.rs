@@ -55,3 +55,9 @@ pub trait PBUpdate<'a> {
     type TransactionType;
     fn update_versionpins(tx: Self::TransactionType) -> update::versionpins::UpdateVersionPins<'a>;
 }
+
+pub trait PBExport<'a> {
+    type Error;
+
+    fn export_packages(&'a mut self, show: &'a str, path: &'a str) -> Result<(), Self::Error>;
+}
