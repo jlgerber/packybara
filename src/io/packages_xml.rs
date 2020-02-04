@@ -564,7 +564,6 @@ mod tests {
 pub mod xml {
     use crate::db::traits::PBFind;
     use crate::io;
-    use crate::packrat::Client;
     use crate::packrat::PackratDb;
     use crate::LtreeSearchMode;
     use crate::SearchAttribute;
@@ -597,12 +596,12 @@ pub mod xml {
     }
 
     pub fn write_xml<'a>(
-        client: Client,
+        db: &'a mut PackratDb,
         show: String,
         output: String,
     ) -> Result<(), PackagesXmlError> {
         // get a list of version pins for the show
-        let mut db = PackratDb::new(client);
+        //let mut db = PackratDb::new(client);
         let vpins = db
             .find_all_versionpins()
             .isolate_facility(true)
