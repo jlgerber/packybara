@@ -4,6 +4,8 @@ pub mod set;
 pub use set::*;
 pub mod find;
 pub use find::*;
+pub mod export;
+pub use export::*;
 
 use structopt::StructOpt;
 
@@ -46,4 +48,11 @@ pub enum PbCrud {
     /// Remove things from the database.
     #[structopt(display_order = 4)]
     Delete {},
+    /// Remove things from the database.
+    #[structopt(display_order = 5)]
+    Export {
+        /// Export subcommands
+        #[structopt(subcommand)]
+        cmd: PbExport,
+    },
 }
