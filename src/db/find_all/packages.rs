@@ -101,6 +101,12 @@ impl fmt::Debug for FindAllPackages<'_> {
 
 impl<'a> FindAllPackages<'a> {
     /// new up a FIndAllPackages instance.
+    ///
+    /// # Arguments
+    /// * `client` - a reference to a mutable Client instance
+    ///
+    /// # Returns
+    /// * An instance of FndAllPackages
     pub fn new(client: &'a mut Client) -> Self {
         FindAllPackages {
             client,
@@ -124,6 +130,13 @@ impl<'a> FindAllPackages<'a> {
     //     self
     // }
 
+    /// Execute the query using previously set parameters
+    ///
+    /// # Arguments
+    /// * None
+    ///
+    /// # Returns
+    /// * an Ok wrapped Vector of FindAllPackagesRow or an Error wrapped Box dyn Error
     pub fn query(&mut self) -> Result<Vec<FindAllPackagesRow>, Box<dyn std::error::Error>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 

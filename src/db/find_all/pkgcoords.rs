@@ -154,6 +154,13 @@ pub struct FindAllPkgCoords<'a> {
 }
 
 impl<'a> FindAllPkgCoords<'a> {
+    /// New up an instance of FindAllPkgCoords
+    ///
+    /// # Arguments
+    /// * `client` - An Option wrapped mutable reference to a Client instacne
+    ///
+    /// # Returns
+    /// * An instance of FindAllPkgCoords
     pub fn new(client: Option<&'a mut Client>) -> Self {
         FindAllPkgCoords {
             client,
@@ -167,36 +174,82 @@ impl<'a> FindAllPkgCoords<'a> {
         }
     }
 
+    /// Set a package name
+    ///
+    /// # Arguments
+    /// * `package_n` - The name of the package as a &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn package(&mut self, package_n: &'a str) -> &mut Self {
         self.package = Some(package_n);
         self
     }
-
+    /// Set the level
+    ///
+    /// # Arguments
+    /// * `level_n` - The level of the level as a &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn level(&mut self, level_n: &'a str) -> &mut Self {
         self.level = Some(level_n);
         self
     }
-
+    /// Set the role
+    ///
+    /// # Arguments
+    /// * `role_n` - The name of the role as a &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn role(&mut self, role_n: &'a str) -> &mut Self {
         self.role = Some(role_n);
         self
     }
 
+    /// Set a platform
+    ///
+    /// # Arguments
+    /// * `platform_n` - The name of the platform as a &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn platform(&mut self, platform_n: &'a str) -> &mut Self {
         self.platform = Some(platform_n);
         self
     }
-
+    /// Set a site name
+    ///
+    /// # Arguments
+    /// * `site_n` - The name of the site as a &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn site(&mut self, site_n: &'a str) -> &mut Self {
         self.site = Some(site_n);
         self
     }
 
+    /// Set the search mode  
+    ///
+    /// # Arguments
+    /// * `mode` - An instance of SearchMode
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn search_mode(&mut self, mode: SearchMode) -> &mut Self {
         self.search_mode = mode;
         self
     }
 
+    /// Set the order by
+    ///
+    /// # Arguments
+    /// * `order` - The name of column or columns to order the return by (comma separated)
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn order_by(&mut self, order: &'a str) -> &mut Self {
         // Vec<OrderPkgCoordsBy>
         let mut orders = Vec::new();
@@ -210,32 +263,69 @@ impl<'a> FindAllPkgCoords<'a> {
         self.order_by = Some(orders);
         self
     }
-
+    /// Set an option wrapped package name
+    ///
+    /// # Arguments
+    /// * `package_n` - The name of the package as an option wrapped &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn package_opt(&mut self, package_n: Option<&'a str>) -> &mut Self {
         self.package = package_n;
         self
     }
-
+    /// Set an option wrapped level
+    ///
+    /// # Arguments
+    /// * `level_n` - The level as an option wrapped &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn level_opt(&mut self, level_n: Option<&'a str>) -> &mut Self {
         self.level = level_n;
         self
     }
-
+    /// Set an option wrapped role
+    ///
+    /// # Arguments
+    /// * `package_n` - The role as an option wrapped &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn role_opt(&mut self, role_n: Option<&'a str>) -> &mut Self {
         self.role = role_n;
         self
     }
-
+    /// Set an option wrapped platform
+    ///
+    /// # Arguments
+    /// * `platform_n` - The platform as an option wrapped &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn platform_opt(&mut self, platform_n: Option<&'a str>) -> &mut Self {
         self.platform = platform_n;
         self
     }
-
+    /// Set an option wrapped site
+    ///
+    /// # Arguments
+    /// * `site_n` - The site as an option wrapped &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn site_opt(&mut self, site_n: Option<&'a str>) -> &mut Self {
         self.site = site_n;
         self
     }
-
+    /// Set an option wrapped order_by
+    ///
+    /// # Arguments
+    /// * `order` - The columns that the query will be sorted by as an option wrapped,
+    /// comma separated &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn order_by_opt(&mut self, order: Option<&'a str>) -> &mut Self {
         if let Some(order) = order {
             let mut orders = Vec::new();

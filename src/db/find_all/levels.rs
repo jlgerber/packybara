@@ -115,7 +115,13 @@ impl fmt::Debug for FindAllLevels<'_> {
 }
 
 impl<'a> FindAllLevels<'a> {
-    /// new up a FIndAllLevels instance.
+    /// new up a FindAllLevels instance.
+    ///
+    /// # Arguments
+    /// *`client` a mutable reference to Client
+    ///
+    /// # Returns
+    /// * a FindAllLevels instance
     pub fn new(client: &'a mut Client) -> Self {
         FindAllLevels {
             client,
@@ -128,16 +134,37 @@ impl<'a> FindAllLevels<'a> {
         }
     }
 
+    /// Set the level and return a reference to mut self.
+    ///
+    /// # Arguments
+    /// * `level_n` - a &str representing the level
+    ///
+    /// # Returns
+    /// * &mut self
     pub fn level(&mut self, level_n: &'a str) -> &mut Self {
         self.level = Some(level_n);
         self
     }
 
+    /// Set the show and return a mutable reference to self.
+    ///
+    /// # Arguments
+    /// * `show_n` - The show name as a &str
+    ///
+    /// # Returns
+    /// * mutable reference to self
     pub fn show(&mut self, show_n: &'a str) -> &mut Self {
         self.show = Some(show_n);
         self
     }
 
+    /// Set the depth of the level as an unsigned 8 bit int.
+    ///
+    /// # Arguments
+    /// * `depth_n` - The depth of the level
+    ///
+    /// # Returns
+    /// * mutable reference to self
     pub fn depth(&mut self, depth_n: u8) -> &mut Self {
         self.depth = Some(depth_n);
         self
@@ -155,32 +182,71 @@ impl<'a> FindAllLevels<'a> {
     }
 
     /// Set an optional level
+    ///
+    /// # Arguments
+    /// * `level` - an option wrapped &str
+    ///
+    /// # Returns
+    /// * mutable reference to self
     pub fn level_opt(&mut self, level: Option<&'a str>) -> &mut Self {
         self.level = level;
         self
     }
 
-    /// Set an optional depht
+    /// Set an optional depth of the level
+    ///
+    /// # Arguments
+    /// * `depth` - Tthe depth of the level as an option wrapped unsigned 8 bit
+    ///
+    /// # Returns
+    /// * Mutable reference to self
     pub fn depth_opt(&mut self, depth: Option<u8>) -> &mut Self {
         self.depth = depth;
         self
     }
 
+    /// Set the order_by value as a list of `OrderLevelBy` instances
+    ///
+    /// # Arguments
+    /// * `attributes` - a vector of OrderLevelBy isntances
+    ///
+    /// # Returns
+    /// * A mutable reference to self
     pub fn order_by(&mut self, attributes: Vec<OrderLevelBy>) -> &mut Self {
         self.order_by = Some(attributes);
         self
     }
 
+    /// Sets the order direction
+    ///
+    /// # Arguments
+    /// * `direction` - An instance of OrderDirection
+    ///
+    /// # Returns
+    /// * A mutable reference to self
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self
     }
 
+    /// Sets the limit of returned items
+    ///
+    /// # Arguments
+    /// * `limit` - The max number of items to return expressed as an IdType
+    ///
+    /// # Returns a mutable reference to self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }
 
+    /// Execute the query from the built up parameters
+    ///
+    /// # Arguments
+    /// * None
+    ///
+    /// # Returns
+    /// * Ok wrapped Vector of FindAllLevelsRow or an Error wrapped Box dyn Error
     pub fn query(&mut self) -> Result<Vec<FindAllLevelsRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 

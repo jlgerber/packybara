@@ -11,6 +11,7 @@ use std::fmt;
 use crate::types::IdType;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
+/// A simple enum representing the possible columns to order the return by.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
 pub enum OrderPlatformBy {
     #[strum(
@@ -112,7 +113,13 @@ impl<'a> FindAllPlatforms<'a> {
             limit: None,
         }
     }
-
+    /// Set a the platform name
+    ///
+    /// # Arguments
+    /// * `name` - The name of the platform as a &str
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn name(&mut self, name: &'a str) -> &mut Self {
         self.name = Some(name);
         self
@@ -129,17 +136,36 @@ impl<'a> FindAllPlatforms<'a> {
         self.name = name;
         self
     }
-
+    /// Set the columsn to sort on
+    ///
+    /// # Arguments
+    /// * `attributes` - The name of column or columns to order the return by
+    /// as a Vector of OrderPlatformBy instances
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn order_by(&mut self, attributes: Vec<OrderPlatformBy>) -> &mut Self {
         self.order_by = Some(attributes);
         self
     }
-
+    /// Set the sort direction
+    ///
+    /// # Arguments
+    /// * `direction` - The direction to sort in, represented as an instance of OrderDirection
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self
     }
-
+    /// Set the max number of elements returned by the query
+    ///
+    /// # Arguments
+    /// * `limit` - The max number of elements to return, as an IdType
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
