@@ -6,6 +6,14 @@ use prettytable::{cell, format, row, table};
 use std::ops::Deref;
 use std::str::FromStr;
 
+/// Pretty print the set of revisions from the database that match the provided criteria
+///
+/// # Arguments
+/// * `client` - A Client instance used to connect to the database
+/// * `cmd` - A PbFind enum instance used to extract the relevant commandline arguments
+///
+/// # Returns
+/// * a Unit if Ok, or a boxed error if Err
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Revisions {
         id,

@@ -5,6 +5,14 @@ use packybara::traits::TransactionHandler;
 use prettytable::{cell, format, row, table};
 use whoami;
 
+/// Pretty print the set of packages from the database that match the provided criteria
+///
+/// # Arguments
+/// * `client` - A Client instance used to connect to the database
+/// * `cmd` - A PbFind enum instance used to extract the relevant commandline arguments
+///
+/// # Returns
+/// * a Unit if Ok, or a boxed error if Err
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::Packages { .. } = cmd {
         //let (level, role, site, site, mode) =
