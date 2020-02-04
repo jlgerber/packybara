@@ -6,8 +6,9 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::db::traits::{PBAdd, PBFind, PBUpdate};
+use crate::db::traits::{PBAdd, PBExport, PBFind, PBUpdate};
 use crate::db::{add, find, find_all, update};
+use crate::io::packages_xml::xml::write_xml;
 use crate::types::IdType;
 pub use postgres::{Client, NoTls, Transaction};
 use snafu::{ResultExt, Snafu};
@@ -192,5 +193,13 @@ impl<'a> PBUpdate<'a> for PackratDb {
     /// * `user` - The name of the user making the update
     fn update_versionpins(tx: Transaction<'a>) -> update::versionpins::UpdateVersionPins<'a> {
         update::versionpins::UpdateVersionPins::new(tx)
+    }
+}
+
+impl<'a> PBExport<'a> for PackratDb {
+    type Error = crate::io::packages_xml::xml::PackagesXmlError;
+
+    fn export_packages(&'a mut self, show: &'a str, path: &'a str) -> Result<(), Self::Error> {
+        write_xml(self, show.to_string(), path.to_string())
     }
 }
