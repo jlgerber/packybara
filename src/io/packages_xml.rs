@@ -1,7 +1,5 @@
 //! Structures designed to generate packages.xml
 //!
-
-//use crate::packrat::PackratDb;
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
 use std::mem;
@@ -562,24 +560,49 @@ pub mod xml {
     use crate::LtreeSearchMode;
     use crate::SearchAttribute;
     use crate::{Platform, Role, Site};
+    use snafu::{ResultExt, Snafu};
     use std::fs::File;
     use std::io::Write;
 
-    pub fn write_xml<'a>(db: &'a mut PackratDb, show: String, output: String) {
+    /// Error type returned from  FindAllPackagesError
+    #[derive(Debug, Snafu)]
+    pub enum PackagesXmlError {
+        /// PackybaraDbQueryError - error when calling try_from_parts
+        #[snafu(display("Error querying the database  {}: {}", msg, source))]
+        PackybaraDbQueryError {
+            msg: &'static str,
+            source: std::boxed::Box<dyn std::error::Error>,
+        },
+        ///PackybaraDbWriteError
+        #[snafu(display("Error writing to the database  {}: {}", msg, source))]
+        PackybaraDbWriteError {
+            msg: &'static str,
+            source: std::boxed::Box<dyn std::error::Error>,
+        },
+        ///FileSystemWriteError
+        #[snafu(display("Error writing to the database  {}: {}", msg, source))]
+        IoError {
+            msg: &'static str,
+            source: std::io::Error,
+        },
+    }
+
+    pub fn write_xml<'a>(
+        db: &'a mut PackratDb,
+        show: String,
+        output: String,
+    ) -> Result<(), PackagesXmlError> {
         // get a list of version pins for the show
-        let results = db
+        let vpins = db
             .find_all_versionpins()
             .isolate_facility(true)
             .level(show.as_str())
             .search_mode(LtreeSearchMode::Descendant)
             .order_by(vec![SearchAttribute::Role, SearchAttribute::Package])
-            .query();
-        let vpins = match results {
-            Ok(vpins) => vpins,
-            Err(err) => {
-                panic!("Unable to get version pins from db: {}", err);
-            }
-        };
+            .query()
+            .context(PackybaraDbQueryError {
+                msg: "Unable to get version pins from db",
+            })?;
         // get a list of withs for the show
         // iterate through version pins, creating appropriate data structure for outgoing
         let mut show = io::Show::new(show);
@@ -641,24 +664,14 @@ pub mod xml {
         let xml_writer = io::ToXml::new();
         let show = xml_writer.to_xml(show);
         let xml_str = io::ToXml::to_pretty_string(&show);
-        let mut output = match File::create(output) {
-            Ok(output) => output,
-            Err(err) => {
-                // todo: define / return error
-                panic!("Unable to create packages.xml for writing: {}", err);
-                //return;
-            }
-        };
-        match write!(output, "{}", xml_str) {
-            Ok(_) => {
-                // sender
-                //     .send(IMainWin::SavePackagesXml(true).to_imsg())
-                //     .expect("unable to send changes");
-                // conductor.signal(MainWin::SavePackagesXml.to_event());
-            }
-            Err(err) => {
-                panic!("Unable to write packages.xml: {}", err);
-            }
-        };
+        let mut output = File::create(output).context(IoError {
+            msg: "Unable to create packages.xml on disk",
+        })?;
+
+        write!(output, "{}", xml_str).context(IoError {
+            msg: "Unable to write packages.xml to disk",
+        })?;
+
+        Ok(())
     }
 }
