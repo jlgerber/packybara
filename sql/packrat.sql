@@ -1,3 +1,11 @@
+/*******************************************************
+ * Copyright (C) 2019,2020 Jonathan Gerber <jlgerber@gmail.com>
+ *
+ * This file is part of packybara.
+ *
+ * packybara can not be copied and/or distributed without the express
+ * permission of Jonathan Gerber
+ *******************************************************/
 CREATE EXTENSION IF NOT EXISTS ltree;
 DROP SEQUENCE IF EXISTS pkgcoord_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS versionpin_id_seq CASCADE;

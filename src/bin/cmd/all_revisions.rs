@@ -1,4 +1,12 @@
 use super::args::PbFind;
+/*******************************************************
+ * Copyright (C) 2019,2020 Jonathan Gerber <jlgerber@gmail.com>
+ *
+ * This file is part of packybara.
+ *
+ * packybara can not be copied and/or distributed without the express
+ * permission of Jonathan Gerber
+ *******************************************************/
 use packybara::db::find_all::revisions::{OrderDirection, OrderRevisionBy};
 use packybara::db::traits::*;
 use packybara::packrat::{Client, PackratDb};

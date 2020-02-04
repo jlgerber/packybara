@@ -1,5 +1,5 @@
 /*******************************************************
- * Copyright (C) 2019 Jonathan Gerber <jlgerber@gmail.com>
+ * Copyright (C) 2019,2020 Jonathan Gerber <jlgerber@gmail.com>
  *
  * This file is part of packybara.
  *

@@ -21,6 +21,14 @@ pub use coords::Coords;
 pub mod version_pin;
 pub use version_pin::VersionPin;
 pub mod level;
+/*******************************************************
+ * Copyright (C) 2019,2020 Jonathan Gerber <jlgerber@gmail.com>
+ *
+ * This file is part of packybara.
+ *
+ * packybara can not be copied and/or distributed without the express
+ * permission of Jonathan Gerber
+ *******************************************************/
 pub use level::Level;
 pub mod platform;
 pub use platform::Platform;
