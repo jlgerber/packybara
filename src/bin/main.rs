@@ -103,6 +103,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 cmd::versionpins::set(tx, cmd)?;
             }
         },
+        PbCrud::Export { cmd } => match cmd {
+            PbExport::PackagesXml { .. } => {
+                cmd::export::export(client, cmd)?;
+            }
+        },
         _ => println!("Not implemented"),
     }
 

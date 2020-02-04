@@ -1,4 +1,3 @@
-use packybara::types::IdType;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, PartialEq)]

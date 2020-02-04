@@ -7,6 +7,7 @@ pub mod all_revisions;
 pub mod all_roles;
 pub mod all_sites;
 pub mod args;
+pub mod export;
 pub mod pins;
 pub mod pkgcoords;
 pub mod utils;

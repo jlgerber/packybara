@@ -556,14 +556,15 @@ mod tests {
 pub mod xml {
     use crate::db::traits::PBFind;
     use crate::io;
+    use crate::packrat::Client;
     use crate::packrat::PackratDb;
     use crate::LtreeSearchMode;
     use crate::SearchAttribute;
     use crate::{Platform, Role, Site};
+    use log;
     use snafu::{ResultExt, Snafu};
     use std::fs::File;
     use std::io::Write;
-
     /// Error type returned from  FindAllPackagesError
     #[derive(Debug, Snafu)]
     pub enum PackagesXmlError {
@@ -588,11 +589,12 @@ pub mod xml {
     }
 
     pub fn write_xml<'a>(
-        db: &'a mut PackratDb,
+        client: Client,
         show: String,
         output: String,
     ) -> Result<(), PackagesXmlError> {
         // get a list of version pins for the show
+        let mut db = PackratDb::new(client);
         let vpins = db
             .find_all_versionpins()
             .isolate_facility(true)
@@ -630,9 +632,11 @@ pub mod xml {
             }
             if role != &Role::Any {
                 let role_str = role.to_string();
-
+                log::debug!("role != Any - role: {}", role_str.as_str());
                 // if our last iter was a role
                 if let Some(ref last) = last_role {
+                    let last_role_str = last.to_string();
+                    log::debug!("extracted last role = {}", last_role_str.as_str());
                     // if the current role is the same as the last
                     // role, we add the package into our list
                     if role == last {
@@ -640,22 +644,38 @@ pub mod xml {
                     } else {
                         // otherwise we drain the list of saved packages,
                         // adding them in to the current role
-                        let mut role_tag = io::Role::new(role_str);
+                        let mut role_tag = io::Role::new(last_role_str);
                         for pkg in role_packages.drain(..) {
                             role_tag.add_package(pkg);
                         }
+                        log::debug!("adding {} role to show", &role_tag.name);
                         show.add_role(role_tag);
                         // and we push the current package into our list,
                         // which is now empty
                         role_packages.push(package);
                     }
                 } else {
+                    log::debug!("last role was None");
                     // in the case where our last iter was NOT a role
                     // role packages should be zero sized
                     assert_eq!(role_packages.len(), 0);
+                    // add in the package
+                    role_packages.push(package);
                 }
+                log::debug!("setting role: {} to last_role", role.to_string().as_str());
                 last_role = Some(role.clone());
             } else {
+                // handle remaining
+                if let Some(role) = last_role {
+                    let role_str = role.to_string();
+                    log::debug!("role == Any. last_role = {}", role_str.as_str());
+                    let mut role_tag = io::Role::new(role_str);
+                    for pkg in role_packages.drain(..) {
+                        role_tag.add_package(pkg);
+                    }
+                    log::debug!("adding {} role to show", &role_tag.name);
+                    show.add_role(role_tag);
+                }
                 show.add_package(package);
                 last_role = None;
             }
