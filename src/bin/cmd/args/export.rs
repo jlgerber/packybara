@@ -3,7 +3,7 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug, PartialEq)]
 #[structopt(about = "PackybaraDb Export")]
 pub enum PbExport {
-    /// Export a show's setate to a packages.xml file
+    /// Export a show's state to a packages.xml file
     #[structopt(display_order = 1, name = "pkgs-xml")]
     PackagesXml {
         /// Set the show to export a packages.xml file from.

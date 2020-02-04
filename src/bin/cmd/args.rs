@@ -48,10 +48,9 @@ pub enum PbCrud {
     /// Remove things from the database.
     #[structopt(display_order = 4)]
     Delete {},
-    /// Remove things from the database.
+    /// Serialize state.
     #[structopt(display_order = 5)]
     Export {
-        /// Export subcommands
         #[structopt(subcommand)]
         cmd: PbExport,
     },
