@@ -636,9 +636,9 @@ CREATE OR REPLACE FUNCTION
 		site text default 'any',
 		role text default 'any',
 		platform text default 'any',
-		search_mode text default 'ancestor'
-		package text default null
-		version text default null
+		search_mode text default 'ancestor',
+		package_name text default NULL,
+		version_name text default NULL
 	) 
 RETURNS TABLE(
   id integer,
@@ -707,24 +707,24 @@ SELECT
 FROM versionpin_view AS vp
 WHERE
 	case when search_mode = 'exact' then
-		CASE WHEN package IS NOT NULL and version IS NOT NULL THEN
+		CASE WHEN package_name IS NOT NULL and version_name IS NOT NULL THEN
 			vp.platform_path = platform_ltree
 			AND vp.role_path = role_ltree
 			AND vp.site_path = site_ltree
 			AND vp.level_path = level_ltree
-			AND vp.distribution = package || '-' || version 
-		WHEN package IS NULL and version IS NOT NULL THEN 
+			AND vp.distribution = package_name || '-' || version_name 
+		WHEN package_name IS NULL and version_name IS NOT NULL THEN 
 			vp.platform_path = platform_ltree
 			AND vp.role_path = role_ltree
 			AND vp.site_path = site_ltree
 			AND vp.level_path = level_ltree
-			AND vp.version = version 
-		WHEN package IS NOT NULL and VERSION IS NULL THEN  
+			AND vp.version = text2ltree(version_name)
+		WHEN package_name IS NOT NULL and version_name IS NULL THEN  
 			vp.platform_path = platform_ltree
 			AND vp.role_path = role_ltree
 			AND vp.site_path = site_ltree
 			AND vp.level_path = level_ltree
-			AND vp.package = package 
+			AND vp.package = package_name 
 		ELSE
 			vp.platform_path = platform_ltree
 			AND vp.role_path = role_ltree
@@ -732,24 +732,24 @@ WHERE
 			AND vp.level_path = level_ltree
 		END
 	when search_mode = 'ancestor' then
-		CASE WHEN package IS NOT NULL and version IS NOT NULL THEN
+		CASE WHEN package_name IS NOT NULL and version_name IS NOT NULL THEN
 			vp.platform_path @> platform_ltree
 			AND vp.role_path @> role_ltree
 			AND vp.site_path @> site_ltree
 			AND vp.level_path @> level_ltree
-			AND vp.distribution = package || '-' || version
-		WHEN package IS NULL and version IS NOT NULL THEN 
+			AND vp.distribution = package_name || '-' || version_name
+		WHEN package_name IS NULL and version_name IS NOT NULL THEN 
 			vp.platform_path @> platform_ltree
 			AND vp.role_path @> role_ltree
 			AND vp.site_path @> site_ltree
 			AND vp.level_path @> level_ltree
-			AND vp.version = version
-		WHEN package IS NOT NULL and VERSION IS NULL THEN 
+			AND vp.version = text2ltree(version_name)
+		WHEN package_name IS NOT NULL and version_name IS NULL THEN 
 			vp.platform_path @> platform_ltree
 			AND vp.role_path @> role_ltree
 			AND vp.site_path @> site_ltree
 			AND vp.level_path @> level_ltree
-			AND vp.package = package 
+			AND vp.package = package_name 
 		ELSE
 			vp.platform_path @> platform_ltree
 			AND vp.role_path @> role_ltree
@@ -757,20 +757,24 @@ WHERE
 			AND vp.level_path @> level_ltree
 		END
 	ELSE 
-		CASE WHEN package IS NOT NULL and version IS NOT NULL THEN
+		CASE WHEN package_name IS NOT NULL and version_name IS NOT NULL THEN
 			vp.platform_path <@ platform_ltree
 			AND vp.role_path <@ role_ltree
 			AND vp.site_path <@ site_ltree
 			AND vp.level_path <@ level_ltree
-			AND vp.distribution = package || '-' || version
-		WHEN package IS NULL and version IS NOT NULL THEN 
+			AND vp.distribution = package_name || '-' || version_name
+		WHEN package_name IS NULL and version_name IS NOT NULL THEN 
 			vp.platform_path <@ platform_ltree
 			AND vp.role_path <@ role_ltree
 			AND vp.site_path <@ site_ltree
 			AND vp.level_path <@ level_ltree
-			AND vp.version = version
-		WHEN package IS NOT NULL and VERSION IS NULL THEN
-			AND vp.package = package 
+			AND vp.version = text2ltree(version_name)
+		WHEN package_name IS NOT NULL and version_name IS NULL THEN
+			vp.platform_path <@ platform_ltree
+			AND vp.role_path <@ role_ltree
+			AND vp.site_path <@ site_ltree
+			AND vp.level_path <@ level_ltree
+			AND vp.package = package_name 
 		ELSE
 			vp.platform_path <@ platform_ltree
 			AND vp.role_path <@ role_ltree
