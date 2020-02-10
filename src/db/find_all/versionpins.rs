@@ -277,6 +277,7 @@ impl<'a> FindAllVersionPins<'a> {
         let mut prepared_args: Vec<&(dyn ToSql + Sync)> =
             vec![&role, &platform, &level, &site, &smode];
         let mut params_cnt = 6;
+
         if let Some(ref package) = self.package {
             query_str = format!("{},\n\tpackage_name => ${}", query_str, params_cnt);
             params_cnt += 1;

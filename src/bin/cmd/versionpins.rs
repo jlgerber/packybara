@@ -87,14 +87,15 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
         let results = results.query()?;
         // For now I do this. I need to add packge handling into the query
         // either by switching functions or handling the sql on this end
-        let results = if let Some(ref package) = package {
-            results
-                .into_iter()
-                .filter(|x| x.distribution.package() == package)
-                .collect::<Vec<_>>()
-        } else {
-            results
-        };
+        // this has been moved into the queyr
+        // let results = if let Some(ref package) = package {
+        //     results
+        //         .into_iter()
+        //         .filter(|x| x.distribution.package() == package)
+        //         .collect::<Vec<_>>()
+        // } else {
+        //     results
+        // };
         let mut table =
             table!([bFg => "PIN ID", "DISTRIBUTION", "ROLE", "LEVEL", "PLATFORM", "SITE", "WITHS"]);
         for result in results {
