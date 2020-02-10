@@ -40,40 +40,42 @@ pub enum PbFind {
     /// Find all versionpins that meet supplied name and pin coordinate criteria.
     VersionPins {
         /// The name of the package.
-        //#[structopt(short, long, display_order = 1)]
-        #[structopt(name = "PACKAGE")]
+        #[structopt(short, long, display_order = 1)]
         package: Option<String>,
+        /// The version number of the distribution
+        #[structopt(short, long, display_order = 2)]
+        version: Option<String>,
         /// Levelspec format show[.seq[.shot]]. Defaults to 'facility'.
-        #[structopt(short = "L", long, display_order = 1)]
+        #[structopt(short = "L", long, display_order = 3)]
         level: Option<String>,
-        /// When searching "up", if the level is facility, treat the
-        /// search direction for facility as current
-        #[structopt(short = "i", long, display_order = 1)]
-        isolate_facility: bool,
         /// The role (eg model or anim_beta). Defaults to 'any'.
-        #[structopt(short = "R", long, display_order = 2)]
+        #[structopt(short = "R", long, display_order = 4)]
         role: Option<String>,
         /// The operating system name (eg cent7_64).
-        #[structopt(short = "P", long, display_order = 3)]
+        #[structopt(short = "P", long, display_order = 5)]
         platform: Option<String>,
         /// The location name (eg portland). Defaults to 'any'.
-        #[structopt(short = "S", long, display_order = 4)]
+        #[structopt(short = "S", long, display_order = 6)]
         site: Option<String>,
         /// The search mode - ancestor (or down), exact, descendant (or up).
-        #[structopt(short, long = "search", display_order = 5)]
+        #[structopt(short, long = "search", display_order = 7)]
         search_mode: Option<String>,
         /// Limit the number of returned items.
-        #[structopt(short, long, display_order = 6)]
+        #[structopt(short, long, display_order = 8)]
         limit: Option<IdType>,
         /// Provide one or more comma separated items to order the return by.
-        #[structopt(short, long = "order-by", display_order = 7)]
+        #[structopt(short, long = "order-by", display_order = 9)]
         order_by: Option<String>,
         /// Provide direction to search in
-        #[structopt(short = "D", long = "order-direction", display_order = 8)]
+        #[structopt(short = "D", long = "order-direction", display_order = 10)]
         order_direction: Option<String>,
         /// Do not truncate the withs if true. Defaults to false.
-        #[structopt(short = "w", long = "withs", display_order = 9)]
+        #[structopt(short = "w", long = "withs", display_order = 11)]
         full_withs: bool,
+        /// When searching "up", if the level is facility, treat the
+        /// search direction for facility as current
+        #[structopt(short = "i", long, display_order = 12)]
+        isolate_facility: bool,
     },
     #[structopt(display_order = 3)]
     /// Find all withs for a given versionpin.

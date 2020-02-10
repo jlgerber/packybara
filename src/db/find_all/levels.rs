@@ -268,7 +268,8 @@ impl<'a> FindAllLevels<'a> {
         if self.depth.is_some() {
             query_str = format!("{} AND nlevel(path) = ${}", query_str, cnt);
             params.push(&depth);
-            cnt += 1;
+            // not using currently because we are the last query_str extension
+            //cnt += 1;
         }
 
         if let Some(ref orderby) = self.order_by {

@@ -155,6 +155,8 @@ impl FindAllVersionPinsRow {
 /// Responsible for finding a distribution
 pub struct FindAllVersionPins<'a> {
     client: &'a mut Client,
+    package: Option<&'a str>,
+    version: Option<&'a str>,
     level: Option<&'a str>,
     isolate_facility: bool,
     role: Option<&'a str>,
@@ -170,6 +172,8 @@ impl<'a> FindAllVersionPins<'a> {
     pub fn new(client: &'a mut Client) -> Self {
         FindAllVersionPins {
             client,
+            package: None,
+            version: None,
             level: None,
             isolate_facility: false,
             role: None,
@@ -180,6 +184,24 @@ impl<'a> FindAllVersionPins<'a> {
             limit: None,
             search_mode: LtreeSearchMode::Ancestor,
         }
+    }
+
+    pub fn package(&mut self, package_n: &'a str) -> &mut Self {
+        self.package = Some(package_n);
+        self
+    }
+    pub fn some_package(&mut self, package_n: Option<&'a str>) -> &mut Self {
+        self.package = package_n;
+        self
+    }
+
+    pub fn version(&mut self, version_n: &'a str) -> &mut Self {
+        self.version = Some(version_n);
+        self
+    }
+    pub fn some_version(&mut self, version_n: Option<&'a str>) -> &mut Self {
+        self.version = version_n;
+        self
     }
 
     pub fn level(&mut self, level_n: &'a str) -> &mut Self {
@@ -248,9 +270,26 @@ impl<'a> FindAllVersionPins<'a> {
         platform => $2, 
         level=>$3, 
         site => $4,
-        search_mode => $5)"
+        search_mode => $5"
             .to_string();
 
+        let smode = self.search_mode.to_string();
+        let mut prepared_args: Vec<&(dyn ToSql + Sync)> =
+            vec![&role, &platform, &level, &site, &smode];
+        let mut params_cnt = 6;
+        if let Some(ref package) = self.package {
+            query_str = format!("{},\n\tpackage_name => ${}", query_str, params_cnt);
+            params_cnt += 1;
+            prepared_args.push(package);
+        }
+        if let Some(ref version) = self.version {
+            query_str = format!("{},\n\tversion_name => ${}", query_str, params_cnt);
+            // dont need the following, since we are the last param to get optionally added
+            // but uncomment if adding more
+            //params_cnt += 1;
+            prepared_args.push(version);
+        }
+        query_str = format!("{})", query_str);
         if let Some(ref orderby) = self.order_by {
             let orderby = orderby.iter().map(|x| match_attrib(x)).collect::<Vec<_>>();
             query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
@@ -262,12 +301,9 @@ impl<'a> FindAllVersionPins<'a> {
         if let Some(limit) = self.limit {
             query_str.push_str(format!(" LIMIT {}", limit).as_str());
         }
-        let smode = self.search_mode.to_string();
         // commented out for now
         //let facility_search_mode = String::from("exact");
         let qstr = query_str.as_str();
-        let /*mut*/ prepared_args: Vec<&(dyn ToSql + Sync)> =
-            vec![&role, &platform, &level, &site, &smode];
         // we do something special here if we are looking for facility.
         // if self.isolate_facility == true && &level == "facility" {
         //     prepared_args.push(&facility_search_mode);

@@ -30,6 +30,7 @@ use whoami;
 pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error>> {
     if let PbFind::VersionPins {
         package,
+        version,
         level,
         isolate_facility,
         role,
@@ -50,7 +51,17 @@ pub fn find(client: Client, cmd: PbFind) -> Result<(), Box<dyn std::error::Error
         // since they returm &mut ref, we cant chain the first calls
         // immediately..
         let mut results = pb.find_all_versionpins();
+        let package_opt = match package {
+            Some(ref p) => Some(p.as_str()),
+            None => None,
+        };
+        let version_opt = match version {
+            Some(ref p) => Some(p.as_str()),
+            None => None,
+        };
         results
+            .some_package(package_opt)
+            .some_version(version_opt)
             .level(level.as_str())
             .isolate_facility(isolate_facility)
             .role(role.as_str())
