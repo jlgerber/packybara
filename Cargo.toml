@@ -1,17 +1,9 @@
 [package]
 name = "packybara"
-version = "0.36.0"
+version = "0.37.0"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[[bin]]
-name = "pkb"
-path = "src/bin/main.rs"
-
-[[bin]]
-name = "pkb-setupdb"
-path = "src/bin/setupdb.rs"
 
 [dependencies]
 simple_xml_serialize =  "0.2.3"
