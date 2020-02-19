@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.37.0"
+version = "0.38.0"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
@@ -10,7 +10,7 @@ simple_xml_serialize =  "0.2.3"
 simple_xml_serialize_macro = { version = "0.2.1", features = ["process_options"] }
 tokio-postgres = "0.5.2"
 tokio = "0.2.11"
-levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.7.0"}
+levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.8.0"}
 strum = "0.17.1"
 strum_macros = "0.17.1"
 snafu = "0.6.2"
