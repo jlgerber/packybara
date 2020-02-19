@@ -43,10 +43,19 @@ impl IntoString for String {
 /// The primary way of constructing a role is through the use of the
 /// ```from_str``` constructor function. This takes an input and splits
 /// it on `_`, resulting in a hierarchy of Strings internally.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub enum Role {
     Any,
     Named { name: String },
+}
+
+impl std::convert::AsRef<str> for Role {
+    fn as_ref(&self) -> &str {
+        match self {
+            Role::Any => "any",
+            Role::Named { name } => name,
+        }
+    }
 }
 
 impl fmt::Display for Role {
