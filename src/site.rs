@@ -51,7 +51,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// assert_eq!(site_string.as_str(), "vancouver");
 /// ```
 #[derive(
-    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone,
+    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone, Hash,
 )]
 pub enum Site {
     #[strum(

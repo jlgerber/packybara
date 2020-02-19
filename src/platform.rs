@@ -53,7 +53,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// assert_eq!(platform_string.as_str(), "cent7_64");
 /// ```
 #[derive(
-    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone,
+    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone, Hash,
 )]
 pub enum Platform {
     #[strum(
