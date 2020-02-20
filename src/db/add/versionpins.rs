@@ -319,28 +319,6 @@ impl<'a> AddVersionPins<'a> {
         self
     }
 
-    // Validate the platform name. Is it Invalid? If it is problematic
-    // return true. Otherwise, return false
-    fn platform_is_invalid(&self, platform: &str) -> bool {
-        platform.matches(".").count() > 1
-            || platform.matches(" ").count() > 0
-            || platform.matches("__").count() > 0
-    }
-
-    // generate the prepared statement, given the number of elements that
-    // it will have.
-    fn generate_prepared_statement(&self, item_count: usize) -> String {
-        let mut insert_str = "INSERT INTO platform (path) VALUES ".to_string();
-        let prepared = (1..=item_count)
-            .into_iter()
-            .map(|x| format!(" (text2ltree(${}))", x))
-            .collect::<Vec<_>>();
-        let prepared = prepared.join(",");
-        insert_str.push_str(prepared.as_str());
-        insert_str.push_str(" ON CONFLICT (path) DO NOTHING");
-        insert_str
-    }
-
     /// Create the platforms we have previously identified with the
     /// `platform` and/or `platforms` methods, returning the number of
     /// novel platforms created, if successful, or an error if unsuccessful.
@@ -410,7 +388,7 @@ impl<'a> AddVersionPins<'a> {
         if sites.len() == 0 {
             return Err(AddVersionPinsError::NoSitesError);
         }
-
+        let mut result_cnt: u64 = 0;
         let package = self.package.clone();
         let version = self.version.clone();
         let tx = self.tx().expect("unable to create a transaction");
@@ -440,16 +418,17 @@ impl<'a> AddVersionPins<'a> {
                             vec![&package, &version, &role, &level, &platform, &site];
                         log::info!("Sql: {}", insert_str);
                         log::info!("Args:{:?}", &args);
-                        tx.execute(insert_str, &args[..])
-                            .context(TokioPostgresError {
-                                msg: "failed to insert versionpin",
-                            })?;
+                        let results =
+                            tx.execute(insert_str, &args[..])
+                                .context(TokioPostgresError {
+                                    msg: "failed to insert versionpin",
+                                })?;
+                        result_cnt += results;
                     }
                 }
             }
         }
-
-        // execute the query, capture the results and provide a failure context.
+        self.result_cnt = result_cnt;
         Ok(self)
     }
 }
