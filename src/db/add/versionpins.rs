@@ -426,7 +426,7 @@ impl<'a> AddVersionPins<'a> {
                         //    FROM t1,t2 ON CONFLICT DO NOTHING";
                         //                         let args: Vec<&(dyn ToSql + Sync)> =
                         //                             vec![&package, &version, &role, &level, &platform, &site];
-                        let insert_str = "select * from INSERT_VERSIONPIN($1, $2, $3, $4, $5)";
+                        let insert_str = "select * from INSERT_VERSIONPIN($1, level_n => $2, site_n => $3, role_n => $4, platform_n => $5)";
                         let args: Vec<&(dyn ToSql + Sync)> =
                             vec![&package, &level, &site, &role, &platform];
                         log::info!("Sql: {}", insert_str);
