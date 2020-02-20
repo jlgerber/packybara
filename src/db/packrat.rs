@@ -181,6 +181,17 @@ impl<'b> PBAdd<'b> for PackratDb {
     fn add_withs(tx: Self::TransactionType) -> add::withs::AddWiths<'b> {
         add::withs::AddWiths::new(tx)
     }
+
+    fn add_versionpins<I>(
+        tx: Self::TransactionType,
+        package: I,
+        version: I,
+    ) -> add::versionpins::AddVersionPins<'b>
+    where
+        I: Into<String>,
+    {
+        add::versionpins::AddVersionPins::new(tx, package.into(), version.into())
+    }
 }
 
 impl<'a> PBUpdate<'a> for PackratDb {

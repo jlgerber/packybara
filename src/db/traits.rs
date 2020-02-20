@@ -49,6 +49,14 @@ pub trait PBAdd<'b> {
     fn add_platforms(tx: Self::TransactionType) -> add::platforms::AddPlatforms<'b>;
 
     fn add_withs(tx: Self::TransactionType) -> add::withs::AddWiths<'b>;
+
+    fn add_versionpins<I>(
+        tx: Self::TransactionType,
+        package: I,
+        version: I,
+    ) -> add::versionpins::AddVersionPins<'b>
+    where
+        I: Into<String>;
 }
 
 pub trait PBUpdate<'a> {
