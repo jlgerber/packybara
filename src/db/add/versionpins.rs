@@ -15,7 +15,7 @@ pub enum InvalidPlatformKind {
 }
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
-pub enum AddVersionpinsError {
+pub enum AddVersionPinsError {
     /// When constructing a query, postgres has thrown an error
     #[snafu(display("Postgres Error: {} {:#?}", msg, source))]
     TokioPostgresError {
@@ -346,8 +346,8 @@ impl<'a> AddVersionPins<'a> {
     /// novel platforms created, if successful, or an error if unsuccessful.
     ///
     /// # Returns
-    /// * Ok(u64) | Err(AddVersionpinsError)
-    pub fn create(mut self) -> Result<Self, AddVersionpinsError> {
+    /// * Ok(u64) | Err(AddVersionPinsError)
+    pub fn create(mut self) -> Result<Self, AddVersionPinsError> {
         // make sure the various coords start with any (or facility for level)
         let platforms = self
             .platforms
@@ -399,51 +399,57 @@ impl<'a> AddVersionPins<'a> {
         // If the user has not thought to actually add components before calling
         // create, that is bad. Lets return an Error.
         if platforms.len() == 0 {
-            return Err(AddVersionpinsError::NoPlatformsError);
+            return Err(AddVersionPinsError::NoPlatformsError);
         }
         if roles.len() == 0 {
-            return Err(AddVersionpinsError::NoRolesError);
+            return Err(AddVersionPinsError::NoRolesError);
         }
         if levels.len() == 0 {
-            return Err(AddVersionpinsError::NoLevelsError);
+            return Err(AddVersionPinsError::NoLevelsError);
         }
         if sites.len() == 0 {
-            return Err(AddVersionpinsError::NoSitesError);
+            return Err(AddVersionPinsError::NoSitesError);
         }
 
-        // Generate vectors that hold references
-        let mut roles_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        for p in &roles {
-            roles_ref.push(p);
+        let package = self.package.clone();
+        let version = self.version.clone();
+        let tx = self.tx().expect("unable to create a transaction");
+        for role in roles {
+            for level in &levels {
+                for platform in &platforms {
+                    for site in &sites {
+                        let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, $2, $3, $4, $5) ON CONFLICT IGNORE";
+                        let args: Vec<&(dyn ToSql + Sync)> =
+                            vec![&package, &role, &level, &site, &platform];
+                        log::info!("Sql: {}", insert_str);
+                        log::info!("Args:{:?}", &args);
+                        tx.execute(insert_str, &args[..])
+                            .context(TokioPostgresError {
+                                msg: "failed to insert pkgcoord",
+                            })?;
+                        let insert_str = "INSERT INTO versionpin(distribution, coord) 
+ WITH 
+   t1 AS 
+     (SELECT id FROM distribution WHERE package=$1 AND version=$2
+   ),
+   t2 AS
+    (SELECT id FROM coord WHERE  package=$1 AND role=$3 AND level=$4 AND platform=$5 AND site=$6)
+   SELECT t1.id, t2.id
+   FROM t1,t2 ON CONFLICT IGNORE";
+                        let args: Vec<&(dyn ToSql + Sync)> =
+                            vec![&package, &version, &role, &level, &platform, &site];
+                        log::info!("Sql: {}", insert_str);
+                        log::info!("Args:{:?}", &args);
+                        tx.execute(insert_str, &args[..])
+                            .context(TokioPostgresError {
+                                msg: "failed to insert versionpin",
+                            })?;
+                    }
+                }
+            }
         }
 
-        let mut levels_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        for p in &levels {
-            levels_ref.push(p);
-        }
-        let mut platforms_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        for p in &platforms {
-            platforms_ref.push(p);
-        }
-
-        let mut sites_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        for p in &sites {
-            sites_ref.push(p);
-        }
-
-        let insert_str = self.generate_prepared_statement(platforms_ref.len());
-
-        log::info!("SQL\n{}", insert_str.as_str());
-        log::info!("Prepared\n{:?}", &platforms_ref);
         // execute the query, capture the results and provide a failure context.
-        let results = self
-            .tx()
-            .unwrap()
-            .execute(insert_str.as_str(), &platforms_ref[..])
-            .context(TokioPostgresError {
-                msg: "failed to add platforms",
-            })?;
-        self.result_cnt = results;
         Ok(self)
     }
 }
