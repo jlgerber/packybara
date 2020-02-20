@@ -334,7 +334,14 @@ impl<'a> AddVersionPins<'a> {
             .platforms
             .iter()
             .unique()
-            .map(|x| format!("any.{}", x.as_ref()))
+            .map(|x| {
+                let xs = x.to_string();
+                if xs.starts_with("any") {
+                    xs
+                } else {
+                    format!("any.{}", x.as_ref())
+                }
+            })
             .collect::<Vec<_>>();
 
         let levels = self
@@ -399,7 +406,7 @@ impl<'a> AddVersionPins<'a> {
             for level in &levels {
                 for platform in &platforms {
                     for site in &sites {
-                        let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING";
+                        let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, text2ltree($2), text2ltree($3), text2ltree($4), text2ltree($5)) ON CONFLICT DO NOTHING";
                         let args: Vec<&(dyn ToSql + Sync)> =
                             vec![&package, &role, &level, &site, &platform];
                         log::info!("Sql: {}", insert_str);

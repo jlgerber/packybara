@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.38.2"
+version = "0.38.3"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
