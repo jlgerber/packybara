@@ -421,7 +421,7 @@ impl<'a> AddVersionPins<'a> {
      (SELECT id FROM distribution WHERE package=$1 AND version=$2
    ),
    t2 AS
-    (SELECT id FROM coord WHERE  package=$1 AND role=$3 AND level=$4 AND platform=$5 AND site=$6)
+    (SELECT id FROM pkgcoord WHERE package=$1 AND role=$3 AND level=$4 AND platform=$5 AND site=$6)
    SELECT t1.id, t2.id
    FROM t1,t2 ON CONFLICT DO NOTHING";
                         let args: Vec<&(dyn ToSql + Sync)> =
