@@ -406,26 +406,35 @@ impl<'a> AddVersionPins<'a> {
             for level in &levels {
                 for platform in &platforms {
                     for site in &sites {
-                        let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, text2ltree($2), text2ltree($3), text2ltree($4), text2ltree($5)) ON CONFLICT DO NOTHING";
+                        //                         let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, text2ltree($2), text2ltree($3), text2ltree($4), text2ltree($5)) ON CONFLICT DO NOTHING";
+                        //                         let args: Vec<&(dyn ToSql + Sync)> =
+                        //                             vec![&package, &role, &level, &site, &platform];
+                        //                         log::info!("Sql: {}", insert_str);
+                        //                         log::info!("Args:{:?}", &args);
+                        //                         tx.execute(insert_str, &args[..])
+                        //                             .context(TokioPostgresError {
+                        //                                 msg: "failed to insert pkgcoord",
+                        //                             })?;
+                        //                         let insert_str = "INSERT INTO versionpin(distribution, coord)
+                        //  WITH
+                        //    t1 AS
+                        //      (SELECT id FROM distribution WHERE package=$1 AND version=$2
+                        //    ),
+                        //    t2 AS
+                        //     (SELECT id FROM pkgcoord WHERE package=$1 AND role=$3 AND level=$4 AND platform=$5 AND site=$6)
+                        //    SELECT t1.id, t2.id
+                        //    FROM t1,t2 ON CONFLICT DO NOTHING";
+                        //                         let args: Vec<&(dyn ToSql + Sync)> =
+                        //                             vec![&package, &version, &role, &level, &platform, &site];
+                        let insert_str = "select * from INSERT_VERSIONPIN($1, $2, $3, $4, $5)";
                         let args: Vec<&(dyn ToSql + Sync)> =
-                            vec![&package, &role, &level, &site, &platform];
+                            vec![&package, &level, &site, &role, &platform];
                         log::info!("Sql: {}", insert_str);
                         log::info!("Args:{:?}", &args);
                         tx.execute(insert_str, &args[..])
                             .context(TokioPostgresError {
                                 msg: "failed to insert pkgcoord",
                             })?;
-                        let insert_str = "INSERT INTO versionpin(distribution, coord) 
- WITH 
-   t1 AS 
-     (SELECT id FROM distribution WHERE package=$1 AND version=$2
-   ),
-   t2 AS
-    (SELECT id FROM pkgcoord WHERE package=$1 AND role=$3 AND level=$4 AND platform=$5 AND site=$6)
-   SELECT t1.id, t2.id
-   FROM t1,t2 ON CONFLICT DO NOTHING";
-                        let args: Vec<&(dyn ToSql + Sync)> =
-                            vec![&package, &version, &role, &level, &platform, &site];
                         log::info!("Sql: {}", insert_str);
                         log::info!("Args:{:?}", &args);
                         let results =
