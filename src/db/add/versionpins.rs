@@ -399,7 +399,7 @@ impl<'a> AddVersionPins<'a> {
             for level in &levels {
                 for platform in &platforms {
                     for site in &sites {
-                        let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, $2, $3, $4, $5) ON CONFLICT IGNORE";
+                        let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING";
                         let args: Vec<&(dyn ToSql + Sync)> =
                             vec![&package, &role, &level, &site, &platform];
                         log::info!("Sql: {}", insert_str);
