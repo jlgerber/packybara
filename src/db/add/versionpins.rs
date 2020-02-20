@@ -335,12 +335,13 @@ impl<'a> AddVersionPins<'a> {
             .iter()
             .unique()
             .map(|x| {
-                let xs = x.to_string();
-                if xs.starts_with("any") {
-                    xs
-                } else {
-                    format!("any.{}", x.as_ref())
-                }
+                x.to_string()
+                // let xs = x.to_string();
+                // if xs.starts_with("any") {
+                //     xs
+                // } else {
+                //     format!("any.{}", x.as_ref())
+                // }
             })
             .collect::<Vec<_>>();
 
@@ -349,12 +350,13 @@ impl<'a> AddVersionPins<'a> {
             .iter()
             .unique()
             .map(|x| {
-                let xs = x.to_string();
-                if xs.starts_with("facility") {
-                    xs
-                } else {
-                    format!("facility.{}", xs)
-                }
+                x.to_string()
+                //let x = x.to_string()
+                // if xs.starts_with("facility") {
+                //     xs
+                // } else {
+                //     format!("facility.{}", xs)
+                // }
             })
             .collect::<Vec<_>>();
 
@@ -363,11 +365,12 @@ impl<'a> AddVersionPins<'a> {
             .iter()
             .unique()
             .map(|x| {
-                if x.as_ref().starts_with("any") {
-                    x.as_ref().to_string()
-                } else {
-                    format!("any.{}", x.as_ref())
-                }
+                x.to_string()
+                // if x.as_ref().starts_with("any") {
+                //     x.as_ref().to_string()
+                // } else {
+                //     format!("any.{}", x.as_ref())
+                // }
             })
             .collect::<Vec<_>>();
 
@@ -376,11 +379,12 @@ impl<'a> AddVersionPins<'a> {
             .iter()
             .unique()
             .map(|x| {
-                if x.as_ref().starts_with("any") {
-                    x.as_ref().to_string()
-                } else {
-                    format!("any.{}", x.as_ref())
-                }
+                x.to_string()
+                // if x.as_ref().starts_with("any") {
+                //     x.as_ref().to_string()
+                // } else {
+                //     format!("any.{}", x.as_ref())
+                // }
             })
             .collect::<Vec<_>>();
 
@@ -399,8 +403,9 @@ impl<'a> AddVersionPins<'a> {
             return Err(AddVersionPinsError::NoSitesError);
         }
         let mut result_cnt: u64 = 0;
-        let package = self.package.clone();
-        let version = self.version.clone();
+        // let package = self.package.clone();
+        // let version = self.version.clone();
+        let dist = format!("{}-{}", self.package, self.version);
         let tx = self.tx().expect("unable to create a transaction");
         for role in roles {
             for level in &levels {
@@ -426,15 +431,10 @@ impl<'a> AddVersionPins<'a> {
                         //    FROM t1,t2 ON CONFLICT DO NOTHING";
                         //                         let args: Vec<&(dyn ToSql + Sync)> =
                         //                             vec![&package, &version, &role, &level, &platform, &site];
-                        let insert_str = "select * from INSERT_VERSIONPIN($1, level_n => $2, site_n => $3, role_n => $4, platform_n => $5)";
+                        let insert_str = "SELECT * from INSERT_VERSIONPIN('$1', level_n => '$2', site_n => '$3', role_n => '$4', platform_n => '$5')";
                         let args: Vec<&(dyn ToSql + Sync)> =
-                            vec![&package, &level, &site, &role, &platform];
-                        log::info!("Sql: {}", insert_str);
-                        log::info!("Args:{:?}", &args);
-                        tx.execute(insert_str, &args[..])
-                            .context(TokioPostgresError {
-                                msg: "failed to insert pkgcoord",
-                            })?;
+                            vec![&dist, &level, &site, &role, &platform];
+
                         log::info!("Sql: {}", insert_str);
                         log::info!("Args:{:?}", &args);
                         let results =
