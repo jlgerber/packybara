@@ -92,6 +92,7 @@ impl<'a> AddVersionPins<'a> {
         }
     }
 
+    // private method that does the heavy lifting for adding a role
     fn _role<I>(&mut self, role: I)
     where
         I: TryInto<Role>,
@@ -130,6 +131,7 @@ impl<'a> AddVersionPins<'a> {
         }
     }
 
+    // private method tht does the heavy lifting for adding a platform
     fn _platform<I>(&mut self, pltfrm: I)
     where
         I: TryInto<Platform>,
@@ -150,6 +152,7 @@ impl<'a> AddVersionPins<'a> {
         }
     }
 
+    // private method that does the heavy lifting for adding a site
     fn _site<I>(&mut self, site: I)
     where
         I: TryInto<Site>,
