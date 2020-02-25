@@ -7,10 +7,11 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::{CoordsError, CoordsResult};
+use serde::Serialize;
 use std::convert::TryFrom;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Hash)]
 pub struct Distribution {
     name: String,
 }

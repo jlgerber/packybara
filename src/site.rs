@@ -7,10 +7,12 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::*;
+use serde::Serialize;
 use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+
 /// Site models our facility locations recognized by package management
 // # Converting from &str
 /// Site implements the std::str::FromStr trait
@@ -51,7 +53,18 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// assert_eq!(site_string.as_str(), "vancouver");
 /// ```
 #[derive(
-    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone, Hash,
+    Debug,
+    Display,
+    EnumString,
+    AsRefStr,
+    IntoStaticStr,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Serialize,
+    Hash,
 )]
 pub enum Site {
     #[strum(

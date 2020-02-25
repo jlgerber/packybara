@@ -15,6 +15,7 @@
 //! is the version pin's coordinates. Hence the Coords type.
 use crate::coords_error::*;
 use crate::{Level, Platform, Role, Site};
+use serde::Serialize;
 use std::convert::{From, TryInto};
 use std::fmt;
 /// CoordsBuilder follows the builder pattern to allow
@@ -142,7 +143,7 @@ impl CoordsBuilder {
 /// Enchiladas.
 ///
 /// Too bad.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize)]
 pub struct Coords {
     /// The Facility, or Show, Sequence, or Shot
     pub level: Level,

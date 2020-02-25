@@ -7,6 +7,7 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::*;
+use serde::Serialize;
 use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::str::FromStr;
@@ -53,7 +54,18 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 /// assert_eq!(platform_string.as_str(), "cent7_64");
 /// ```
 #[derive(
-    Debug, Display, EnumString, AsRefStr, IntoStaticStr, PartialEq, Eq, PartialOrd, Ord, Clone, Hash,
+    Debug,
+    Display,
+    EnumString,
+    AsRefStr,
+    IntoStaticStr,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Serialize,
+    Hash,
 )]
 pub enum Platform {
     #[strum(
