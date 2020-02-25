@@ -6,6 +6,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
@@ -23,7 +24,7 @@ pub enum FindVersionPinsError {
 }
 
 /// A row returned from the FindVersionPins.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindVersionPinsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: IdType,
