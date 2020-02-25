@@ -77,7 +77,7 @@ impl<'a> FindVersionPin<'a> {
             site_name, 
             platform_name,
             withs
-        FROM find_distribution(
+        FROM find_distribution_and_withs(
             $1, 
             role => $2, 
             platform => $3, 
@@ -96,7 +96,7 @@ impl<'a> FindVersionPin<'a> {
             .client
             .query(query_str, prepared_args)
             .context(TokioPostgresError {
-                msg: "problem with select from find_distribution",
+                msg: "problem with select from find_distribution_and_withs",
             })?
             .pop()
             .ok_or(FindVersionPinError::NoQueryResults)?;
