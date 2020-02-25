@@ -10,6 +10,7 @@
 drop function if exists find_distribution;
 drop function if exists search_distributions;
 drop function if exists find_vpin_audit;
+drop function if exists find_distribution_and_withs;
 ---------------
 -- DISTRIBUTION
 ---------------
@@ -1184,4 +1185,35 @@ ON
     ELSE
         auditvals.old_dist::INTEGER
     END = distribution2.distribution_id;
+END $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION find_distribution_and_withs(
+  package_name text,
+  level text default 'facility',
+  site text default 'any',
+  role text default 'any',
+  platform text default 'any'
+) RETURNS TABLE(
+	distribution text,
+	withs text []
+) AS $$ 
+BEGIN 
+	RETURN QUERY 
+	SELECT 
+		t1.distribution,t2.* 
+	FROM 
+		FIND_DISTRIBUTION(package_name, level, site, role, platform) AS t1 
+	INNER JOIN  
+	(
+		SELECT ARRAY(
+			SELECT 
+				distribution 
+			FROM 
+				find_distribution_withs(package_name, level, site, role, platform) AS withs
+		) AS withs 
+	) 
+	AS 
+		t2 
+	ON 1 = 1;
 END $$ LANGUAGE plpgsql;
