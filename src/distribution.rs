@@ -70,6 +70,12 @@ impl Distribution {
         let name = validate(name)?;
         Ok(Distribution { name })
     }
+    /// create an empty distribution
+    pub fn empty() -> Self {
+        Distribution {
+            name: "".to_string(),
+        }
+    }
     pub(crate) fn new_unchecked<T: Into<String>>(name: T) -> Self {
         let name = name.into();
         Distribution { name }
