@@ -83,7 +83,7 @@ pub struct FindAllChangesRow {
     pub package: String,
     // when I start to track updates to with's this will have to
     // be an enum ChangeType {Distribution(Distribution), Withs(Vec<String>)}
-    pub old: Distribution, // should this be a distribution?
+    pub old: Option<Distribution>, // should this be a distribution?
     pub new: Distribution,
 }
 
@@ -99,7 +99,10 @@ impl fmt::Display for FindAllChangesRow {
             self.role,
             self.platform,
             self.site,
-            self.old,
+            self.old
+                .as_ref()
+                .map(|x| format!("{}", x))
+                .unwrap_or(String::new()),
             self.new
         )
     }
@@ -125,7 +128,7 @@ impl FindAllChangesRow {
         platform: Platform,
         site: Site,
         package: S,
-        old: Distribution,
+        old: Option<Distribution>,
         new: Distribution,
     ) -> Self {
         FindAllChangesRow {
@@ -184,9 +187,16 @@ impl FindAllChangesRow {
         let site = Site::try_from(site).context(CoordsTryFromPartsError {
             coords: "unable to create from supplied str",
         })?;
-        let old = Distribution::try_from(old).context(CoordsTryFromPartsError {
-            coords: "unable to create from supplied str",
-        })?;
+        let old = if old == "" {
+            None
+        } else {
+            Some(
+                Distribution::try_from(old).context(CoordsTryFromPartsError {
+                    coords: "unable to create from supplied str",
+                })?,
+            )
+        };
+
         let new = Distribution::try_from(new).context(CoordsTryFromPartsError {
             coords: "unable to create from supplied str",
         })?;
