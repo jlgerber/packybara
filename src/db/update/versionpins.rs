@@ -5,9 +5,9 @@ pbk update versionpins --versionpin 22 --distribution 22 --pkgcoord 84 -v 432 -d
 use crate::traits::TransactionHandler;
 use crate::types::IdType;
 use log;
-use postgres::types::ToSql;
-use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Transaction;
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
 pub enum UpdateVersionPinsError {
@@ -72,7 +72,7 @@ pub struct UpdateVersionPins<'a> {
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for UpdateVersionPins<'a> {
+impl<'a> TransactionHandler for UpdateVersionPins<'a> {
     type Error = tokio_postgres::error::Error;
     /// retrieve an Option wrapped mutable reference to the
     /// transaction
@@ -80,7 +80,7 @@ impl<'a> TransactionHandler<'a> for UpdateVersionPins<'a> {
         self.tx.as_mut()
     }
     /// Extract the transaction from Self.
-    fn take_tx(&mut self) -> Transaction<'a> {
+    fn take_tx(&mut self) -> Transaction<'_> {
         self.tx.take().unwrap()
     }
 
@@ -160,7 +160,7 @@ impl<'a> UpdateVersionPins<'a> {
 
     /// Inject updates into the internal transaction. The database update is deferred
     /// until one calls self.commit(...)
-    pub fn update(mut self) -> Result<Self, UpdateVersionPinsError> {
+    pub async fn update(mut self) -> Result<Self, UpdateVersionPinsError> {
         let mut update_cnt = 0;
         let changes = {
             let mut empty = Vec::new();
@@ -173,7 +173,7 @@ impl<'a> UpdateVersionPins<'a> {
                 update_cnt += 1;
                 let mut updates_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
                 let mut prepared_line = "UPDATE versionpin ".to_string();
-                let mut pos_idx = 2;
+                let mut pos_idx: i32 = 2;
                 updates_ref.push(&x.versionpin_id);
                 if let Some(ref dist_id) = x.distribution_id {
                     updates_ref.push(dist_id);
@@ -195,8 +195,10 @@ impl<'a> UpdateVersionPins<'a> {
                 // todo guard against possible emp
                 {
                     self.tx()
+                        .await
                         .unwrap()
                         .execute(prepared_line.as_str(), &updates_ref[..])
+                        .await
                         .context(TokioPostgresError {
                             msg: "failed to execute statement in transaction",
                         })?;

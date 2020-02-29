@@ -9,20 +9,22 @@
 //! reexport the db traits
 pub use crate::db::traits::*;
 pub use crate::packrat::PackratDbError;
-use postgres::Transaction;
-
+use async_trait::async_trait;
+use tokio_postgres::Transaction;
 /// Transaction handler provides default implementation of commit trait, along
 /// with helper functions.
-pub trait TransactionHandler<'a> {
+#[async_trait]
+pub trait TransactionHandler {
     type Error: std::convert::From<tokio_postgres::error::Error>;
+    // type Error: std::error::Error;
     // /// retrieve an Option<&mut Transaction>. The expectation here is that the
     // /// implementer (a struct) will have a tx: Option<Transaction> field and
     // /// the impl will return self.tx.as_mut()
-    fn tx(&mut self) -> Option<&mut Transaction<'a>>;
+    async fn tx(&mut self) -> Option<&mut Transaction<'_>>;
 
     /// take the transaction from the impl. The expectation is that we have a field
     /// self.tx = Option<Transaction<'a>> that can be taken via self.tx.take().
-    fn take_tx(&mut self) -> Transaction<'a>;
+    async fn take_tx(&mut self) -> Transaction<'_>;
 
     /// Retrieve the number of results of the operation. This should match the
     /// number of updates or creates. The expecation is that the result count
@@ -35,16 +37,20 @@ pub trait TransactionHandler<'a> {
     /// Given a user and comment, commit the internal transaction, returning the
     /// number of results, if successful, or an error if not.
     /// The default implementation, as provided, should suffice.
-    fn commit(&mut self, author: &str, comment: &str) -> Result<u64, Self::Error> {
+    async fn commit(&mut self, author: &str, comment: &str) -> Result<u64, Self::Error> {
         {
             {
-                self.tx().unwrap().execute(
-                    "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
-                    &[&author, &comment],
-                )?;
+                self.tx()
+                    .await
+                    .unwrap()
+                    .execute(
+                        "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
+                        &[&author, &comment],
+                    )
+                    .await?;
             }
 
-            self.take_tx().commit()?;
+            self.take_tx().await.commit().await?;
         }
 
         let result = self.get_result_cnt();
