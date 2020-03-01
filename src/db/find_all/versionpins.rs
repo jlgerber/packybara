@@ -6,9 +6,9 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::{Deserialize, Serialize};
 use snafu::{ResultExt, Snafu};
 use std::fmt;
-
 pub type FindAllVersionPinsResult<T, E = FindAllVersionPinsError> = std::result::Result<T, E>;
 
 fn match_attrib(search_by: &SearchAttribute) -> &'static str {
@@ -33,7 +33,7 @@ pub enum FindAllVersionPinsError {
 }
 
 /// A row returned from the  FindAllVersionPins.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FindAllVersionPinsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: IdType,
