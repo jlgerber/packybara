@@ -4,10 +4,10 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 //use std::str::FromStr;
 //use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
@@ -183,7 +183,9 @@ impl<'a> FindAllDistributions<'a> {
     //     self
     // }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllDistributionsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(
+        &mut self,
+    ) -> Result<Vec<FindAllDistributionsRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 distribution_id,
@@ -223,7 +225,7 @@ impl<'a> FindAllDistributions<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..])? {
+        for row in self.client.query(query_str.as_str(), &params[..]).await? {
             let id = row.get(0);
             let package = row.get(1);
             let version = row.get(2);

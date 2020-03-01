@@ -1,12 +1,12 @@
 use itertools::Itertools;
-use postgres::types::ToSql;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
 //use std::fmt;
 use crate::traits::TransactionHandler;
 use crate::{Level, Platform, Role, Site};
 use log;
-use postgres::Transaction;
 use std::convert::TryInto;
+use tokio_postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidPlatformKind {
@@ -71,7 +71,7 @@ impl<'a> TransactionHandler<'a> for AddVersionPins<'a> {
 
 impl<'a> AddVersionPins<'a> {
     /// New up an AddVersionPins instance. This function takes a mutable
-    /// reference to the postgres::Client, which is responsible for holding
+    /// reference to the tokio_postgres::Client, which is responsible for holding
     /// a connection to the database, as well as providing a crud interface.
     ///
     /// # Arguments
@@ -328,7 +328,7 @@ impl<'a> AddVersionPins<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddVersionPinsError)
-    pub fn create(mut self) -> Result<Self, AddVersionPinsError> {
+    pub async fn create(mut self) -> Result<Self, AddVersionPinsError> {
         // make sure the various coords start with any (or facility for level)
         let platforms = self
             .platforms
@@ -406,7 +406,7 @@ impl<'a> AddVersionPins<'a> {
         // let package = self.package.clone();
         // let version = self.version.clone();
         let dist = format!("{}-{}", self.package, self.version);
-        let tx = self.tx().expect("unable to create a transaction");
+        let tx = self.tx().await.expect("unable to create a transaction");
         for role in roles {
             for level in &levels {
                 for platform in &platforms {
@@ -437,11 +437,11 @@ impl<'a> AddVersionPins<'a> {
 
                         log::info!("Sql: {}", insert_str);
                         log::info!("Args:{:?}", &args);
-                        let results =
-                            tx.execute(insert_str, &args[..])
-                                .context(TokioPostgresError {
-                                    msg: "failed to insert versionpin",
-                                })?;
+                        let results = tx.execute(insert_str, &args[..]).await.context(
+                            TokioPostgresError {
+                                msg: "failed to insert versionpin",
+                            },
+                        )?;
                         result_cnt += results;
                     }
                 }

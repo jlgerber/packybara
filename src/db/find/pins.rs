@@ -6,10 +6,10 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 pub type FindPinsResult<T, E = FindPinsError> = std::result::Result<T, E>;
 
@@ -253,14 +253,14 @@ impl<'a> FindPins<'a> {
         self
     }
 
-    fn simple_query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
+    async fn simple_query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
         let query_str = "SELECT DISTINCT 
                 name
             FROM 
                 role_view ORDER BY name";
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str);
-        for row in self.client.query(query_str, &[])? {
+        for row in self.client.query(query_str, &[]).await? {
             let role_name = row.get(0);
             result.push(FindPinsRow::try_from_parts(
                 role_name, "facility", "any", "any",
@@ -271,7 +271,7 @@ impl<'a> FindPins<'a> {
 
     /// Initiate the query based on the current state of self and return a
     /// vector of results
-    pub fn query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
         fn process_map(root: &str, value: &str) -> String {
             if value != root {
                 if !value.contains("%") {
@@ -284,7 +284,7 @@ impl<'a> FindPins<'a> {
             }
         }
         if self.simple {
-            return self.simple_query();
+            return self.simple_query().await;
         }
         let level = self
             .level
@@ -409,7 +409,7 @@ impl<'a> FindPins<'a> {
         let qstr = query_str.as_str();
         log::info!("SQL {}", qstr);
         log::info!("Prepared Arguments: {:?}", &params);
-        for row in self.client.query(qstr, &params[..])? {
+        for row in self.client.query(qstr, &params[..]).await? {
             let role_name: &str = row.get(0);
             let level_name: &str = row.get(1);
             let platform_name: &str = row.get(2);

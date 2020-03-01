@@ -3,12 +3,12 @@ pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAtt
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
+use tokio_postgres::types::ToSql;
 
-//use postgres::types::ToSql;
-use postgres::Client;
+//use tokio_postgres::types::ToSql;
 use snafu::Snafu;
 use std::fmt;
+use tokio_postgres::Client;
 //use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
@@ -122,7 +122,7 @@ impl<'a> FindAllSites<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllSitesRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllSitesRow>, Box<dyn std::error::Error>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut op = "=";
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
@@ -144,7 +144,7 @@ impl<'a> FindAllSites<'a> {
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments:\n{:?}", &params);
         let mut result = Vec::new();
-        for row in self.client.query(query_str.as_str(), &params[..])? {
+        for row in self.client.query(query_str.as_str(), &params[..]).await? {
             let name = row.get(0);
             result.push(FindAllSitesRow::try_from_parts(name)?);
         }

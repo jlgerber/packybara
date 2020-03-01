@@ -4,12 +4,12 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
 pub enum OrderRoleBy {
@@ -193,7 +193,7 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name,
@@ -224,7 +224,7 @@ impl<'a> FindAllRoles<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..])? {
+        for row in self.client.query(query_str.as_str(), &params[..]).await? {
             let role_name = row.get(0);
             let category = row.get(1);
             result.push(FindAllRolesRow::try_from_parts(role_name, category)?);

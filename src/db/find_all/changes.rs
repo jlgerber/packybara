@@ -5,8 +5,6 @@ pub use crate::Coords;
 pub use crate::Distribution;
 use crate::{Level, Platform, Role, Site};
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::ResultExt;
 use snafu::Snafu;
 use std::convert::TryFrom;
@@ -14,6 +12,8 @@ use std::fmt;
 use std::str::FromStr;
 use strum::ParseError;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 /// Logged activity in audit log may be one of
 #[derive(
@@ -289,7 +289,7 @@ impl<'a> FindAllChanges<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllChangesRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllChangesRow>, Box<dyn std::error::Error>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let query_str = "SELECT
                 id,
@@ -315,7 +315,7 @@ impl<'a> FindAllChanges<'a> {
 
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Prepared: {:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..])? {
+        for row in self.client.query(query_str.as_str(), &params[..]).await? {
             let id: IdType = row.get(0);
             let txid: LongIdType = row.get(1);
             let action: &str = row.get(2);

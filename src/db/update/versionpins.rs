@@ -72,7 +72,7 @@ pub struct UpdateVersionPins<'a> {
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler for UpdateVersionPins<'a> {
+impl<'a> TransactionHandler<'a> for UpdateVersionPins<'a> {
     type Error = tokio_postgres::error::Error;
     /// retrieve an Option wrapped mutable reference to the
     /// transaction

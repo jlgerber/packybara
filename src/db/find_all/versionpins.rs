@@ -4,10 +4,10 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 pub type FindAllVersionPinsResult<T, E = FindAllVersionPinsError> = std::result::Result<T, E>;
 
@@ -250,7 +250,9 @@ impl<'a> FindAllVersionPins<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllVersionPinsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(
+        &mut self,
+    ) -> Result<Vec<FindAllVersionPinsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility").to_string();
         let role = self.role.unwrap_or("any").to_string();
         let platform = self.platform.unwrap_or("any").to_string();
@@ -314,7 +316,7 @@ impl<'a> FindAllVersionPins<'a> {
 
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in self.client.query(qstr, &prepared_args[..])? {
+        for row in self.client.query(qstr, &prepared_args[..]).await? {
             let level_name: &str = row.get(4);
             // this should be done at the query level, but i have to switch this
             // from using a function to raw sql. Or alter the function

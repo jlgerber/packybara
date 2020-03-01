@@ -1,9 +1,9 @@
 use crate::traits::TransactionHandler;
 use crate::types::IdType;
 use log;
-use postgres::types::ToSql;
-use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Transaction;
 
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
@@ -75,13 +75,19 @@ impl<'a> AddWiths<'a> {
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(AddWithsError)
-    pub fn create(mut self, vpin_id: IdType, withs: Vec<String>) -> Result<Self, AddWithsError> {
+    pub async fn create(
+        mut self,
+        vpin_id: IdType,
+        withs: Vec<String>,
+    ) -> Result<Self, AddWithsError> {
         if withs.len() == 0 {
             return Err(AddWithsError::NoUpdatesError);
         }
         self.tx()
+            .await
             .unwrap()
             .execute("DELETE FROM withpackage WHERE versionpin = $1", &[&vpin_id])
+            .await
             .context(TokioPostgresError {
                 msg: "failed to delete withs before adding new ones",
             })?;

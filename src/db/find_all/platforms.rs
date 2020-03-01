@@ -3,10 +3,10 @@ pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAtt
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-//use postgres::types::ToSql;
-use postgres::Client;
+//use tokio_postgres::types::ToSql;
 use snafu::Snafu;
 use std::fmt;
+use tokio_postgres::Client;
 //use std::str::FromStr;
 use crate::types::IdType;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
@@ -171,7 +171,7 @@ impl<'a> FindAllPlatforms<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllPlatformsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllPlatformsRow>, Box<dyn std::error::Error>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name
@@ -187,7 +187,7 @@ impl<'a> FindAllPlatforms<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Prepared: {:?}", &params);
-        for row in self.client.query(query_str.as_str(), &[])? {
+        for row in self.client.query(query_str.as_str(), &[]).await? {
             //&params[..])? {
             let name = row.get(0);
             result.push(FindAllPlatformsRow::try_from_parts(name)?);

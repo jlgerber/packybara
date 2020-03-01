@@ -1,9 +1,9 @@
 use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
-use postgres::types::ToSql;
-use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidRoleKind {
@@ -53,10 +53,10 @@ impl<'a> TransactionHandler<'a> for AddRoles<'a> {
 
 impl<'a> AddRoles<'a> {
     /// New up an AddRoles instance, given a mutable reference to a
-    /// postgres::Client.
+    /// tokio_postgres::Client.
     ///
     /// # Arguments
-    /// * `client` - a postgres::Client instance
+    /// * `client` - a tokio_postgres::Client instance
     ///
     /// # Returns
     /// * instance of Self
@@ -115,7 +115,7 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddRolesError)
-    pub fn create(mut self) -> Result<Self, AddRolesError> {
+    pub async fn create(mut self) -> Result<Self, AddRolesError> {
         let mut expand_roles = Vec::new();
         let roles = self
             .names
@@ -154,8 +154,10 @@ impl<'a> AddRoles<'a> {
         log::info!("Prepared\n{:?}", &roles_ref);
         let results = self
             .tx()
+            .await
             .unwrap()
             .execute(insert_str.as_str(), &roles_ref[..])
+            .await
             .context(TokioPostgresError {
                 msg: "failed to add roles",
             })?;

@@ -10,8 +10,8 @@ use crate::db::traits::{PBAdd, PBExport, PBFind, PBUpdate};
 use crate::db::{add, find, find_all, update};
 use crate::io::packages_xml::xml::write_xml;
 use crate::types::IdType;
-pub use postgres::{Client, NoTls, Transaction};
 use snafu::{ResultExt, Snafu};
+pub use tokio_postgres::{Client, NoTls, Transaction};
 
 #[derive(Debug, Snafu)]
 pub enum PackratDbError {
@@ -34,7 +34,7 @@ impl PackratDb {
     pub fn new(client: Client) -> Self {
         PackratDb { client }
     }
-    pub fn commit<'a>(
+    pub async fn commit<'a>(
         mut tx: Transaction<'a>,
         author: &str,
         comment: &str,
@@ -45,19 +45,20 @@ impl PackratDb {
                 "INSERT INTO REVISION (author, comment) VALUES ($1, $2)",
                 &[&author, &comment],
             )
+            .await
             .context(TokioPostgresError {
                 msg: "failed to insert Revisions",
             })?;
         }
 
-        tx.commit().context(TokioPostgresError {
+        tx.commit().await.context(TokioPostgresError {
             msg: "failed to commit transaction",
         })?;
         Ok(commits)
     }
     /// Generate a transaction for updates and adds
-    pub fn transaction<'a>(&'a mut self) -> Transaction<'a> {
-        self.client.transaction().unwrap()
+    pub async fn transaction<'a>(&'a mut self) -> Transaction<'a> {
+        self.client.transaction().await.unwrap()
     }
 }
 
@@ -207,10 +208,17 @@ impl<'a> PBUpdate<'a> for PackratDb {
     }
 }
 
+use async_trait::async_trait;
+
+#[async_trait]
 impl<'a> PBExport<'a> for PackratDb {
     type Error = crate::io::packages_xml::xml::PackagesXmlError;
 
-    fn export_packages(&'a mut self, show: &'a str, path: &'a str) -> Result<(), Self::Error> {
-        write_xml(self, show.to_string(), path.to_string())
+    async fn export_packages(
+        &'a mut self,
+        show: &'a str,
+        path: &'a str,
+    ) -> Result<(), Self::Error> {
+        write_xml(self, show.to_string(), path.to_string()).await
     }
 }

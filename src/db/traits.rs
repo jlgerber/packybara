@@ -1,6 +1,7 @@
 use crate::db::{add, find, find_all, update};
 use crate::types::IdType;
-pub use postgres::Transaction;
+use async_trait::async_trait;
+pub use tokio_postgres::Transaction;
 
 pub trait PBFind {
     fn find_versionpin<'b>(&'b mut self, package: &'b str) -> find::versionpin::FindVersionPin;
@@ -64,8 +65,10 @@ pub trait PBUpdate<'a> {
     fn update_versionpins(tx: Self::TransactionType) -> update::versionpins::UpdateVersionPins<'a>;
 }
 
+#[async_trait]
 pub trait PBExport<'a> {
     type Error;
 
-    fn export_packages(&'a mut self, show: &'a str, path: &'a str) -> Result<(), Self::Error>;
+    async fn export_packages(&'a mut self, show: &'a str, path: &'a str)
+        -> Result<(), Self::Error>;
 }

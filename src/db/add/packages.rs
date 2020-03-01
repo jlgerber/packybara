@@ -1,9 +1,9 @@
 use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
-use postgres::types::ToSql;
-use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Transaction;
 
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
@@ -49,7 +49,7 @@ impl<'a> AddPackages<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - A reference to a postgres::Client instance, which
+    /// * `client` - A reference to a tokio_postgres::Client instance, which
     /// stores the connection to the database, and provides crud methods
     /// for us.
     pub fn new(tx: Transaction<'a>) -> Self {
@@ -97,7 +97,7 @@ impl<'a> AddPackages<'a> {
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(AddPackagesError)
-    pub fn create(mut self) -> Result<Self, AddPackagesError> {
+    pub async fn create(mut self) -> Result<Self, AddPackagesError> {
         let packages = self.names.iter().unique().cloned().collect::<Vec<String>>();
         if packages.len() == 0 {
             return Err(AddPackagesError::NoPackageNamesError);
@@ -119,8 +119,10 @@ impl<'a> AddPackages<'a> {
         log::info!("Prepared\n{:?}", &packages_ref);
         let results = self
             .tx()
+            .await
             .unwrap()
             .execute(insert_str.as_str(), &packages_ref[..])
+            .await
             .context(TokioPostgresError {
                 msg: "failed to add packages",
             })?;

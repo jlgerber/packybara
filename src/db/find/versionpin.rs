@@ -3,9 +3,9 @@ use crate::coords_error::CoordsError;
 use crate::types::IdType;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
@@ -68,7 +68,7 @@ impl<'a> FindVersionPin<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<FindVersionPinsRow, FindVersionPinError> {
+    pub async fn query(&mut self) -> Result<FindVersionPinsRow, FindVersionPinError> {
         let query_str = "SELECT 
             versionpin_id, 
             distribution, 
@@ -95,6 +95,7 @@ impl<'a> FindVersionPin<'a> {
         let row = self
             .client
             .query(query_str, prepared_args)
+            .await
             .context(TokioPostgresError {
                 msg: "problem with select from find_distribution_and_withs",
             })?

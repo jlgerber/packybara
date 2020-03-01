@@ -595,7 +595,7 @@ pub mod xml {
         },
     }
 
-    pub fn write_xml<'a>(
+    pub async fn write_xml<'a>(
         db: &'a mut PackratDb,
         show: String,
         output: String,
@@ -609,6 +609,7 @@ pub mod xml {
             .search_mode(LtreeSearchMode::Descendant)
             .order_by(vec![SearchAttribute::Role, SearchAttribute::Package])
             .query()
+            .await
             .context(PackybaraDbQueryError {
                 msg: "Unable to get version pins from db",
             })?;

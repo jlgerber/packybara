@@ -4,10 +4,10 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 pub type FindAllWithsResult<T, E = FindAllWithsError> = std::result::Result<T, E>;
 
@@ -98,7 +98,7 @@ impl<'a> FindAllWiths<'a> {
         FindAllWiths { client, vpin_id }
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllWithsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllWithsRow>, Box<dyn std::error::Error>> {
         let query_str = "SELECT id, versionpin, package, pinorder
         FROM withpackage WHERE versionpin = $1 ORDER BY pinorder"
             .to_string();
@@ -107,7 +107,7 @@ impl<'a> FindAllWiths<'a> {
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] = &[&self.vpin_id];
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in self.client.query(qstr, prepared_args)? {
+        for row in self.client.query(qstr, prepared_args).await? {
             let id: IdType = row.get(0);
             let vpin_id: IdType = row.get(1);
             let with: String = row.get(2);

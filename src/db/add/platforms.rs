@@ -1,10 +1,10 @@
 use itertools::Itertools;
-use postgres::types::ToSql;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
 //use std::fmt;
 use crate::traits::TransactionHandler;
 use log;
-use postgres::Transaction;
+use tokio_postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidPlatformKind {
@@ -57,7 +57,7 @@ impl<'a> TransactionHandler<'a> for AddPlatforms<'a> {
 
 impl<'a> AddPlatforms<'a> {
     /// New up an AddPlatforms instance. This function takes a mutable
-    /// reference to the postgres::Client, which is responsible for holding
+    /// reference to the tokio_postgres::Client, which is responsible for holding
     /// a connection to the database, as well as providing a crud interface.
     ///
     /// # Arguments
@@ -132,7 +132,7 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddPlatformsError)
-    pub fn create(mut self) -> Result<Self, AddPlatformsError> {
+    pub async fn create(mut self) -> Result<Self, AddPlatformsError> {
         // convert the self.names of platforms to lowercase after
         // making sure the list is unique, and prefixing with 'any.'
         let platforms = self
@@ -169,8 +169,10 @@ impl<'a> AddPlatforms<'a> {
         // execute the query, capture the results and provide a failure context.
         let results = self
             .tx()
+            .await
             .unwrap()
             .execute(insert_str.as_str(), &platforms_ref[..])
+            .await
             .context(TokioPostgresError {
                 msg: "failed to add platforms",
             })?;

@@ -8,12 +8,12 @@ pub use crate::Distribution;
 
 use crate::types::IdType;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use snafu::Snafu;
 use std::fmt;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
 pub enum OrderPkgCoordsBy {
@@ -422,7 +422,7 @@ impl<'a> FindAllPkgCoords<'a> {
         (query_str, prepared)
     }
     /// execute the query
-    pub fn query(&mut self) -> Result<Vec<FindAllPkgCoordsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllPkgCoordsRow>, Box<dyn std::error::Error>> {
         let (query_str, prep) = self.get_query_str();
         let mut result = Vec::new();
         let mut prepared_args: Vec<&(dyn ToSql + Sync)> = Vec::new();
@@ -436,7 +436,7 @@ impl<'a> FindAllPkgCoords<'a> {
             return Err(FindAllPkgCoordsError::NoClientError)?;
         }
         let client = client.unwrap();
-        for row in client.query(query_str.as_str(), &prepared_args[..])? {
+        for row in client.query(query_str.as_str(), &prepared_args[..]).await? {
             let id: IdType = row.get(0);
             let package: &str = row.get(1);
             let level_name: &str = row.get(2);

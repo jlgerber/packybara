@@ -4,11 +4,11 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use postgres::types::ToSql;
-use postgres::Client;
 use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 pub type FindVersionPinsResult<T, E = FindVersionPinsError> = std::result::Result<T, E>;
 
@@ -167,7 +167,7 @@ impl<'a> FindVersionPins<'a> {
         self.order_direction = Some(direction);
         self
     }
-    pub fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
@@ -206,7 +206,7 @@ impl<'a> FindVersionPins<'a> {
         }
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        for row in self.client.query(query_str.as_str(), prepared_args)? {
+        for row in self.client.query(query_str.as_str(), prepared_args).await? {
             let id: IdType = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);

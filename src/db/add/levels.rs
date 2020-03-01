@@ -1,9 +1,9 @@
 use crate::traits::TransactionHandler;
 use itertools::Itertools;
 use log;
-use postgres::types::ToSql;
-use postgres::Transaction;
 use snafu::{ResultExt, Snafu};
+use tokio_postgres::types::ToSql;
+use tokio_postgres::Transaction;
 /// An enum which defines the kinds of InvalidLevelErrors we may encounter. .
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidLevelKind {
@@ -107,7 +107,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * Ok(&mut Self) | Err(AddLevelsError)
-    pub fn create(mut self) -> Result<Self, AddLevelsError> {
+    pub async fn create(mut self) -> Result<Self, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
             .names
@@ -150,8 +150,10 @@ impl<'a> AddLevels<'a> {
 
         let results = self
             .tx()
+            .await
             .unwrap()
             .execute(insert_str.as_str(), &levels_ref[..])
+            .await
             .context(TokioPostgresError {
                 msg: "failed to add levels",
             })?;
