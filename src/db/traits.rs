@@ -37,7 +37,7 @@ pub trait PBFind {
 
     fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths;
 }
-
+/*
 pub trait PBAdd<'b> {
     type TransactionType;
 
@@ -59,7 +59,7 @@ pub trait PBAdd<'b> {
     where
         I: Into<String>;
 }
-
+*/
 pub trait PBUpdate<'a> {
     type TransactionType;
     fn update_versionpins(tx: Self::TransactionType) -> update::versionpins::UpdateVersionPins<'a>;

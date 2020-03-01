@@ -15,16 +15,17 @@ use tokio_postgres::Transaction;
 /// with helper functions.
 #[async_trait]
 pub trait TransactionHandler<'a> {
-    type Error: std::convert::From<tokio_postgres::error::Error>;
+    //type Error: std::convert::From<tokio_postgres::error::Error>;
+    type Error: std::error::Error;
     // type Error: std::error::Error;
     // /// retrieve an Option<&mut Transaction>. The expectation here is that the
     // /// implementer (a struct) will have a tx: Option<Transaction> field and
     // /// the impl will return self.tx.as_mut()
-    async fn tx(&mut self) -> Option<&mut Transaction<'a>>;
+    async fn tx(&'a mut self) -> Option<&mut Transaction<'a>>;
 
     /// take the transaction from the impl. The expectation is that we have a field
     /// self.tx = Option<Transaction<'a>> that can be taken via self.tx.take().
-    async fn take_tx(&mut self) -> Transaction<'a>;
+    async fn take_tx(&'a mut self) -> Transaction<'a>;
 
     /// Retrieve the number of results of the operation. This should match the
     /// number of updates or creates. The expecation is that the result count
@@ -37,7 +38,11 @@ pub trait TransactionHandler<'a> {
     /// Given a user and comment, commit the internal transaction, returning the
     /// number of results, if successful, or an error if not.
     /// The default implementation, as provided, should suffice.
-    async fn commit(&mut self, author: &str, comment: &str) -> Result<u64, Self::Error> {
+    async fn commit(
+        &'a mut self,
+        author: &str,
+        comment: &str,
+    ) -> Result<u64, Box<dyn std::error::Error>> {
         {
             {
                 self.tx()

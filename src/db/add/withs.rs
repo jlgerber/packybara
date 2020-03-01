@@ -28,7 +28,7 @@ pub struct AddWiths<'a> {
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for AddWiths<'a> {
+impl<'a> TransactionHandler for AddWiths<'a> {
     type Error = tokio_postgres::error::Error;
     /// retrieve an Option wrapped mutable reference to the
     /// transaction
@@ -36,7 +36,7 @@ impl<'a> TransactionHandler<'a> for AddWiths<'a> {
         self.tx.as_mut()
     }
     /// Extract the transaction from Self.
-    fn take_tx(&mut self) -> Transaction<'a> {
+    fn take_tx(&mut self) -> Transaction {
         self.tx.take().unwrap()
     }
 
@@ -101,8 +101,10 @@ impl<'a> AddWiths<'a> {
             log::info!("SQL\n{}", prepared_line.as_str());
             log::info!("Prepared\n{:?}", &prepared_args);
             self.tx()
+                .await
                 .unwrap()
                 .execute(prepared_line.as_str(), &prepared_args[..])
+                .await
                 .context(TokioPostgresError {
                     msg: "problem executing prepared statement",
                 })?;
