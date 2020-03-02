@@ -58,16 +58,23 @@ pub type FindAllChangesResult<T, E = FindAllChangesError> = std::result::Result<
 /// Error type returned from  FindAllChangesError
 #[derive(Debug, Snafu)]
 pub enum FindAllChangesError {
-    ///  DistributionNewError - failure to new up a distribution.
     #[snafu(display("Error constructing Distribution from {}: {}", msg, source))]
     DistributionNewError { msg: String, source: CoordsError },
-    /// CoordsTryFromPartsError - error when calling try_from_parts
+
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+
     #[snafu(display("Error creating ChangeAction from '{}': {}", input, source))]
     ChangeActionError { input: String, source: ParseError },
+
     #[snafu(display("transaction_id not set"))]
     TransactionIdMissingError,
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllChanges.query
@@ -289,7 +296,7 @@ impl<'a> FindAllChanges<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllChangesRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> FindAllChangesResult<Vec<FindAllChangesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let query_str = "SELECT
                 id,
@@ -315,7 +322,13 @@ impl<'a> FindAllChanges<'a> {
 
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Prepared: {:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..])? {
+        for row in
+            self.client
+                .query(query_str.as_str(), &params[..])
+                .context(TokioPostgresError {
+                    msg: "problem with select from find_vpin_audit  function",
+                })?
+        {
             let id: IdType = row.get(0);
             let txid: LongIdType = row.get(1);
             let action: &str = row.get(2);

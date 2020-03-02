@@ -6,7 +6,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
-use snafu::Snafu;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 
 //use std::str::FromStr;
@@ -39,6 +39,12 @@ pub enum FindAllDistributionsError {
         distribution,
     ))]
     DistributionError { distribution: String },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllDistributions.query
@@ -183,7 +189,7 @@ impl<'a> FindAllDistributions<'a> {
     //     self
     // }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllDistributionsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> FindAllDistributionsResult<Vec<FindAllDistributionsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 distribution_id,
@@ -223,7 +229,13 @@ impl<'a> FindAllDistributions<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..])? {
+        for row in
+            self.client
+                .query(query_str.as_str(), &params[..])
+                .context(TokioPostgresError {
+                    msg: "problem with select from distribution_view",
+                })?
+        {
             let id = row.get(0);
             let package = row.get(1);
             let version = row.get(2);

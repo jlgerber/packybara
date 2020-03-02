@@ -5,7 +5,7 @@ pub use crate::Distribution;
 use log;
 //use postgres::types::ToSql;
 use postgres::Client;
-use snafu::Snafu;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 //use std::str::FromStr;
 use crate::types::IdType;
@@ -34,6 +34,12 @@ pub enum FindAllPlatformsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllPlatforms.query
@@ -171,7 +177,7 @@ impl<'a> FindAllPlatforms<'a> {
         self
     }
 
-    pub fn query(&mut self) -> Result<Vec<FindAllPlatformsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> FindAllPlatformsResult<Vec<FindAllPlatformsRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name
@@ -187,7 +193,13 @@ impl<'a> FindAllPlatforms<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Prepared: {:?}", &params);
-        for row in self.client.query(query_str.as_str(), &[])? {
+        for row in self
+            .client
+            .query(query_str.as_str(), &[])
+            .context(TokioPostgresError {
+                msg: "problem with select from platform_view",
+            })?
+        {
             //&params[..])? {
             let name = row.get(0);
             result.push(FindAllPlatformsRow::try_from_parts(name)?);

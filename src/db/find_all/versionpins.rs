@@ -31,6 +31,12 @@ pub enum FindAllVersionPinsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    //std::convert::From<tokio_postgres::error::Error>
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllVersionPins.query
@@ -583,7 +589,7 @@ impl<'a> FindAllVersionPins<'a> {
     /// * Result
     ///   * Ok  - Vector of FindAllVersionPinsRow
     ///   * Err - Box of dyn Error
-    pub fn query(&mut self) -> Result<Vec<FindAllVersionPinsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> Result<Vec<FindAllVersionPinsRow>, FindAllVersionPinsError> {
         let level = self.level.unwrap_or("facility").to_string();
         let role = self.role.unwrap_or("any").to_string();
         let platform = self.platform.unwrap_or("any").to_string();
@@ -647,7 +653,13 @@ impl<'a> FindAllVersionPins<'a> {
 
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in self.client.query(qstr, &prepared_args[..])? {
+        for row in self
+            .client
+            .query(qstr, &prepared_args[..])
+            .context(TokioPostgresError {
+                msg: "problem with select from find_all_versionpins function",
+            })?
+        {
             let level_name: &str = row.get(4);
             // this should be done at the query level, but i have to switch this
             // from using a function to raw sql. Or alter the function

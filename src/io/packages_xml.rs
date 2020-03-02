@@ -11,7 +11,6 @@
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
 use std::mem;
-
 /// Determine if an XML element is closed (eg <foo />)
 pub trait IsClosed {
     /// Indicates whether or not a Xml Node has contents or not
@@ -562,6 +561,7 @@ mod tests {
 }
 
 pub mod xml {
+    use crate::db::find_all::versionpins::FindAllVersionPinsError;
     use crate::db::traits::PBFind;
     use crate::io;
     use crate::packrat::PackratDb;
@@ -572,6 +572,7 @@ pub mod xml {
     use snafu::{ResultExt, Snafu};
     use std::fs::File;
     use std::io::Write;
+
     /// Error type returned from  FindAllPackagesError
     #[derive(Debug, Snafu)]
     pub enum PackagesXmlError {
@@ -579,7 +580,7 @@ pub mod xml {
         #[snafu(display("Error querying the database  {}: {}", msg, source))]
         PackybaraDbQueryError {
             msg: &'static str,
-            source: std::boxed::Box<dyn std::error::Error>,
+            source: FindAllVersionPinsError, //std::boxed::Box<dyn std::error::Error>,
         },
         ///PackybaraDbWriteError
         #[snafu(display("Error writing to the database  {}: {}", msg, source))]
