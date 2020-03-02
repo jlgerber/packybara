@@ -31,7 +31,7 @@ pub enum FindAllVersionPinsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
-    //std::convert::From<tokio_postgres::error::Error>
+    /// Handles all errors originating from the tokio_postgres and postgres crates
     #[snafu(display("Postgres Error: {} {}", msg, source))]
     TokioPostgresError {
         msg: &'static str,
@@ -39,15 +39,20 @@ pub enum FindAllVersionPinsError {
     },
 }
 
-/// A row returned from the  FindAllVersionPins.query
+/// A row returned from the FindAllVersionPins query
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FindAllVersionPinsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: IdType,
+    /// The database id of the distribution
     pub distribution_id: IdType,
+    /// The database id of the PkgCoord
     pub pkgcoord_id: IdType,
+    /// A Distribution instanc
     pub distribution: Distribution,
+    /// A Coords instance (representing a unique set of level,row,platform,site coordinates)
     pub coords: Coords,
+    /// An optional vector of with package names
     pub withs: Option<Vec<String>>,
 }
 
@@ -102,8 +107,8 @@ impl FindAllVersionPinsRow {
             withs,
         }
     }
-    /// Try to attempt to construct a distribution from &strs. This is a fallible operation
-    /// returning a result.
+    /// Attempt to construct a distribution from `&str`s. This is a fallible operation
+    /// returning a `Result`.
     ///
     /// # Arguments
     ///
@@ -118,6 +123,7 @@ impl FindAllVersionPinsRow {
     /// * withs - An optional vector of package names
     ///
     /// # Returns
+    ///
     /// * Result
     ///   * `Ok`  - `FindAllVersionPinsRow`
     ///   * `Err` - `FindAllVersionPinsError`
@@ -161,15 +167,15 @@ impl FindAllVersionPinsRow {
     ///
     /// # Arguments
     ///
-    /// * `id` - The database id
+    /// * `id`              - The database id
     /// * `distribution_id` - The id of the distribution in the database
-    /// * `pkgcoord_id` - The id of the pkgcoord in the database
-    /// * `distribution` - The name of the distribution
-    /// * `level` - The name of the level in levelspec notation. Use "facility" for the non-show facility level
-    /// * `role` - The name of the role. Subroles are accepted
-    /// * `platform` - The name of the platform (eg cent7_64)
-    /// * `site` - The full name of the site (eg portland)
-    /// * withs - An optional vector of package names
+    /// * `pkgcoord_id`     - The id of the pkgcoord in the database
+    /// * `distribution`    - The name of the distribution
+    /// * `level`           - The name of the level in levelspec notation. Use "facility" for the non-show facility level
+    /// * `role`            - The name of the role. Subroles are accepted
+    /// * `platform`        - The name of the platform (eg cent7_64)
+    /// * `site`            - The full name of the site (eg portland)
+    /// * withs             - An optional vector of package names
     ///
     /// # Returns
     ///
@@ -534,7 +540,6 @@ impl<'a> FindAllVersionPins<'a> {
         self.order_by = Some(attributes);
         self
     }
-
     /// Order the direction return by the provided OrderDirection
     ///
     /// # Arguments
@@ -548,7 +553,19 @@ impl<'a> FindAllVersionPins<'a> {
         self.order_direction = Some(direction);
         self
     }
-
+    /// Order the direction of the return by the provided OrderDirection
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - An optional OrderDirection instance
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
+        self.order_direction = direction;
+        self
+    }
     /// Limit the number of returned elements
     ///
     /// # Arguments
@@ -574,6 +591,21 @@ impl<'a> FindAllVersionPins<'a> {
     /// * Mutable reference to self
     pub fn search_mode(&mut self, mode: LtreeSearchMode) -> &mut Self {
         self.search_mode = mode;
+        self
+    }
+    /// Optionally search mode of the search.
+    ///
+    /// # Arguments
+    ///
+    /// * `mode` - An Option wrapped LtreeSearchMode instance
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn search_mode_opt(&mut self, mode: Option<LtreeSearchMode>) -> &mut Self {
+        if let Some(mode) = mode {
+            self.search_mode = mode;
+        }
         self
     }
 
@@ -641,15 +673,7 @@ impl<'a> FindAllVersionPins<'a> {
         if let Some(limit) = self.limit {
             query_str.push_str(format!(" LIMIT {}", limit).as_str());
         }
-        // commented out for now
-        //let facility_search_mode = String::from("exact");
         let qstr = query_str.as_str();
-        // we do something special here if we are looking for facility.
-        // if self.isolate_facility == true && &level == "facility" {
-        //     prepared_args.push(&facility_search_mode);
-        // } else {
-        //     prepared_args.push(&smode);
-        // };
 
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
