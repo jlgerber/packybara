@@ -9,6 +9,7 @@ use postgres::Client;
 use serde::{Deserialize, Serialize};
 use snafu::{ResultExt, Snafu};
 use std::fmt;
+
 pub type FindAllVersionPinsResult<T, E = FindAllVersionPinsError> = std::result::Result<T, E>;
 
 fn match_attrib(search_by: &SearchAttribute) -> &'static str {
@@ -70,9 +71,14 @@ impl FindAllVersionPinsRow {
     /// New up a  FindAllVersionPinsRow instance
     ///
     /// # Arguments
+    ///
     /// * `versionpin_id`: The id of the relevant row in the versionpin table
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
+    ///
+    /// # Returns
+    ///
+    /// * `FindAllVersionPinsRow` instance
     pub fn new(
         versionpin_id: IdType,
         distribution_id: IdType,
@@ -94,6 +100,21 @@ impl FindAllVersionPinsRow {
     /// returning a result.
     ///
     /// # Arguments
+    ///
+    /// * `id` - The database id
+    /// * `distribution_id` - The id of the distribution in the database
+    /// * `pkgcoord_id` - The id of the pkgcoord in the database
+    /// * `distribution` - The name of the distribution
+    /// * `level` - The name of the level in levelspec notation. Use "facility" for the non-show facility level
+    /// * `role` - The name of the role. Subroles are accepted
+    /// * `platform` - The name of the platform (eg cent7_64)
+    /// * `site` - The full name of the site (eg portland)
+    /// * withs - An optional vector of package names
+    ///
+    /// # Returns
+    /// * Result
+    ///   * `Ok`  - `FindAllVersionPinsRow`
+    ///   * `Err` - `FindAllVersionPinsError`
     pub fn try_from_parts(
         id: IdType,
         distribution_id: IdType,
@@ -128,6 +149,25 @@ impl FindAllVersionPinsRow {
         ))
     }
 
+    /// Like try_from_parts but constructs distribution without checking validity,
+    /// and panics if coords cannot be constructed. Generally used when one is
+    /// assured of the ability to construct a Fn=ndAllVersionPinsRow correctly
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The database id
+    /// * `distribution_id` - The id of the distribution in the database
+    /// * `pkgcoord_id` - The id of the pkgcoord in the database
+    /// * `distribution` - The name of the distribution
+    /// * `level` - The name of the level in levelspec notation. Use "facility" for the non-show facility level
+    /// * `role` - The name of the role. Subroles are accepted
+    /// * `platform` - The name of the platform (eg cent7_64)
+    /// * `site` - The full name of the site (eg portland)
+    /// * withs - An optional vector of package names
+    ///
+    /// # Returns
+    ///
+    /// * `FindAllVersionPinsRow`
     pub fn from_parts(
         id: IdType,
         distribution_id: IdType,
@@ -140,7 +180,8 @@ impl FindAllVersionPinsRow {
         withs: Option<Vec<String>>,
     ) -> FindAllVersionPinsRow {
         let distribution = Distribution::new_unchecked(distribution);
-        let coords = Coords::try_from_parts(level, role, platform, site).unwrap();
+        let coords = Coords::try_from_parts(level, role, platform, site)
+            .expect("Unable to construct Coords from parts");
 
         Self::new(
             id,
@@ -152,7 +193,8 @@ impl FindAllVersionPinsRow {
         )
     }
 }
-/// Responsible for finding a distribution
+/// Responsible for finding all VersionPins which meet certain criteria, which the
+/// struct tracks
 pub struct FindAllVersionPins<'a> {
     client: &'a mut Client,
     package: Option<&'a str>,
@@ -169,6 +211,15 @@ pub struct FindAllVersionPins<'a> {
 }
 
 impl<'a> FindAllVersionPins<'a> {
+    /// New up a FindAllVersionPins instance
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - a mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * FindAllVersionPins instance
     pub fn new(client: &'a mut Client) -> Self {
         FindAllVersionPins {
             client,
@@ -186,26 +237,275 @@ impl<'a> FindAllVersionPins<'a> {
         }
     }
 
+    /// Set the name of the package, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `package_n` - The name of the package
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn package(&mut self, package_n: &'a str) -> &mut Self {
         self.package = Some(package_n);
         self
     }
+
+    /// Set the name of the package, returning a mutable reference to self, per the
+    /// builder pattern. This method is deprecated in favor of `package_opt`
+    ///
+    /// # Arguments
+    ///
+    /// * `package_n` - either None, or Some wrapping the package name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn some_package(&mut self, package_n: Option<&'a str>) -> &mut Self {
+        log::warn!("some_package is deprecated. Use package_opt instead");
         self.package = package_n;
         self
     }
-
+    /// Set the name of the package, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `package_n` - either None, or Some wrapping the package name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn package_opt(&mut self, package_n: Option<&'a str>) -> &mut Self {
+        self.package = package_n;
+        self
+    }
+    /// Set the name of the version, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `version_n` - version name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn version(&mut self, version_n: &'a str) -> &mut Self {
         self.version = Some(version_n);
         self
     }
+    /// Set the name of the version, returning a mutable reference to self, per the
+    /// builder pattern. This method is deprecated. use `version_opt` instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `version_n` - either None, or Some wrapping the version name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn some_version(&mut self, version_n: Option<&'a str>) -> &mut Self {
+        log::warn!("some_version is deprecated. Use version_opt instead");
+        self.version = version_n;
+        self
+    }
+    /// Set the name of the version, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `version_n` - either None, or Some wrapping the version name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn version_opt(&mut self, version_n: Option<&'a str>) -> &mut Self {
         self.version = version_n;
         self
     }
 
+    /// Set the name of the level, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `level_n` - The level name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn level(&mut self, level_n: &'a str) -> &mut Self {
         self.level = Some(level_n);
+        self
+    }
+
+    /// Set the name of the level, returning a mutable reference to self, per the
+    /// builder pattern. This method is deprecated. use `level_opt` instead
+    ///
+    /// # Arguments
+    ///
+    /// * `level_n` - either None, or Some wrapping the level name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn some_level(&mut self, level_n: Option<&'a str>) -> &mut Self {
+        log::warn!("some_level is deprecated. Use level_opt instead");
+        self.level = level_n;
+        self
+    }
+
+    /// Set the name of the level, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `level_n` - either None, or Some wrapping the level name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn level_opt(&mut self, level_n: Option<&'a str>) -> &mut Self {
+        self.level = level_n;
+        self
+    }
+
+    /// Set the name of the role, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `role_n` - The role name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn role(&mut self, role_n: &'a str) -> &mut Self {
+        self.role = Some(role_n);
+        self
+    }
+
+    /// Set the name of the role, returning a mutable reference to self, per the
+    /// builder pattern. This method is deprecated. Use `role_opt` instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `role_n` - either None, or Some wrapping the role name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn some_role(&mut self, role_n: Option<&'a str>) -> &mut Self {
+        log::warn!("some_role is deprecated. Use role_opt instead");
+        self.role = role_n;
+        self
+    }
+
+    /// Set the name of the role, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `role_n` - either None, or Some wrapping the role name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn role_opt(&mut self, role_n: Option<&'a str>) -> &mut Self {
+        self.role = role_n;
+        self
+    }
+
+    /// Set the name of the platform, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `platform_n` - The platform name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn platform(&mut self, platform_n: &'a str) -> &mut Self {
+        self.platform = Some(platform_n);
+        self
+    }
+
+    /// Set the name of the platform, returning a mutable reference to self, per the
+    /// builder pattern. This method is deprecated. Use `platform_opt` instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `platform_n` - either None, or Some wrapping the platform name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn some_platform(&mut self, platform_n: Option<&'a str>) -> &mut Self {
+        log::warn!("some_platform is deprecated. Use platform_opt instead");
+        self.platform = platform_n;
+        self
+    }
+
+    /// Set the name of the platform, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `platform_n` - either None, or Some wrapping the platform name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn platform_opt(&mut self, platform_n: Option<&'a str>) -> &mut Self {
+        self.platform = platform_n;
+        self
+    }
+
+    /// Set the name of the site, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `site_n` - The site name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn site(&mut self, site_n: &'a str) -> &mut Self {
+        self.site = Some(site_n);
+        self
+    }
+
+    /// Set the name of the site, returning a mutable reference to self, per the
+    /// builder pattern. This method is deprecated. Use `site_opt` instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `site_n` - either None, or Some wrapping the site name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn some_site(&mut self, site_n: Option<&'a str>) -> &mut Self {
+        log::warn!("some_site is deprecated. Use site_opt instead");
+        self.site = site_n;
+        self
+    }
+
+    /// Set the name of the site, returning a mutable reference to self, per the
+    /// builder pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `site_n` - either None, or Some wrapping the site name as a &str
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn site_opt(&mut self, site_n: Option<&'a str>) -> &mut Self {
+        self.site = site_n;
         self
     }
     /// If isolate_facility is True, then we scope our search to
@@ -215,41 +515,74 @@ impl<'a> FindAllVersionPins<'a> {
         self
     }
 
-    pub fn role(&mut self, role_n: &'a str) -> &mut Self {
-        self.role = Some(role_n);
-        self
-    }
-
-    pub fn platform(&mut self, platform_n: &'a str) -> &mut Self {
-        self.platform = Some(platform_n);
-        self
-    }
-
-    pub fn site(&mut self, site_n: &'a str) -> &mut Self {
-        self.site = Some(site_n);
-        self
-    }
-
+    /// Order the return by the provided attributes
+    ///
+    /// # Arguments
+    ///
+    /// * `attributes` - A vector of SearchAttribute instances
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
         self.order_by = Some(attributes);
         self
     }
 
+    /// Order the direction return by the provided OrderDirection
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - An OrderDirection instances
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self
     }
 
+    /// Limit the number of returned elements
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - an integer
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }
 
+    /// Set the search mode of the search
+    ///
+    /// # Arguments
+    ///
+    /// * `mode` - An LtreeSearchMode instance
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
     pub fn search_mode(&mut self, mode: LtreeSearchMode) -> &mut Self {
         self.search_mode = mode;
         self
     }
 
+    /// perform a database query, returning a Vector of FindAllVersionPinsRow if successful, or
+    /// a box dyn Error if not
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * Result
+    ///   * Ok  - Vector of FindAllVersionPinsRow
+    ///   * Err - Box of dyn Error
     pub fn query(&mut self) -> Result<Vec<FindAllVersionPinsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility").to_string();
         let role = self.role.unwrap_or("any").to_string();
