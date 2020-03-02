@@ -540,6 +540,19 @@ impl<'a> FindAllVersionPins<'a> {
         self.order_by = Some(attributes);
         self
     }
+    /// Order the return by the provided attributes
+    ///
+    /// # Arguments
+    ///
+    /// * `attributes` - An optional vector of SearchAttribute instances
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to self
+    pub fn order_by_opt(&mut self, attributes: Option<Vec<SearchAttribute>>) -> &mut Self {
+        self.order_by = attributes;
+        self
+    }
     /// Order the direction return by the provided OrderDirection
     ///
     /// # Arguments
