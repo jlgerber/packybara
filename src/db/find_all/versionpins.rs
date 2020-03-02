@@ -684,7 +684,9 @@ impl<'a> FindAllVersionPins<'a> {
         }
 
         if let Some(limit) = self.limit {
-            query_str.push_str(format!(" LIMIT {}", limit).as_str());
+            if limit > 0 {
+                query_str.push_str(format!(" LIMIT {}", limit).as_str());
+            }
         }
         let qstr = query_str.as_str();
 
