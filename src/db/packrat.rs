@@ -25,16 +25,16 @@ pub enum PackratDbError {
     NoUpdatesError,
 }
 
-pub struct PackratDb {
-    client: Client,
+pub struct PackratDb<'a> {
+    client: &'a mut Client,
 }
 
-impl PackratDb {
+impl<'a> PackratDb<'a> {
     /// New up a PackratDb instance given a Client
-    pub fn new(client: Client) -> Self {
+    pub fn new(client: &'a mut Client) -> Self {
         PackratDb { client }
     }
-    pub fn commit<'a>(
+    pub fn commit(
         mut tx: Transaction<'a>,
         author: &str,
         comment: &str,
@@ -56,12 +56,12 @@ impl PackratDb {
         Ok(commits)
     }
     /// Generate a transaction for updates and adds
-    pub fn transaction<'a>(&'a mut self) -> Transaction<'a> {
+    pub fn transaction(&'a mut self) -> Transaction<'a> {
         self.client.transaction().unwrap()
     }
 }
 
-impl PBFind for PackratDb {
+impl<'a> PBFind for PackratDb<'a> {
     /// Find the most appropriate versionpin for a request. `find_versionpin`
     /// returns an instance of `FindVersionPinBuilder`, which provides
     /// setter methods providing a fluent api.
@@ -154,7 +154,7 @@ impl PBFind for PackratDb {
     }
 }
 
-impl<'b> PBAdd<'b> for PackratDb {
+impl<'b> PBAdd<'b> for PackratDb<'b> {
     type TransactionType = Transaction<'b>;
 
     /// add packages
@@ -194,7 +194,7 @@ impl<'b> PBAdd<'b> for PackratDb {
     }
 }
 
-impl<'a> PBUpdate<'a> for PackratDb {
+impl<'a> PBUpdate<'a> for PackratDb<'a> {
     type TransactionType = Transaction<'a>;
 
     /// update packages
@@ -207,7 +207,7 @@ impl<'a> PBUpdate<'a> for PackratDb {
     }
 }
 
-impl<'a> PBExport<'a> for PackratDb {
+impl<'a> PBExport<'a> for PackratDb<'a> {
     type Error = crate::io::packages_xml::xml::PackagesXmlError;
 
     fn export_packages(&'a mut self, show: &'a str, path: &'a str) -> Result<(), Self::Error> {
