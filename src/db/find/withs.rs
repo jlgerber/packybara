@@ -6,6 +6,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
@@ -29,7 +30,7 @@ pub enum FindWithsError {
 }
 
 /// A row returned from the FindDistributions.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindWithsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: IdType,
