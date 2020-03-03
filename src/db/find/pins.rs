@@ -8,6 +8,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
@@ -37,7 +38,7 @@ pub enum FindPinsError {
 }
 
 /// A row returned from the  FindPins.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindPinsRow {
     /// the id of result in the VersionPin table
     pub role: String,
