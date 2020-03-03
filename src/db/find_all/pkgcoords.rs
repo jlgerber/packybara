@@ -5,6 +5,7 @@ pub use crate::db::search_attribute::{
 pub use crate::utils::pred_true_false;
 pub use crate::Coords;
 pub use crate::Distribution;
+use serde::Serialize;
 
 use crate::types::IdType;
 use log;
@@ -76,7 +77,7 @@ pub enum FindAllPkgCoordsError {
 }
 
 /// A row returned from the FindAllPkgCoords.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllPkgCoordsRow {
     /// the id of result in the PkgCoord table
     pub id: IdType,

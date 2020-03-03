@@ -9,6 +9,7 @@ use snafu::{ResultExt, Snafu};
 use std::fmt;
 //use std::str::FromStr;
 //use crate::types::IdType;
+use serde::Serialize;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
@@ -42,7 +43,7 @@ pub enum FindAllPackagesError {
 }
 
 /// A row returned from the  FindAllPackages.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllPackagesRow {
     pub name: String,
 }

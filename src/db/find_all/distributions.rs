@@ -6,6 +6,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
@@ -48,7 +49,7 @@ pub enum FindAllDistributionsError {
 }
 
 /// A row returned from the  FindAllDistributions.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllDistributionsRow {
     pub id: IdType,
     pub package: String,
@@ -62,7 +63,7 @@ impl fmt::Display for FindAllDistributionsRow {
 }
 
 impl FindAllDistributionsRow {
-    /// New up a  FindAllDistributionsRow instance
+    /// New up a FindAllDistributionsRow instance
     ///
     /// # Arguments
     /// * `name`  - the name name
@@ -84,7 +85,8 @@ impl FindAllDistributionsRow {
     /// * `name`
     ///
     /// # Returns
-    /// Result
+    ///
+    /// * Result
     /// - Ok - FindAllDistributionsRow instance
     /// - Err - FindAllDistributionsError
     pub fn try_from_parts(

@@ -9,6 +9,7 @@ use snafu::{ResultExt, Snafu};
 use std::fmt;
 //use std::str::FromStr;
 use crate::types::IdType;
+use serde::Serialize;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 /// A simple enum representing the possible columns to order the return by.
@@ -43,7 +44,7 @@ pub enum FindAllPlatformsError {
 }
 
 /// A row returned from the  FindAllPlatforms.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllPlatformsRow {
     pub name: String,
 }

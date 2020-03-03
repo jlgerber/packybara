@@ -4,12 +4,10 @@ pub use crate::Coords;
 pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
-
-//use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
-//use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
@@ -43,7 +41,7 @@ pub enum FindAllSitesError {
 }
 
 /// A row returned from the  FindAllSites.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllSitesRow {
     pub name: String,
 }

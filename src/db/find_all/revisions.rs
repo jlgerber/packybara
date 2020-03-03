@@ -7,6 +7,7 @@ use chrono::{DateTime, Local /*TimeZone*/};
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};

@@ -6,6 +6,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
@@ -29,7 +30,7 @@ pub enum FindAllWithsError {
 }
 
 /// A row returned from the  FindAllWiths.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllWithsRow {
     /// the id of result in the With table
     pub id: IdType,

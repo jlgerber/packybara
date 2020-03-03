@@ -6,6 +6,7 @@ pub use crate::Distribution;
 use log;
 use postgres::types::ToSql;
 use postgres::Client;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 
@@ -50,7 +51,7 @@ pub enum FindAllLevelsError {
 }
 
 /// A row returned from the  FindAllLevels.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllLevelsRow {
     pub level: String,
     pub show: String,
