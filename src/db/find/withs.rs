@@ -165,6 +165,10 @@ impl<'a> FindWiths<'a> {
         self.site = site_n;
         self
     }
+    pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
+        self.order_by = Some(attributes);
+        self
+    }
     pub fn order_by_opt(&mut self, attributes: Option<Vec<SearchAttribute>>) -> &mut Self {
         self.order_by = attributes;
         self
