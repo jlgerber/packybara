@@ -128,23 +128,38 @@ impl<'a> FindWiths<'a> {
         self
     }
 
+    pub fn level_opt(&mut self, level_n: Option<&'a str>) -> &mut Self {
+        self.level = level_n;
+        self
+    }
+
     pub fn role(&mut self, role_n: &'a str) -> &mut Self {
         self.role = Some(role_n);
         self
     }
 
+    pub fn role_opt(&mut self, role_n: Option<&'a str>) -> &mut Self {
+        self.role = role_n;
+        self
+    }
     pub fn platform(&mut self, platform_n: &'a str) -> &mut Self {
         self.platform = Some(platform_n);
         self
     }
-
+    pub fn platform_opt(&mut self, platform_n: Option<&'a str>) -> &mut Self {
+        self.platform = platform_n;
+        self
+    }
     pub fn site(&mut self, site_n: &'a str) -> &mut Self {
         self.site = Some(site_n);
         self
     }
-
-    pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
-        self.order_by = Some(attributes);
+    pub fn site_opt(&mut self, site_n: Option<&'a str>) -> &mut Self {
+        self.site = site_n;
+        self
+    }
+    pub fn order_by_opt(&mut self, attributes: Option<Vec<SearchAttribute>>) -> &mut Self {
+        self.order_by = attributes;
         self
     }
 
@@ -153,6 +168,10 @@ impl<'a> FindWiths<'a> {
         self
     }
 
+    pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
+        self.order_direction = direction;
+        self
+    }
     pub fn query(&mut self) -> Result<Vec<FindWithsRow>, Box<dyn std::error::Error>> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
