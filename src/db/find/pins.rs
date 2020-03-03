@@ -35,6 +35,12 @@ pub enum FindPinsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindPins.query
@@ -254,14 +260,20 @@ impl<'a> FindPins<'a> {
         self
     }
 
-    fn simple_query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
+    fn simple_query(&mut self) -> Result<Vec<FindPinsRow>, FindPinsError> {
         let query_str = "SELECT DISTINCT 
                 name
             FROM 
                 role_view ORDER BY name";
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str);
-        for row in self.client.query(query_str, &[])? {
+        for row in self
+            .client
+            .query(query_str, &[])
+            .context(TokioPostgresError {
+                msg: "problem with select from platform_view",
+            })?
+        {
             let role_name = row.get(0);
             result.push(FindPinsRow::try_from_parts(
                 role_name, "facility", "any", "any",
@@ -272,7 +284,7 @@ impl<'a> FindPins<'a> {
 
     /// Initiate the query based on the current state of self and return a
     /// vector of results
-    pub fn query(&mut self) -> Result<Vec<FindPinsRow>, Box<dyn std::error::Error>> {
+    pub fn query(&mut self) -> Result<Vec<FindPinsRow>, FindPinsError> {
         fn process_map(root: &str, value: &str) -> String {
             if value != root {
                 if !value.contains("%") {
@@ -410,7 +422,13 @@ impl<'a> FindPins<'a> {
         let qstr = query_str.as_str();
         log::info!("SQL {}", qstr);
         log::info!("Prepared Arguments: {:?}", &params);
-        for row in self.client.query(qstr, &params[..])? {
+        for row in self
+            .client
+            .query(qstr, &params[..])
+            .context(TokioPostgresError {
+                msg: "problem with select from platform_view",
+            })?
+        {
             let role_name: &str = row.get(0);
             let level_name: &str = row.get(1);
             let platform_name: &str = row.get(2);
