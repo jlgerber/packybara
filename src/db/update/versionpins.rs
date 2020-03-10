@@ -71,29 +71,29 @@ pub struct UpdateVersionPins<'a> {
     tx: Option<Transaction<'a>>,
     /// vector of VersionPinChanges which will be applied to the database
     pub changes: Vec<VersionPinChange>,
-    result_cnt: u64,
+    result_cnt: Cell<u64>,
 }
 
 #[async_trait]
-impl<'a> TransactionHandler<'a> for UpdateVersionPins<'a> {
+impl<'a, 'b: 'a> TransactionHandler<'a, 'b> for UpdateVersionPins<'a> {
     type Error = tokio_postgres::error::Error;
     /// retrieve an Option wrapped mutable reference to the
     /// transaction
-    async fn tx(&'a mut self) -> Option<&mut Transaction<'a>> {
+    fn tx(&'a mut self) -> Option<&mut Transaction<'a>> {
         self.tx.as_mut()
     }
     /// Extract the transaction from Self.
-    async fn take_tx(&'a mut self) -> Transaction<'a> {
+    fn take_tx(&'a mut self) -> Transaction<'a> {
         self.tx.take().unwrap()
     }
 
     /// Return the result count to 0
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
+    fn reset_result_cnt(&self) {
+        self.result_cnt.set(0);
     }
     /// Retrieve th result count
     fn get_result_cnt(&self) -> u64 {
-        self.result_cnt
+        self.result_cnt.get()
     }
 }
 
@@ -107,7 +107,7 @@ impl<'a> UpdateVersionPins<'a> {
         Self {
             tx: Some(tx),
             changes: Vec::new(),
-            result_cnt: 0,
+            result_cnt: Cell::new(0),
         }
     }
 
@@ -171,7 +171,7 @@ impl<'a> UpdateVersionPins<'a> {
             std::mem::swap(&mut empty, &mut self.changes);
             empty
         };
-        let tx = self.take_tx().await;
+        let tx = self.take_tx();
         {
             //let tx = self.tx().await.unwrap();
             for x in &changes {
