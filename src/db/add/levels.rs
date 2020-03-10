@@ -97,7 +97,7 @@ impl AddLevels {
     /// new instances created.
     ///
     /// # Returns
-    /// * Ok(&mut Self) | Err(AddLevelsError)
+    /// * Ok(Self) | Err(AddLevelsError)
     pub async fn create(mut self, tx: &mut Transaction<'_>) -> Result<Self, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
