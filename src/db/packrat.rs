@@ -6,7 +6,7 @@
  * packybara can not be copied and/or distributed without the express
  * permission of Jonathan Gerber
  *******************************************************/
-use crate::db::traits::{/*PBAdd,*/ PBExport, PBFind, PBUpdate};
+use crate::db::traits::{PBAdd, PBExport, PBFind, PBUpdate};
 use crate::db::{add, find, find_all, update};
 use crate::io::packages_xml::xml::write_xml;
 use crate::types::IdType;
@@ -154,7 +154,7 @@ impl PBFind for PackratDb {
         find::withs::FindWiths::new(&mut self.client, package)
     }
 }
-/*
+
 impl<'b> PBAdd<'b> for PackratDb {
     type TransactionType = Transaction<'b>;
 
@@ -194,7 +194,7 @@ impl<'b> PBAdd<'b> for PackratDb {
         add::versionpins::AddVersionPins::new(tx, package.into(), version.into())
     }
 }
-*/
+
 impl<'a> PBUpdate<'a> for PackratDb {
     type TransactionType = Transaction<'a>;
 

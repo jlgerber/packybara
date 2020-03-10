@@ -38,7 +38,7 @@ pub struct AddLevels<'a> {
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for AddLevels<'a> {
+impl<'a, 'b: 'a> TransactionHandler<'a, 'b> for AddLevels<'a> {
     type Error = tokio_postgres::error::Error;
     fn tx(&mut self) -> Option<&mut Transaction<'a>> {
         self.tx.as_mut()
@@ -150,7 +150,6 @@ impl<'a> AddLevels<'a> {
 
         let results = self
             .tx()
-            .await
             .unwrap()
             .execute(insert_str.as_str(), &levels_ref[..])
             .await
