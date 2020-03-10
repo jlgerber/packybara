@@ -39,8 +39,7 @@ pub enum AddVersionPinsError {
 
 /// Responsible for creating version pins for the given package, version
 /// level, list of roles, platform, and site
-pub struct AddVersionPins<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct AddVersionPins {
     package: String,
     version: String,
     levels: Vec<Level>,
@@ -50,26 +49,20 @@ pub struct AddVersionPins<'a> {
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for AddVersionPins<'a> {
-    type Error = tokio_postgres::error::Error;
-    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-
-    fn take_tx(&mut self) -> Transaction<'a> {
-        self.tx.take().unwrap()
-    }
-
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
-    }
+impl TransactionHandler for AddVersionPins {
+    type Error = AddVersionPinsError;
 
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
+
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
 }
 
-impl<'a> AddVersionPins<'a> {
+impl AddVersionPins {
     /// New up an AddVersionPins instance. This function takes a mutable
     /// reference to the tokio_postgres::Client, which is responsible for holding
     /// a connection to the database, as well as providing a crud interface.
@@ -79,9 +72,8 @@ impl<'a> AddVersionPins<'a> {
     ///
     /// # Returns
     /// * an instance of AddVersionPins
-    pub fn new(tx: Transaction<'a>, package: String, version: String) -> Self {
+    pub fn new(package: String, version: String) -> Self {
         Self {
-            tx: Some(tx),
             package,
             version,
             roles: Vec::new(),
@@ -328,7 +320,7 @@ impl<'a> AddVersionPins<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddVersionPinsError)
-    pub async fn create(mut self) -> Result<Self, AddVersionPinsError> {
+    pub async fn create(mut self, tx: &mut Transaction<'_>) -> Result<Self, AddVersionPinsError> {
         // make sure the various coords start with any (or facility for level)
         let platforms = self
             .platforms
@@ -406,31 +398,10 @@ impl<'a> AddVersionPins<'a> {
         // let package = self.package.clone();
         // let version = self.version.clone();
         let dist = format!("{}-{}", self.package, self.version);
-        let tx = self.tx().await.expect("unable to create a transaction");
         for role in roles {
             for level in &levels {
                 for platform in &platforms {
                     for site in &sites {
-                        //                         let insert_str = "INSERT INTO pkgcoord(package,role,level,site,platform) VALUES($1, text2ltree($2), text2ltree($3), text2ltree($4), text2ltree($5)) ON CONFLICT DO NOTHING";
-                        //                         let args: Vec<&(dyn ToSql + Sync)> =
-                        //                             vec![&package, &role, &level, &site, &platform];
-                        //                         log::info!("Sql: {}", insert_str);
-                        //                         log::info!("Args:{:?}", &args);
-                        //                         tx.execute(insert_str, &args[..])
-                        //                             .context(TokioPostgresError {
-                        //                                 msg: "failed to insert pkgcoord",
-                        //                             })?;
-                        //                         let insert_str = "INSERT INTO versionpin(distribution, coord)
-                        //  WITH
-                        //    t1 AS
-                        //      (SELECT id FROM distribution WHERE package=$1 AND version=$2
-                        //    ),
-                        //    t2 AS
-                        //     (SELECT id FROM pkgcoord WHERE package=$1 AND role=$3 AND level=$4 AND platform=$5 AND site=$6)
-                        //    SELECT t1.id, t2.id
-                        //    FROM t1,t2 ON CONFLICT DO NOTHING";
-                        //                         let args: Vec<&(dyn ToSql + Sync)> =
-                        //                             vec![&package, &version, &role, &level, &platform, &site];
                         let insert_str = "SELECT * from INSERT_VERSIONPIN($1, level_n => $2, site_n => $3, role_n => $4, platform_n => $5)";
                         let args: Vec<&(dyn ToSql + Sync)> =
                             vec![&dist, &level, &site, &role, &platform];

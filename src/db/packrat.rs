@@ -35,7 +35,7 @@ impl PackratDb {
         PackratDb { client }
     }
     pub async fn commit<'a>(
-        mut tx: Transaction<'a>,
+        tx: Transaction<'a>,
         author: &str,
         comment: &str,
         commits: u64,
@@ -138,6 +138,7 @@ impl PBFind for PackratDb {
     ) -> find_all::versionpin_withs::FindAllWiths {
         find_all::versionpin_withs::FindAllWiths::new(&mut self.client, versionpin_id)
     }
+
     fn find_all_distributions<'b>(&'b mut self) -> find_all::distributions::FindAllDistributions {
         find_all::distributions::FindAllDistributions::new(&mut self.client)
     }
@@ -155,56 +156,48 @@ impl PBFind for PackratDb {
     }
 }
 
-impl<'b> PBAdd<'b> for PackratDb {
-    type TransactionType = Transaction<'b>;
-
+impl PBAdd for PackratDb {
     /// add packages
-    fn add_packages(tx: Self::TransactionType) -> add::packages::AddPackages<'b> {
-        add::packages::AddPackages::new(tx)
+    fn add_packages() -> add::packages::AddPackages {
+        add::packages::AddPackages::new()
     }
 
     /// add levels
-    fn add_levels(tx: Self::TransactionType) -> add::levels::AddLevels<'b> {
-        add::levels::AddLevels::new(tx)
+    fn add_levels() -> add::levels::AddLevels {
+        add::levels::AddLevels::new()
     }
 
     /// add roles
-    fn add_roles(tx: Self::TransactionType) -> add::roles::AddRoles<'b> {
-        add::roles::AddRoles::new(tx)
+    fn add_roles() -> add::roles::AddRoles {
+        add::roles::AddRoles::new()
     }
 
     /// add platforms
-    fn add_platforms(tx: Self::TransactionType) -> add::platforms::AddPlatforms<'b> {
-        add::platforms::AddPlatforms::new(tx)
+    fn add_platforms() -> add::platforms::AddPlatforms {
+        add::platforms::AddPlatforms::new()
     }
 
     /// Add withs to the transaction
-    fn add_withs(tx: Self::TransactionType) -> add::withs::AddWiths<'b> {
-        add::withs::AddWiths::new(tx)
+    fn add_withs() -> add::withs::AddWiths {
+        add::withs::AddWiths::new()
     }
 
-    fn add_versionpins<I>(
-        tx: Self::TransactionType,
-        package: I,
-        version: I,
-    ) -> add::versionpins::AddVersionPins<'b>
+    fn add_versionpins<I>(package: I, version: I) -> add::versionpins::AddVersionPins
     where
         I: Into<String>,
     {
-        add::versionpins::AddVersionPins::new(tx, package.into(), version.into())
+        add::versionpins::AddVersionPins::new(package.into(), version.into())
     }
 }
 
-impl<'a> PBUpdate<'a> for PackratDb {
-    type TransactionType = Transaction<'a>;
-
+impl PBUpdate for PackratDb {
     /// update packages
     ///
     /// # Arguments
     /// * `comment` - A comment describing the update
     /// * `user` - The name of the user making the update
-    fn update_versionpins(tx: Transaction<'a>) -> update::versionpins::UpdateVersionPins {
-        update::versionpins::UpdateVersionPins::new(tx)
+    fn update_versionpins() -> update::versionpins::UpdateVersionPins {
+        update::versionpins::UpdateVersionPins::new()
     }
 }
 

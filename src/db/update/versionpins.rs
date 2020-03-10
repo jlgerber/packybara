@@ -67,47 +67,45 @@ impl VersionPinChange {
 }
 
 /// Responsible for creating packages
-pub struct UpdateVersionPins<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct UpdateVersionPins {
     /// vector of VersionPinChanges which will be applied to the database
     pub changes: Vec<VersionPinChange>,
-    result_cnt: Cell<u64>,
+    result_cnt: u64,
 }
 
-#[async_trait]
-impl<'a, 'b: 'a> TransactionHandler<'a, 'b> for UpdateVersionPins<'a> {
-    type Error = tokio_postgres::error::Error;
-    /// retrieve an Option wrapped mutable reference to the
-    /// transaction
-    fn tx(&'a mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-    /// Extract the transaction from Self.
-    fn take_tx(&'a mut self) -> Transaction<'a> {
-        self.tx.take().unwrap()
-    }
+// #[async_trait]
+// impl<'a, 'b: 'a> TransactionHandler for UpdateVersionPins {
+//     type Error = tokio_postgres::error::Error;
+//     /// retrieve an Option wrapped mutable reference to the
+//     /// transaction
+//     fn tx(&'a mut self) -> Option<&mut Transaction<'a>> {
+//         self.tx.as_mut()
+//     }
+//     /// Extract the transaction from Self.
+//     fn take_tx(&'a mut self) -> Transaction<'a> {
+//         self.tx.take().unwrap()
+//     }
 
-    /// Return the result count to 0
-    fn reset_result_cnt(&self) {
-        self.result_cnt.set(0);
-    }
-    /// Retrieve th result count
-    fn get_result_cnt(&self) -> u64 {
-        self.result_cnt.get()
-    }
-}
+//     /// Return the result count to 0
+//     fn reset_result_cnt(&self) {
+//         self.result_cnt.set(0);
+//     }
+//     /// Retrieve th result count
+//     fn get_result_cnt(&self) -> u64 {
+//         self.result_cnt.get()
+//     }
+// }
 
-impl<'a> UpdateVersionPins<'a> {
+impl UpdateVersionPins {
     /// new up an UpdateVersionPins instance
     ///
     /// # Arguments
     ///
     /// * `tx` - A Transaction instance
-    pub fn new(tx: Transaction<'a>) -> Self {
+    pub fn new() -> Self {
         Self {
-            tx: Some(tx),
             changes: Vec::new(),
-            result_cnt: Cell::new(0),
+            result_cnt: 0,
         }
     }
 
@@ -163,57 +161,60 @@ impl<'a> UpdateVersionPins<'a> {
 
     /// Inject updates into the internal transaction. The database update is deferred
     /// until one calls self.commit(...)
-    pub async fn update(&'a mut self) -> Result<Transaction<'a>, UpdateVersionPinsError> {
+    pub async fn update(
+        &mut self,
+        tx: Transaction<'_>,
+    ) -> Result<&mut Self, UpdateVersionPinsError> {
         //) -> Result<mut Self, UpdateVersionPinsError> {
-        let mut update_cnt = 0;
+        let mut update_cnt: i32 = 0;
         let changes = {
             let mut empty = Vec::new();
             std::mem::swap(&mut empty, &mut self.changes);
             empty
         };
-        let tx = self.take_tx();
-        {
-            //let tx = self.tx().await.unwrap();
-            for x in &changes {
-                if x.has_changes() {
-                    let mut maybe_comma = String::from("");
-                    update_cnt += 1;
-                    let mut updates_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
-                    let mut prepared_line = "UPDATE versionpin ".to_string();
-                    let mut pos_idx: i32 = 2;
-                    updates_ref.push(&x.versionpin_id);
-                    if let Some(ref dist_id) = x.distribution_id {
-                        updates_ref.push(dist_id);
-                        prepared_line.push_str(
-                            format!("{}SET distribution = ${}", maybe_comma, pos_idx).as_str(),
-                        );
-                        pos_idx += 1;
-                        maybe_comma.push_str(",");
-                    }
-                    if let Some(ref pkgcoord_id) = x.pkgcoord_id {
-                        updates_ref.push(pkgcoord_id);
-                        prepared_line
-                            .push_str(format!("{}SET coord = ${}", maybe_comma, pos_idx).as_str());
-                    }
-                    prepared_line.push_str(" WHERE id = $1");
-                    log::info!("SQL\n{}", prepared_line.as_str());
-                    log::info!("Prepared\n{:?}", &updates_ref);
 
-                    // todo guard against possible emp
-                    {
-                        // self.tx()
-                        //     .await
-                        //     .unwrap()
-                        tx.execute(prepared_line.as_str(), &updates_ref[..])
-                            .await
-                            .context(TokioPostgresError {
-                                msg: "failed to execute statement in transaction",
-                            })?;
-                    }
+        for x in &changes {
+            if x.has_changes() {
+                // set up a variable that is either "" or a comma. used to
+                // build up a query
+                let mut maybe_comma = String::from("");
+                // increment the count
+                update_cnt += 1;
+
+                // define a vector to hold the prepared statement values
+                let mut updates_ref: Vec<&(dyn ToSql + Sync)> = Vec::new();
+                let mut prepared_line = "UPDATE versionpin ".to_string();
+
+                // the first index of the prepared statement. The first one is already spoken for
+                let mut pos_idx: i32 = 2;
+                updates_ref.push(&x.versionpin_id);
+                if let Some(ref dist_id) = x.distribution_id {
+                    updates_ref.push(dist_id);
+                    prepared_line.push_str(
+                        format!("{}SET distribution = ${}", maybe_comma, pos_idx).as_str(),
+                    );
+                    pos_idx += 1;
+                    maybe_comma.push_str(",");
                 }
+                if let Some(ref pkgcoord_id) = x.pkgcoord_id {
+                    updates_ref.push(pkgcoord_id);
+                    prepared_line
+                        .push_str(format!("{}SET coord = ${}", maybe_comma, pos_idx).as_str());
+                }
+                prepared_line.push_str(" WHERE id = $1");
+
+                log::info!("SQL\n{}", prepared_line.as_str());
+                log::info!("Prepared\n{:?}", &updates_ref);
+
+                // execute the prepared statement in the database
+                tx.execute(prepared_line.as_str(), &updates_ref[..])
+                    .await
+                    .context(TokioPostgresError {
+                        msg: "failed to execute statement in transaction",
+                    })?;
             }
         }
-        //self.result_cnt = update_cnt;
-        Ok(tx)
+        self.result_cnt = update_cnt as u64;
+        Ok(self)
     }
 }

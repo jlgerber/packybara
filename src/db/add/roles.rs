@@ -26,32 +26,25 @@ pub enum AddRolesError {
 }
 
 /// Responsible for creating roles
-pub struct AddRoles<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct AddRoles {
     names: Vec<String>,
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for AddRoles<'a> {
-    type Error = tokio_postgres::error::Error;
-    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-
-    fn take_tx(&mut self) -> Transaction<'a> {
-        self.tx.take().unwrap()
-    }
-
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
-    }
+impl TransactionHandler for AddRoles {
+    type Error = AddRolesError;
 
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
+
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
 }
 
-impl<'a> AddRoles<'a> {
+impl AddRoles {
     /// New up an AddRoles instance, given a mutable reference to a
     /// tokio_postgres::Client.
     ///
@@ -60,9 +53,8 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * instance of Self
-    pub fn new(tx: Transaction<'a>) -> Self {
+    pub fn new() -> Self {
         Self {
-            tx: Some(tx),
             names: Vec::new(),
             result_cnt: 0,
         }
@@ -115,7 +107,7 @@ impl<'a> AddRoles<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddRolesError)
-    pub async fn create(mut self) -> Result<Self, AddRolesError> {
+    pub async fn create(mut self, tx: &mut Transaction<'_>) -> Result<Self, AddRolesError> {
         let mut expand_roles = Vec::new();
         let roles = self
             .names
@@ -152,10 +144,7 @@ impl<'a> AddRoles<'a> {
 
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &roles_ref);
-        let results = self
-            .tx()
-            .await
-            .unwrap()
+        let results = tx
             .execute(insert_str.as_str(), &roles_ref[..])
             .await
             .context(TokioPostgresError {

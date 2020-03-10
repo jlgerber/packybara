@@ -23,34 +23,24 @@ pub enum AddWithsError {
 }
 
 /// The AddWiths struct is responsible for creating withs.
-pub struct AddWiths<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct AddWiths {
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler for AddWiths<'a> {
-    type Error = tokio_postgres::error::Error;
-    /// retrieve an Option wrapped mutable reference to the
-    /// transaction
-    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-    /// Extract the transaction from Self.
-    fn take_tx(&mut self) -> Transaction {
-        self.tx.take().unwrap()
-    }
+impl TransactionHandler for AddWiths {
+    type Error = AddWithsError;
 
-    /// Return the result count to 0
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
-    }
-    /// Retrieve th result count
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
+
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
 }
 
-impl<'a> AddWiths<'a> {
+impl AddWiths {
     /// New up an AddWiths instance
     ///
     /// # Arguments
@@ -59,34 +49,31 @@ impl<'a> AddWiths<'a> {
     ///
     /// # Returns
     /// * An instance of Self
-    pub fn new(tx: Transaction<'a>) -> Self {
-        Self {
-            tx: Some(tx),
-            result_cnt: 0,
-        }
+    pub fn new() -> Self {
+        Self { result_cnt: 0 }
     }
 
-    /// update previously registered with in the database. This call is
+    /// create withs. This call is
     /// fallible, and may return either the number of new packages created, or a
     /// relevant error.
     ///
     /// # Arguments
-    /// None
+    /// * `vpin_id`
+    /// * `withs`
+    /// * `tx`
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(AddWithsError)
     pub async fn create(
         mut self,
+        tx: &mut Transaction<'_>,
         vpin_id: IdType,
         withs: Vec<String>,
     ) -> Result<Self, AddWithsError> {
         if withs.len() == 0 {
             return Err(AddWithsError::NoUpdatesError);
         }
-        self.tx()
-            .await
-            .unwrap()
-            .execute("DELETE FROM withpackage WHERE versionpin = $1", &[&vpin_id])
+        tx.execute("DELETE FROM withpackage WHERE versionpin = $1", &[&vpin_id])
             .await
             .context(TokioPostgresError {
                 msg: "failed to delete withs before adding new ones",
@@ -100,10 +87,7 @@ impl<'a> AddWiths<'a> {
             let prepared_args: &[&(dyn ToSql + std::marker::Sync)] = &[&vpin_id, &x.as_str(), &cnt];
             log::info!("SQL\n{}", prepared_line.as_str());
             log::info!("Prepared\n{:?}", &prepared_args);
-            self.tx()
-                .await
-                .unwrap()
-                .execute(prepared_line.as_str(), &prepared_args[..])
+            tx.execute(prepared_line.as_str(), &prepared_args[..])
                 .await
                 .context(TokioPostgresError {
                     msg: "problem executing prepared statement",

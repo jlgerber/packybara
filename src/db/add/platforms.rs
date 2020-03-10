@@ -30,32 +30,25 @@ pub enum AddPlatformsError {
 }
 
 /// Responsible for creating platforms
-pub struct AddPlatforms<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct AddPlatforms {
     names: Vec<String>,
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for AddPlatforms<'a> {
-    type Error = tokio_postgres::error::Error;
-    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-
-    fn take_tx(&mut self) -> Transaction<'a> {
-        self.tx.take().unwrap()
-    }
-
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
-    }
+impl TransactionHandler for AddPlatforms {
+    type Error = AddPlatformsError;
 
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
+
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
 }
 
-impl<'a> AddPlatforms<'a> {
+impl AddPlatforms {
     /// New up an AddPlatforms instance. This function takes a mutable
     /// reference to the tokio_postgres::Client, which is responsible for holding
     /// a connection to the database, as well as providing a crud interface.
@@ -65,9 +58,8 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * an instance of AddPlatforms
-    pub fn new(tx: Transaction<'a>) -> Self {
+    pub fn new() -> Self {
         Self {
-            tx: Some(tx),
             names: Vec::new(),
             result_cnt: 0,
         }
@@ -132,7 +124,7 @@ impl<'a> AddPlatforms<'a> {
     ///
     /// # Returns
     /// * Ok(u64) | Err(AddPlatformsError)
-    pub async fn create(mut self) -> Result<Self, AddPlatformsError> {
+    pub async fn create(mut self, tx: &mut Transaction<'_>) -> Result<Self, AddPlatformsError> {
         // convert the self.names of platforms to lowercase after
         // making sure the list is unique, and prefixing with 'any.'
         let platforms = self
@@ -167,10 +159,7 @@ impl<'a> AddPlatforms<'a> {
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &platforms_ref);
         // execute the query, capture the results and provide a failure context.
-        let results = self
-            .tx()
-            .await
-            .unwrap()
+        let results = tx
             .execute(insert_str.as_str(), &platforms_ref[..])
             .await
             .context(TokioPostgresError {

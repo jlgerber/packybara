@@ -38,31 +38,25 @@ pub trait PBFind {
     fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths;
 }
 
-pub trait PBAdd<'b> {
-    type TransactionType;
+pub trait PBAdd {
+    fn add_packages() -> add::packages::AddPackages;
 
-    fn add_packages(tx: Self::TransactionType) -> add::packages::AddPackages<'b>;
+    fn add_levels() -> add::levels::AddLevels;
 
-    fn add_levels(tx: Self::TransactionType) -> add::levels::AddLevels<'b>;
+    fn add_roles() -> add::roles::AddRoles;
 
-    fn add_roles(tx: Self::TransactionType) -> add::roles::AddRoles<'b>;
+    fn add_platforms() -> add::platforms::AddPlatforms;
 
-    fn add_platforms(tx: Self::TransactionType) -> add::platforms::AddPlatforms<'b>;
+    fn add_withs() -> add::withs::AddWiths;
 
-    fn add_withs(tx: Self::TransactionType) -> add::withs::AddWiths<'b>;
-
-    fn add_versionpins<I>(
-        tx: Self::TransactionType,
-        package: I,
-        version: I,
-    ) -> add::versionpins::AddVersionPins<'b>
+    fn add_versionpins<I>(package: I, version: I) -> add::versionpins::AddVersionPins
     where
         I: Into<String>;
 }
 
-pub trait PBUpdate<'a> {
-    type TransactionType;
-    fn update_versionpins(tx: Self::TransactionType) -> update::versionpins::UpdateVersionPins<'a>;
+pub trait PBUpdate {
+    // type TransactionType;
+    fn update_versionpins() -> update::versionpins::UpdateVersionPins;
 }
 
 #[async_trait]

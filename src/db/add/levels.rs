@@ -4,6 +4,7 @@ use log;
 use snafu::{ResultExt, Snafu};
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Transaction;
+
 /// An enum which defines the kinds of InvalidLevelErrors we may encounter. .
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidLevelKind {
@@ -32,43 +33,33 @@ pub enum AddLevelsError {
     },
 }
 /// The AddLevels struct is responsible for creating levels.
-pub struct AddLevels<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct AddLevels {
     names: Vec<String>,
     result_cnt: u64,
 }
 
-impl<'a, 'b: 'a> TransactionHandler<'a, 'b> for AddLevels<'a> {
-    type Error = tokio_postgres::error::Error;
-    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-
-    fn take_tx(&mut self) -> Transaction<'a> {
-        self.tx.take().unwrap()
-    }
-
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
-    }
+impl TransactionHandler for AddLevels {
+    type Error = AddLevelsError;
 
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
-}
 
-impl<'a> AddLevels<'a> {
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+}
+impl AddLevels {
     /// New up an AddLevels instance
     ///
     /// # Arguments
-    /// * `client` - a mutable reference to a postgress::Client, which holds
-    /// the database connection, among other things.
+    /// * None
     ///
     /// # Returns
     /// * An instance of Self
-    pub fn new(tx: Transaction<'a>) -> Self {
+    pub fn new() -> Self {
         Self {
-            tx: Some(tx),
             names: Vec::new(),
             result_cnt: 0,
         }
@@ -107,7 +98,7 @@ impl<'a> AddLevels<'a> {
     ///
     /// # Returns
     /// * Ok(&mut Self) | Err(AddLevelsError)
-    pub async fn create(mut self) -> Result<Self, AddLevelsError> {
+    pub async fn create(mut self, tx: &mut Transaction<'_>) -> Result<Self, AddLevelsError> {
         let mut expand_levels = Vec::new();
         let levels = self
             .names
@@ -148,9 +139,7 @@ impl<'a> AddLevels<'a> {
         log::info!("Prepared\n{:?}", &levels_ref);
         // here we limit the lifetime of tx, so that we can return &mut self
 
-        let results = self
-            .tx()
-            .unwrap()
+        let results = tx
             .execute(insert_str.as_str(), &levels_ref[..])
             .await
             .context(TokioPostgresError {

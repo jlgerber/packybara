@@ -19,42 +19,33 @@ pub enum AddPackagesError {
 }
 
 /// Responsible for creating packages
-pub struct AddPackages<'a> {
-    tx: Option<Transaction<'a>>,
+pub struct AddPackages {
     names: Vec<String>,
     result_cnt: u64,
 }
 
-impl<'a> TransactionHandler<'a> for AddPackages<'a> {
-    type Error = tokio_postgres::error::Error;
-    fn tx(&mut self) -> Option<&mut Transaction<'a>> {
-        self.tx.as_mut()
-    }
-
-    fn take_tx(&mut self) -> Transaction<'a> {
-        self.tx.take().unwrap()
-    }
-
-    fn reset_result_cnt(&mut self) {
-        self.result_cnt = 0;
-    }
+impl TransactionHandler for AddPackages {
+    type Error = AddPackagesError;
 
     fn get_result_cnt(&self) -> u64 {
         self.result_cnt
     }
+
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
 }
 
-impl<'a> AddPackages<'a> {
+impl AddPackages {
     /// new up an AddPackages instance
     ///
     /// # Arguments
-    ///
-    /// * `client` - A reference to a tokio_postgres::Client instance, which
+    ///  * None
     /// stores the connection to the database, and provides crud methods
     /// for us.
-    pub fn new(tx: Transaction<'a>) -> Self {
+    pub fn new() -> Self {
         Self {
-            tx: Some(tx),
             names: Vec::new(),
             result_cnt: 0,
         }
@@ -97,7 +88,7 @@ impl<'a> AddPackages<'a> {
     ///
     /// # Returns Result
     /// * Ok(u64) | Err(AddPackagesError)
-    pub async fn create(mut self) -> Result<Self, AddPackagesError> {
+    pub async fn create(mut self, tx: &mut Transaction<'_>) -> Result<Self, AddPackagesError> {
         let packages = self.names.iter().unique().cloned().collect::<Vec<String>>();
         if packages.len() == 0 {
             return Err(AddPackagesError::NoPackageNamesError);
@@ -117,10 +108,7 @@ impl<'a> AddPackages<'a> {
 
         log::info!("SQL\n{}", insert_str.as_str());
         log::info!("Prepared\n{:?}", &packages_ref);
-        let results = self
-            .tx()
-            .await
-            .unwrap()
+        let results = tx
             .execute(insert_str.as_str(), &packages_ref[..])
             .await
             .context(TokioPostgresError {
