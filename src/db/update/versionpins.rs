@@ -7,7 +7,6 @@ use crate::types::IdType;
 use async_trait::async_trait;
 use log;
 use snafu::{ResultExt, Snafu};
-use std::cell::Cell;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Transaction;
 /// Error type returned from FindVersionPinsError
@@ -73,28 +72,19 @@ pub struct UpdateVersionPins {
     result_cnt: u64,
 }
 
-// #[async_trait]
-// impl<'a, 'b: 'a> TransactionHandler for UpdateVersionPins {
-//     type Error = tokio_postgres::error::Error;
-//     /// retrieve an Option wrapped mutable reference to the
-//     /// transaction
-//     fn tx(&'a mut self) -> Option<&mut Transaction<'a>> {
-//         self.tx.as_mut()
-//     }
-//     /// Extract the transaction from Self.
-//     fn take_tx(&'a mut self) -> Transaction<'a> {
-//         self.tx.take().unwrap()
-//     }
+#[async_trait]
+impl TransactionHandler for UpdateVersionPins {
+    type Error = UpdateVersionPinsError;
 
-//     /// Return the result count to 0
-//     fn reset_result_cnt(&self) {
-//         self.result_cnt.set(0);
-//     }
-//     /// Retrieve th result count
-//     fn get_result_cnt(&self) -> u64 {
-//         self.result_cnt.get()
-//     }
-// }
+    fn get_result_cnt(&self) -> u64 {
+        self.result_cnt
+    }
+
+    /// zero out the result count
+    fn reset_result_cnt(&mut self) {
+        self.result_cnt = 0;
+    }
+}
 
 impl UpdateVersionPins {
     /// new up an UpdateVersionPins instance
@@ -165,7 +155,6 @@ impl UpdateVersionPins {
         &mut self,
         tx: Transaction<'_>,
     ) -> Result<&mut Self, UpdateVersionPinsError> {
-        //) -> Result<mut Self, UpdateVersionPinsError> {
         let mut update_cnt: i32 = 0;
         let changes = {
             let mut empty = Vec::new();
