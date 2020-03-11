@@ -5,13 +5,11 @@ pub use crate::Distribution;
 use log;
 use tokio_postgres::types::ToSql;
 
-//use tokio_postgres::types::ToSql;
 use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
-use tokio_postgres::Client;
-//use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
+use tokio_postgres::Client;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
 pub enum OrderSiteBy {
@@ -59,10 +57,12 @@ impl FindAllSitesRow {
     /// New up a  FindAllSitesRow instance
     ///
     /// # Arguments
+    ///
     /// * `name`  - the site name
     ///
     /// # Returns
-    /// - FindAllSitesRow instance
+    ///
+    /// * FindAllSitesRow instance
     pub fn new(name: String) -> Self {
         FindAllSitesRow { name }
     }
@@ -74,7 +74,8 @@ impl FindAllSitesRow {
     /// * `site`
     ///
     /// # Returns
-    /// Result
+    ///
+    /// * Result
     /// - Ok - FindAllSitesRow instance
     /// - Err - FindAllSitesError
     pub fn try_from_parts(site: &str) -> FindAllSitesResult<FindAllSitesRow> {
@@ -85,18 +86,22 @@ impl FindAllSitesRow {
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
     ///
     /// # Arguments
+    ///
     /// * `role`
     /// * `category`
     ///
     /// # Returns
-    /// - FindAllSitesRow instance
+    ///
+    /// * FindAllSitesRow instance
     pub fn from_parts(site: &str) -> FindAllSitesRow {
         Self::try_from_parts(site).unwrap()
     }
 }
 /// Responsible for finding a distribution
 pub struct FindAllSites<'a> {
+    /// The client is used to interface with the database
     client: &'a mut Client,
+    /// An optional name of the site to query for
     name: Option<&'a str>,
 }
 
@@ -107,11 +112,24 @@ impl fmt::Debug for FindAllSites<'_> {
 }
 
 impl<'a> FindAllSites<'a> {
-    /// new up a FIndAllSites instance.
+    /// new up a FindAllSites instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
     pub fn new(client: &'a mut Client) -> Self {
         FindAllSites { client, name: None }
     }
 
+    /// Set teh name fo the site and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the site
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn name(&mut self, name: &'a str) -> &mut Self {
         self.name = Some(name);
         self
@@ -129,6 +147,16 @@ impl<'a> FindAllSites<'a> {
         self
     }
 
+    /// Invoke the database query and return a result
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result returning a Vector of FindAllSitesRow if ok, or
+    /// a FindAllSitesError if in error
     pub async fn query(&mut self) -> FindAllSitesResult<Vec<FindAllSitesRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut op = "=";

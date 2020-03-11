@@ -9,6 +9,7 @@ use log;
 use snafu::{ResultExt, Snafu};
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Transaction;
+
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]
 pub enum UpdateVersionPinsError {
@@ -21,6 +22,7 @@ pub enum UpdateVersionPinsError {
     #[snafu(display("No update data supplied"))]
     NoUpdatesError,
 }
+
 /// Models a change to a versionpin as optional new distribution and/or
 /// pkgcoord_ids
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -35,11 +37,13 @@ impl VersionPinChange {
     /// an option wrapped distribution id and pkgcoord id.
     ///
     /// # Arguments
+    ///
     /// * `versionpin_id` The database id of the versionpin
     /// * `distribution_id` - The database id of the distribution wrapped in Some, or None
     /// * `pkgcoord_id` - The database id of the pkgcoord wrapped in Some, or None.
     ///
     /// # Returns
+    ///
     /// * VersionPinChange instance
     pub fn new(
         versionpin_id: IdType,
@@ -151,6 +155,15 @@ impl UpdateVersionPins {
 
     /// Inject updates into the internal transaction. The database update is deferred
     /// until one calls self.commit(...)
+    ///
+    /// # Arguments
+    ///
+    /// * `tx` - A mutable reference to a Postgres Transaction instance, which we use to
+    ///          execute database updates within a transaction block.
+    ///
+    /// # Returns
+    ///
+    /// * Result wrapping a mutable reference to Self if ok; Otherwise, a UpdateVersionPinsError
     pub async fn update(
         &mut self,
         tx: &mut Transaction<'_>,

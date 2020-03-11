@@ -146,6 +146,14 @@ impl fmt::Debug for FindAllRoles<'_> {
 
 impl<'a> FindAllRoles<'a> {
     /// new up a FIndAllRoles instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * A FindAllRoles instance
     pub fn new(client: &'a mut Client) -> Self {
         FindAllRoles {
             client,
@@ -157,11 +165,29 @@ impl<'a> FindAllRoles<'a> {
         }
     }
 
+    /// Set the role name and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `role_n` - The name of the role
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn role(&mut self, role_n: &'a str) -> &mut Self {
         self.role = Some(role_n);
         self
     }
 
+    /// Set the category name and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `category_n` - The name of the category for the level
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn category(&mut self, category_n: &'a str) -> &mut Self {
         self.category = Some(category_n);
         self
@@ -180,26 +206,73 @@ impl<'a> FindAllRoles<'a> {
     }
 
     /// Set an optional role
+    ///
+    /// # Arguments
+    ///
+    /// * `role` - An option wrapping the name of the role
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn role_opt(&mut self, role: Option<&'a str>) -> &mut Self {
         self.role = role;
         self
     }
 
+    /// Set the column or columns to order the returned values by and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `attributes` - A vector of OrderRoleBy instances
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn order_by(&mut self, attributes: Vec<OrderRoleBy>) -> &mut Self {
         self.order_by = Some(attributes);
         self
     }
 
+    /// Set the direction of the query sort. Used in conjunction with `order_by`. Returns
+    /// a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - A variant of teh `OrderDirection` enum
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self
     }
 
+    /// Set the maximum number of results that the query will return and return a
+    /// mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - The maximum number of returned roles
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }
 
+    /// Invoke the database query and return a result
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result returning a Vector of FindAllRolesRow if ok, or
+    /// a FindAllRolesError if in error
     pub async fn query(&mut self) -> FindAllRolesResult<Vec<FindAllRolesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 

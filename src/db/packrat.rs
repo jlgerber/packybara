@@ -34,6 +34,21 @@ impl PackratDb {
     pub fn new(client: Client) -> Self {
         PackratDb { client }
     }
+
+    /// Commit a transaction to the database, setting the author and comment along with
+    /// a transaction id
+    ///
+    /// # Arguments
+    ///
+    /// * `tx` - The postgres Transaction instance which provides a handle to a set of database transactions
+    ///          which may be undone atomically
+    /// * `author` - The author of the changes grouped by the transaction
+    /// * `comment` - The author's explanation of the changes grouped by the transaction
+    /// * `commits` - The number of commits
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result, wrapping the number of upates if successful; otherwise, a PackratDbError
     pub async fn commit<'a>(
         tx: Transaction<'a>,
         author: &str,

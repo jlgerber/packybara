@@ -279,10 +279,20 @@ impl<'a> FindAllChanges<'a> {
         }
     }
 
+    /// Set the transaction id and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `txid` - The transaction id for the revision which we update the internal one to.
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn transaction_id(&mut self, txid: LongIdType) -> &mut Self {
         self.transaction_id = Some(txid);
         self
     }
+
     /// Set an optional id.
     ///
     /// # Arguments
@@ -295,6 +305,16 @@ impl<'a> FindAllChanges<'a> {
         self
     }
 
+    /// Invoke the database query and return a result
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result returning a Vector of FindAllChangesRow if ok, or
+    /// a FindAllCHangeError if in error
     pub async fn query(&mut self) -> FindAllChangesResult<Vec<FindAllChangesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let query_str = "SELECT

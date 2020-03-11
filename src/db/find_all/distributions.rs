@@ -84,7 +84,9 @@ impl FindAllDistributionsRow {
     ///
     /// # Arguments
     ///
-    /// * `name`
+    /// * `id` - The id of the distribution
+    /// * `name` - The package name
+    /// * `version` - The version string
     ///
     /// # Returns
     ///
@@ -99,6 +101,19 @@ impl FindAllDistributionsRow {
         // TODO: police category
         Ok(Self::new(id, package.to_string(), version.to_string()))
     }
+    /// Try to build a distribution from an id and distribution string. This is a fallible
+    /// operation, returning a Result
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The id of the distribution
+    /// * `distribution` - The distribution name as a string
+    ///
+    /// # Returns
+    ///
+    /// * Result
+    /// - Ok - FindAllDistributionsRow instance
+    /// - Err - FindAllDistributionsError
     pub fn try_from(
         id: IdType,
         distribution: &str,
@@ -112,6 +127,7 @@ impl FindAllDistributionsRow {
         }
         Ok(Self::new(id, pieces[0].to_string(), pieces[1].to_string()))
     }
+
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
     ///
     /// # Arguments
@@ -145,6 +161,14 @@ impl fmt::Debug for FindAllDistributions<'_> {
 
 impl<'a> FindAllDistributions<'a> {
     /// new up a FIndAllDistributions instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * A FindAllDistributions instance
     pub fn new(client: &'a mut Client) -> Self {
         FindAllDistributions {
             client,
@@ -156,21 +180,55 @@ impl<'a> FindAllDistributions<'a> {
         }
     }
 
+    /// Set the package name and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `package` - The name of the package
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn package(&mut self, package: &'a str) -> &mut Self {
         self.package = Some(package);
         self
     }
 
-    pub fn version(&mut self, version: &'a str) -> &mut Self {
-        self.version = Some(version);
-        self
-    }
-
+    /// Set the package name and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `package` - An Option wrapped package name
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn package_opt(&mut self, package: Option<&'a str>) -> &mut Self {
         self.package = package;
         self
     }
-
+    /// Set the package version and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `version` - The distribution version string
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
+    pub fn version(&mut self, version: &'a str) -> &mut Self {
+        self.version = Some(version);
+        self
+    }
+    /// Set the package version and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `version` - An Option wrapped distribution version string
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn version_opt(&mut self, version: Option<&'a str>) -> &mut Self {
         self.version = version;
         self
@@ -179,10 +237,29 @@ impl<'a> FindAllDistributions<'a> {
     //     self.order_by = attributes;
     //     self
     // }
+    /// Set the sort order direction and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - A variant of the OrderDirection enum
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self
     }
+
+    /// Set the optional sort order direction and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - An Option wrapping a variant of the OrderDirection enum
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
         self.order_direction = direction;
         self
@@ -193,6 +270,16 @@ impl<'a> FindAllDistributions<'a> {
     //     self
     // }
 
+    /// Invoke the database query and return a result
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result returning a Vector of FindAllDistributionsRow if ok, or
+    /// a FindAllDistributionsError if in error
     pub async fn query(&mut self) -> FindAllDistributionsResult<Vec<FindAllDistributionsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 

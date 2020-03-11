@@ -53,10 +53,15 @@ impl FindAllWithsRow {
     /// New up a  FindAllWithsRow instance
     ///
     /// # Arguments
+    ///
     /// * `id`: The id of the relevant row in the with table
     /// * `vpin_id`: The versionpin id that the with belongs to
     /// * `with`: The actual with package
     /// * `order`: The order of the with package in the list of with packages
+    ///
+    /// # Returns
+    ///
+    /// * A FindAllWithsRow instance
     pub fn new(id: IdType, vpin_id: IdType, with: String, order: IdType) -> Self {
         FindAllWithsRow {
             id,
@@ -69,10 +74,15 @@ impl FindAllWithsRow {
     /// returning a result.
     ///
     /// # Arguments
+    ///
     /// * `id`: The id of the relevant row in the with table
     /// * `vpin_id`: The versionpin id that the with belongs to
     /// * `with`: The actual with package
     /// * `order`: The order of the with package in the list of with packages
+    ///
+    /// # Returns
+    ///
+    /// * A Result wrapping a FindAllWithsRow if Ok; otherwise, a FindAllWithsError is returned
     pub fn try_from_parts(
         id: IdType,
         vpin_id: IdType,
@@ -101,10 +111,31 @@ pub struct FindAllWiths<'a> {
 }
 
 impl<'a> FindAllWiths<'a> {
+    /// new up a FindAllWiths instance
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to the Client instance
+    /// * `vpin_id` - The database versionpin id for the versionpin associated
+    ///               with the with packages
+    ///
+    /// # Returns
+    ///
+    /// * `FindAllWiths` instance
     pub fn new(client: &'a mut Client, vpin_id: IdType) -> Self {
         FindAllWiths { client, vpin_id }
     }
 
+    /// Invoke the database query and return a result
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result returning a Vector of FindAllWithsRow if ok, or
+    /// a FindAllWithsError if in error
     pub async fn query(&mut self) -> Result<Vec<FindAllWithsRow>, FindAllWithsError> {
         let query_str = "SELECT id, versionpin, package, pinorder
         FROM withpackage WHERE versionpin = $1 ORDER BY pinorder"

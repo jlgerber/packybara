@@ -110,7 +110,15 @@ impl fmt::Debug for FindAllPlatforms<'_> {
 }
 
 impl<'a> FindAllPlatforms<'a> {
-    /// new up a FIndAllPlatforms instance.
+    /// new up a FindAllPlatforms instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * A FindAllPlatforms instance
     pub fn new(client: &'a mut Client) -> Self {
         FindAllPlatforms {
             client,
@@ -178,6 +186,16 @@ impl<'a> FindAllPlatforms<'a> {
         self
     }
 
+    /// execute the database query, returning a Future wrapping a Result wrapping a Vector
+    /// of FindAllPlatformsRow if Ok, or a FindAllPlatformsError otherwise
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * Result wrapping a Vector of  FindAllPlatformsRow if Ok, or a FindAllPlatformsError otherwise
     pub async fn query(&mut self) -> FindAllPlatformsResult<Vec<FindAllPlatformsRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 

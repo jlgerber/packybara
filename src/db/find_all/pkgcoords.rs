@@ -125,7 +125,18 @@ impl FindAllPkgCoordsRow {
     /// Try to attempt to construct a distribution from &strs. This is a fallible operation
     /// returning a result.
     ///
-    /// Args
+    /// # Arguments
+    ///
+    /// * `id` - The database id
+    /// * `package` - The name of the package
+    /// * `level` - The level
+    /// * `role` - THe role or subrole
+    /// * `platform` - The name of the platform (eg cent7_64)
+    /// * `site` - The location (eg portland)
+    ///
+    /// # Returns
+    ///
+    /// * A Result wrapping a FindAllPkgCoordsRow if ok, or a FindAllPkgCoordsError otherwise
     pub fn try_from_parts(
         id: IdType,
         package: &str,
@@ -137,6 +148,21 @@ impl FindAllPkgCoordsRow {
         Ok(Self::new(id, package, level, role, platform, site))
     }
 
+    /// Try to attempt to construct a distribution from &strs. This is a fallible operation
+    /// returning a result.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The database id
+    /// * `package` - The name of the package
+    /// * `level` - The level
+    /// * `role` - THe role or subrole
+    /// * `platform` - The name of the platform (eg cent7_64)
+    /// * `site` - The location (eg portland)
+    ///
+    /// # Returns
+    ///
+    /// * A a FindAllPkgCoordsRow. May panic
     pub fn from_parts(
         id: IdType,
         package: &str,
@@ -428,7 +454,17 @@ impl<'a> FindAllPkgCoords<'a> {
         }
         (query_str, prepared)
     }
-    /// execute the query
+
+    /// execute the database query, returning a Future wrapping a Result wrapping a Vector
+    /// of FindAllPkgCoordsRow if Ok, or a FindAllPkgCoordsError otherwise
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * Result wrapping a Vector of  FindAllPkgCoordsRow if Ok, or a FindAllPkgCoordsError otherwise
     pub async fn query(&mut self) -> FindAllPkgCoordsResult<Vec<FindAllPkgCoordsRow>> {
         let (query_str, prep) = self.get_query_str();
         let mut result = Vec::new();

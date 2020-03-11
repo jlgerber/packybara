@@ -5,7 +5,7 @@ pub use crate::Coords;
 pub use crate::Distribution;
 use chrono::{DateTime, Local /*TimeZone*/};
 use log;
-use serde::Serialize;
+//use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
@@ -58,7 +58,7 @@ pub struct FindAllRevisionsRow {
     pub transaction_id: LongIdType,
     pub author: String,
     pub comment: String,
-    pub datetime: DateTime<Local>,
+    pub datetime: DateTime<Local>, // TODO: DateTime<Local> doesnt impl Serde::Serialize. switchß
 }
 
 impl fmt::Display for FindAllRevisionsRow {
@@ -169,7 +169,7 @@ impl fmt::Debug for FindAllRevisions<'_> {
 }
 
 impl<'a> FindAllRevisions<'a> {
-    /// new up a FIndAllRevisions instance.
+    /// new up a FIndAllRevisions instance, give a mutable reference to a Client instance.
     pub fn new(client: &'a mut Client) -> Self {
         FindAllRevisions {
             client,
@@ -182,18 +182,43 @@ impl<'a> FindAllRevisions<'a> {
         }
     }
 
+    /// Set the id and return a mutable reference to Self per the builder pattern.
+    ///  
+    /// # Arguments
+    ///
+    /// * `id` - The database id for the revision which we use to update the current id with
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn id(&mut self, id: IdType) -> &mut Self {
         self.id = Some(id);
         self
     }
+
+    /// Set the transaction id and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `txid` - The transaction id for the revision which we update the internal one to.
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn transaction_id(&mut self, txid: LongIdType) -> &mut Self {
         self.transaction_id = Some(txid);
         self
     }
+
     /// Set the author.
     ///
     /// # Arguments
-    /// * `author`
+    ///
+    /// * `author` - The name of the author of the revision
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn author(&mut self, author: &'a str) -> &mut Self {
         self.author = Some(author);
         self
@@ -246,25 +271,74 @@ impl<'a> FindAllRevisions<'a> {
         self.order_by = Some(attributes);
         self
     }
+    /// Set the sort order direction and return a mutable reference to Self.
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - a variant of OrderDirection indicating the sort order
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self
     }
 
+    /// Set the sort order direction to an Option wrapped OrderDirection instance and return
+    /// a mutable reference to self.
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - An Option wrapped OrderDirection instance which we use to update the internal
+    ///                 direction to.
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
         self.order_direction = direction;
         self
     }
 
+    /// Set the limit of the number of responses and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - The maximum number of results to return from the query
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
         self
     }
 
+    /// Set the limit of the number of responses and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - An Option wrapping the maximum number of results to return from the query
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
     pub fn limit_opt(&mut self, limit: Option<IdType>) -> &mut Self {
         self.limit = limit;
         self
     }
+
+    /// Invoke the database query and return a result
+    ///
+    /// # Arguments
+    ///
+    /// * None
+    ///
+    /// # Returns
+    ///
+    /// * A future wrapping a Result returning a Vector of FindAllRevisionsRow if ok, or
+    /// a FindAllRevisionsError if in error
     pub async fn query(&mut self) -> FindAllRevisionsResult<Vec<FindAllRevisionsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
