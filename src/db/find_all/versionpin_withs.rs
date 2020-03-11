@@ -4,7 +4,8 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use snafu::Snafu;
+use serde::Serialize;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
@@ -20,10 +21,16 @@ pub enum FindAllWithsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllWiths.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllWithsRow {
     /// the id of result in the With table
     pub id: IdType,
@@ -98,7 +105,7 @@ impl<'a> FindAllWiths<'a> {
         FindAllWiths { client, vpin_id }
     }
 
-    pub async fn query(&mut self) -> Result<Vec<FindAllWithsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindAllWithsRow>, FindAllWithsError> {
         let query_str = "SELECT id, versionpin, package, pinorder
         FROM withpackage WHERE versionpin = $1 ORDER BY pinorder"
             .to_string();
@@ -107,7 +114,14 @@ impl<'a> FindAllWiths<'a> {
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] = &[&self.vpin_id];
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in self.client.query(qstr, prepared_args).await? {
+        for row in self
+            .client
+            .query(qstr, prepared_args)
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from withpackage",
+            })?
+        {
             let id: IdType = row.get(0);
             let vpin_id: IdType = row.get(1);
             let with: String = row.get(2);

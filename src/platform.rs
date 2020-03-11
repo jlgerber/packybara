@@ -7,7 +7,7 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::str::FromStr;
@@ -65,6 +65,7 @@ use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
     Ord,
     Clone,
     Serialize,
+    Deserialize,
     Hash,
 )]
 pub enum Platform {

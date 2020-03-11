@@ -68,6 +68,12 @@ pub enum FindAllChangesError {
     ChangeActionError { input: String, source: ParseError },
     #[snafu(display("transaction_id not set"))]
     TransactionIdMissingError,
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllChanges.query

@@ -4,7 +4,8 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use snafu::Snafu;
+use serde::Serialize;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
@@ -65,10 +66,16 @@ pub enum FindAllRolesError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllRoles.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllRolesRow {
     pub role: String,
     pub category: String,
@@ -193,7 +200,7 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
-    pub async fn query(&mut self) -> Result<Vec<FindAllRolesRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> FindAllRolesResult<Vec<FindAllRolesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name,
@@ -224,7 +231,14 @@ impl<'a> FindAllRoles<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..]).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), &params[..])
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from role_view",
+            })?
+        {
             let role_name = row.get(0);
             let category = row.get(1);
             result.push(FindAllRolesRow::try_from_parts(role_name, category)?);

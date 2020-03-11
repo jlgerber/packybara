@@ -6,6 +6,7 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 use tokio_postgres::types::ToSql;
@@ -34,10 +35,16 @@ pub enum FindPinsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindPins.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindPinsRow {
     /// the id of result in the VersionPin table
     pub role: String,

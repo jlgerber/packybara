@@ -10,7 +10,7 @@ simple_xml_serialize =  "0.2.3"
 simple_xml_serialize_macro = { version = "0.2.1", features = ["process_options"] }
 tokio-postgres = "0.5.3"
 tokio = "0.2.13"
-levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.9.0"}
+levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.10.0"}
 strum = "0.18.0"
 strum_macros = "0.18.0"
 snafu = "0.6.2"

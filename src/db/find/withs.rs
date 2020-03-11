@@ -4,6 +4,7 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
+use serde::Serialize;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
 use tokio_postgres::types::ToSql;
@@ -20,10 +21,16 @@ pub enum FindWithsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the FindDistributions.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindWithsRow {
     /// the id of result in the VersionPin table
     pub versionpin_id: IdType,
@@ -128,8 +135,18 @@ impl<'a> FindWiths<'a> {
         self
     }
 
+    pub fn level_opt(&mut self, level_n: Option<&'a str>) -> &mut Self {
+        self.level = level_n;
+        self
+    }
+
     pub fn role(&mut self, role_n: &'a str) -> &mut Self {
         self.role = Some(role_n);
+        self
+    }
+
+    pub fn role_opt(&mut self, role_n: Option<&'a str>) -> &mut Self {
+        self.role = role_n;
         self
     }
 
@@ -138,16 +155,26 @@ impl<'a> FindWiths<'a> {
         self
     }
 
+    pub fn platform_opt(&mut self, platform_n: Option<&'a str>) -> &mut Self {
+        self.platform = platform_n;
+        self
+    }
     pub fn site(&mut self, site_n: &'a str) -> &mut Self {
         self.site = Some(site_n);
         self
     }
-
+    pub fn site_opt(&mut self, site_n: Option<&'a str>) -> &mut Self {
+        self.site = site_n;
+        self
+    }
     pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
         self.order_by = Some(attributes);
         self
     }
-
+    pub fn order_by_opt(&mut self, attributes: Option<Vec<SearchAttribute>>) -> &mut Self {
+        self.order_by = attributes;
+        self
+    }
     pub fn order_direction(&mut self, direction: OrderDirection) -> &mut Self {
         self.order_direction = Some(direction);
         self

@@ -7,7 +7,7 @@
  * permission of Jonathan Gerber
  *******************************************************/
 use crate::coords_error::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Index;
@@ -44,7 +44,7 @@ impl IntoString for String {
 /// The primary way of constructing a role is through the use of the
 /// ```from_str``` constructor function. This takes an input and splits
 /// it on `_`, resulting in a hierarchy of Strings internally.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, Hash)]
 pub enum Role {
     Any,
     Named { name: String },

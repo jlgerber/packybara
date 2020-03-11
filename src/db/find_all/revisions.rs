@@ -5,7 +5,8 @@ pub use crate::Coords;
 pub use crate::Distribution;
 use chrono::{DateTime, Local /*TimeZone*/};
 use log;
-use snafu::Snafu;
+use serde::Serialize;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 use tokio_postgres::types::ToSql;
@@ -42,6 +43,12 @@ pub enum FindAllRevisionsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllRevisions.query
@@ -258,7 +265,7 @@ impl<'a> FindAllRevisions<'a> {
         self.limit = limit;
         self
     }
-    pub async fn query(&mut self) -> Result<Vec<FindAllRevisionsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> FindAllRevisionsResult<Vec<FindAllRevisionsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 id, transaction_id, author, datetime, comment
@@ -306,7 +313,14 @@ impl<'a> FindAllRevisions<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Prepared: {:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..]).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), &params[..])
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from revision_view",
+            })?
+        {
             let id: IdType = row.get(0);
             let txid: LongIdType = row.get(1);
             let author: &str = row.get(2);

@@ -9,12 +9,12 @@
 use crate::coords_error::*;
 use failure::Fail;
 use levelspec::LevelSpec;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, Hash)]
 pub enum Level {
     Facility,
     LevelSpec(LevelSpec),

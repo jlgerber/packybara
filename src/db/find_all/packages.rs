@@ -4,11 +4,12 @@ pub use crate::Coords;
 pub use crate::Distribution;
 use log;
 //use tokio_postgres::types::ToSql;
-use snafu::Snafu;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 use tokio_postgres::Client;
 //use std::str::FromStr;
 //use crate::types::IdType;
+use serde::Serialize;
 use strum_macros::{AsRefStr, Display, EnumString, IntoStaticStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, AsRefStr, Display, IntoStaticStr)]
@@ -33,10 +34,16 @@ pub enum FindAllPackagesError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllPackages.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllPackagesRow {
     pub name: String,
 }
@@ -137,7 +144,7 @@ impl<'a> FindAllPackages<'a> {
     ///
     /// # Returns
     /// * an Ok wrapped Vector of FindAllPackagesRow or an Error wrapped Box dyn Error
-    pub async fn query(&mut self) -> Result<Vec<FindAllPackagesRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> FindAllPackagesResult<Vec<FindAllPackagesRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 name
@@ -161,7 +168,14 @@ impl<'a> FindAllPackages<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Arguments\n{:?}", &params);
-        for row in self.client.query(query_str.as_str(), &[]).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), &[])
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from package table",
+            })?
+        {
             //&params[..])? {
             let name = row.get(0);
             result.push(FindAllPackagesRow::try_from_parts(name)?);

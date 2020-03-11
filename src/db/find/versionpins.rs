@@ -158,6 +158,26 @@ impl<'a> FindVersionPins<'a> {
         self
     }
 
+    pub fn level_opt(&mut self, level_n: Option<&'a str>) -> &mut Self {
+        self.level = level_n;
+        self
+    }
+
+    pub fn role_opt(&mut self, role_n: Option<&'a str>) -> &mut Self {
+        self.role = role_n;
+        self
+    }
+
+    pub fn platform_opt(&mut self, platform_n: Option<&'a str>) -> &mut Self {
+        self.platform = platform_n;
+        self
+    }
+
+    pub fn site_opt(&mut self, site_n: Option<&'a str>) -> &mut Self {
+        self.site = site_n;
+        self
+    }
+
     pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
         self.order_by = Some(attributes);
         self

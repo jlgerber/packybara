@@ -4,7 +4,8 @@ use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-use snafu::Snafu;
+use serde::Serialize;
+use snafu::{ResultExt, Snafu};
 use std::fmt;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
@@ -41,10 +42,16 @@ pub enum FindAllLevelsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// Error from postgres
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the  FindAllLevels.query
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct FindAllLevelsRow {
     pub level: String,
     pub show: String,
@@ -247,7 +254,7 @@ impl<'a> FindAllLevels<'a> {
     ///
     /// # Returns
     /// * Ok wrapped Vector of FindAllLevelsRow or an Error wrapped Box dyn Error
-    pub async fn query(&mut self) -> Result<Vec<FindAllLevelsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> FindAllLevelsResult<Vec<FindAllLevelsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name,
@@ -281,7 +288,14 @@ impl<'a> FindAllLevels<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..]).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), &params[..])
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from level_view",
+            })?
+        {
             let level_name = row.get(0);
             let show = row.get(1);
             result.push(FindAllLevelsRow::try_from_parts(level_name, show)?);
