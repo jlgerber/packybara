@@ -295,7 +295,7 @@ impl<'a> FindAllChanges<'a> {
         self
     }
 
-    pub async fn query(&mut self) -> Result<Vec<FindAllChangesRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> FindAllChangesResult<Vec<FindAllChangesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let query_str = "SELECT
                 id,
@@ -321,7 +321,14 @@ impl<'a> FindAllChanges<'a> {
 
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Prepared: {:?}", &params);
-        for row in self.client.query(query_str.as_str(), &params[..]).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), &params[..])
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from find_vpin_audit  function",
+            })?
+        {
             let id: IdType = row.get(0);
             let txid: LongIdType = row.get(1);
             let action: &str = row.get(2);

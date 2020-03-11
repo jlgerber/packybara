@@ -66,9 +66,11 @@ impl FindAllDistributionsRow {
     /// New up a  FindAllDistributionsRow instance
     ///
     /// # Arguments
+    ///
     /// * `name`  - the name name
     ///
     /// # Returns
+    ///
     /// - FindAllDistributionsRow instance
     pub fn new(id: IdType, package: String, version: String) -> Self {
         FindAllDistributionsRow {
@@ -85,7 +87,8 @@ impl FindAllDistributionsRow {
     /// * `name`
     ///
     /// # Returns
-    /// Result
+    ///
+    /// * Result
     /// - Ok - FindAllDistributionsRow instance
     /// - Err - FindAllDistributionsError
     pub fn try_from_parts(

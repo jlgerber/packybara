@@ -180,7 +180,12 @@ impl<'a> FindWiths<'a> {
         self
     }
 
-    pub async fn query(&mut self) -> Result<Vec<FindWithsRow>, Box<dyn std::error::Error>> {
+    pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
+        self.order_direction = direction;
+        self
+    }
+
+    pub async fn query(&mut self) -> Result<Vec<FindWithsRow>, FindWithsError> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
@@ -223,7 +228,14 @@ impl<'a> FindWiths<'a> {
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", prep_vals);
 
-        for row in self.client.query(query_str.as_str(), prep_vals).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), prep_vals)
+            .await
+            .context(TokioPostgresError {
+                msg: "problem querying withs row",
+            })?
+        {
             let id: IdType = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);

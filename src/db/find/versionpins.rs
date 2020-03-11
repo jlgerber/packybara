@@ -21,6 +21,12 @@ pub enum FindVersionPinsError {
     /// CoordsTryFromPartsError - error when calling try_from_parts
     #[snafu(display("Error calling Coords::try_from_parts with {}: {}", coords, source))]
     CoordsTryFromPartsError { coords: String, source: CoordsError },
+    /// When constructing a query, postgres has thrown an error
+    #[snafu(display("Postgres Error: {} {}", msg, source))]
+    TokioPostgresError {
+        msg: &'static str,
+        source: tokio_postgres::error::Error,
+    },
 }
 
 /// A row returned from the FindVersionPins.query
@@ -187,7 +193,7 @@ impl<'a> FindVersionPins<'a> {
         self.order_direction = Some(direction);
         self
     }
-    pub async fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, Box<dyn std::error::Error>> {
+    pub async fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, FindVersionPinsError> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
@@ -226,7 +232,14 @@ impl<'a> FindVersionPins<'a> {
         }
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        for row in self.client.query(query_str.as_str(), prepared_args).await? {
+        for row in self
+            .client
+            .query(query_str.as_str(), prepared_args)
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from find_distribution_and_withs",
+            })?
+        {
             let id: IdType = row.get(0);
             let distribution: &str = row.get(1);
             let level_name: &str = row.get(2);
