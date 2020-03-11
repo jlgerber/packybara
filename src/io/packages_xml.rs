@@ -562,6 +562,7 @@ mod tests {
 }
 
 pub mod xml {
+    use crate::db::find_all::versionpins::FindAllVersionPinsError;
     use crate::db::traits::PBFind;
     use crate::io;
     use crate::packrat::PackratDb;
@@ -579,7 +580,7 @@ pub mod xml {
         #[snafu(display("Error querying the database  {}: {}", msg, source))]
         PackybaraDbQueryError {
             msg: &'static str,
-            source: std::boxed::Box<dyn std::error::Error>,
+            source: FindAllVersionPinsError,
         },
         ///PackybaraDbWriteError
         #[snafu(display("Error writing to the database  {}: {}", msg, source))]
