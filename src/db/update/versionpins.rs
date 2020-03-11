@@ -153,7 +153,7 @@ impl UpdateVersionPins {
     /// until one calls self.commit(...)
     pub async fn update(
         &mut self,
-        tx: Transaction<'_>,
+        tx: &mut Transaction<'_>,
     ) -> Result<&mut Self, UpdateVersionPinsError> {
         let mut update_cnt: i32 = 0;
         let changes = {
