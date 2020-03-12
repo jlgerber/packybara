@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.54.0"
+version = "0.54.1"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 simple_xml_serialize =  "0.2.3"
 simple_xml_serialize_macro = { version = "0.2.1", features = ["process_options"] }
-tokio-postgres = "0.5.3"
+#tokio-postgres = "0.5.3"
 tokio = "0.2.13"
 levelspec = {git = "https://github.com/jlgerber/rust-lspec.git", tag="v0.10.0"}
 strum = "0.18.0"
@@ -26,6 +26,7 @@ serde = { version = "1.0", features = ["derive"] }
 async-trait = "0.1.24"
  
 
-[dependencies.postgres]
-version = "0.17.2"
+[dependencies.tokio-postgres]
+#version = "0.17.2"
+version="0.5.3"
 features = ["with-chrono-0_4"]
