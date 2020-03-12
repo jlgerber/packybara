@@ -27,5 +27,5 @@ async-trait = "0.1.24"
  
 
 [dependencies.postgres]
-version = "0.17.1"
+version = "0.17.2"
 features = ["with-chrono-0_4"]
