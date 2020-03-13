@@ -106,7 +106,6 @@ impl FindWithsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindWiths<'a> {
-    client: &'a mut Client,
     package: &'a str,
     level: Option<&'a str>,
     role: Option<&'a str>,
@@ -117,9 +116,8 @@ pub struct FindWiths<'a> {
 }
 
 impl<'a> FindWiths<'a> {
-    pub fn new(client: &'a mut Client, package: &'a str) -> Self {
+    pub fn new(package: &'a str) -> Self {
         FindWiths {
-            client,
             package,
             level: None,
             role: None,
@@ -185,7 +183,10 @@ impl<'a> FindWiths<'a> {
         self
     }
 
-    pub async fn query(&mut self) -> Result<Vec<FindWithsRow>, FindWithsError> {
+    pub async fn query(
+        &mut self,
+        client: &'a mut Client,
+    ) -> Result<Vec<FindWithsRow>, FindWithsError> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
@@ -228,13 +229,13 @@ impl<'a> FindWiths<'a> {
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", prep_vals);
 
-        for row in self
-            .client
-            .query(query_str.as_str(), prep_vals)
-            .await
-            .context(TokioPostgresError {
-                msg: "problem querying withs row",
-            })?
+        for row in
+            client
+                .query(query_str.as_str(), prep_vals)
+                .await
+                .context(TokioPostgresError {
+                    msg: "problem querying withs row",
+                })?
         {
             let id: IdType = row.get(0);
             let distribution: &str = row.get(1);

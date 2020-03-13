@@ -259,22 +259,20 @@ impl FindAllChangesRow {
     }
 }
 /// Responsible for finding a distribution
-pub struct FindAllChanges<'a> {
-    client: &'a mut Client,
+pub struct FindAllChanges {
     transaction_id: Option<LongIdType>,
 }
 
-impl fmt::Debug for FindAllChanges<'_> {
+impl fmt::Debug for FindAllChanges {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "FindAllChanges( txid:{:?})", self.transaction_id)
     }
 }
 
-impl<'a> FindAllChanges<'a> {
+impl FindAllChanges {
     /// new up a FIndAllChanges instance.
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllChanges {
-            client,
             transaction_id: None,
         }
     }
@@ -315,7 +313,7 @@ impl<'a> FindAllChanges<'a> {
     ///
     /// * A future wrapping a Result returning a Vector of FindAllChangesRow if ok, or
     /// a FindAllCHangeError if in error
-    pub async fn query(&mut self) -> FindAllChangesResult<Vec<FindAllChangesRow>> {
+    pub async fn query(&mut self, client: &Client) -> FindAllChangesResult<Vec<FindAllChangesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let query_str = "SELECT
                 id,
@@ -341,8 +339,7 @@ impl<'a> FindAllChanges<'a> {
 
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Prepared: {:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {

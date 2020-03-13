@@ -106,7 +106,6 @@ impl FindAllLevelsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindAllLevels<'a> {
-    client: &'a mut Client,
     level: Option<&'a str>,
     show: Option<&'a str>,
     depth: Option<u8>,
@@ -125,13 +124,11 @@ impl<'a> FindAllLevels<'a> {
     /// new up a FindAllLevels instance.
     ///
     /// # Arguments
-    /// *`client` a mutable reference to Client
     ///
     /// # Returns
     /// * a FindAllLevels instance
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllLevels {
-            client,
             show: None,
             level: None,
             depth: None,
@@ -254,7 +251,7 @@ impl<'a> FindAllLevels<'a> {
     ///
     /// # Returns
     /// * Ok wrapped Vector of FindAllLevelsRow or an Error wrapped Box dyn Error
-    pub async fn query(&mut self) -> FindAllLevelsResult<Vec<FindAllLevelsRow>> {
+    pub async fn query(&mut self, client: &Client) -> FindAllLevelsResult<Vec<FindAllLevelsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name,
@@ -288,8 +285,7 @@ impl<'a> FindAllLevels<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {

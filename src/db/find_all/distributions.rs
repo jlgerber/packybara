@@ -141,7 +141,6 @@ impl FindAllDistributionsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindAllDistributions<'a> {
-    client: &'a mut Client,
     package: Option<&'a str>,
     version: Option<&'a str>,
     //order_by: Vec<OrderDistributionBy>,
@@ -169,9 +168,8 @@ impl<'a> FindAllDistributions<'a> {
     /// # Returns
     ///
     /// * A FindAllDistributions instance
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllDistributions {
-            client,
             package: None,
             version: None,
             //order_by: Vec::new(),
@@ -280,7 +278,10 @@ impl<'a> FindAllDistributions<'a> {
     ///
     /// * A future wrapping a Result returning a Vector of FindAllDistributionsRow if ok, or
     /// a FindAllDistributionsError if in error
-    pub async fn query(&mut self) -> FindAllDistributionsResult<Vec<FindAllDistributionsRow>> {
+    pub async fn query(
+        &mut self,
+        client: &Client,
+    ) -> FindAllDistributionsResult<Vec<FindAllDistributionsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 distribution_id,
@@ -320,8 +321,7 @@ impl<'a> FindAllDistributions<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {

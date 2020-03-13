@@ -105,38 +105,39 @@ impl FindAllWithsRow {
     }
 }
 /// Responsible for finding a distribution
-pub struct FindAllWiths<'a> {
-    client: &'a mut Client,
+pub struct FindAllWiths {
     vpin_id: IdType,
 }
 
-impl<'a> FindAllWiths<'a> {
+impl FindAllWiths {
     /// new up a FindAllWiths instance
     ///
     /// # Arguments
     ///
-    /// * `client` - A mutable reference to the Client instance
     /// * `vpin_id` - The database versionpin id for the versionpin associated
     ///               with the with packages
     ///
     /// # Returns
     ///
     /// * `FindAllWiths` instance
-    pub fn new(client: &'a mut Client, vpin_id: IdType) -> Self {
-        FindAllWiths { client, vpin_id }
+    pub fn new(vpin_id: IdType) -> Self {
+        FindAllWiths { vpin_id }
     }
 
     /// Invoke the database query and return a result
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * client
     ///
     /// # Returns
     ///
     /// * A future wrapping a Result returning a Vector of FindAllWithsRow if ok, or
     /// a FindAllWithsError if in error
-    pub async fn query(&mut self) -> Result<Vec<FindAllWithsRow>, FindAllWithsError> {
+    pub async fn query(
+        &mut self,
+        client: &Client,
+    ) -> Result<Vec<FindAllWithsRow>, FindAllWithsError> {
         let query_str = "SELECT id, versionpin, package, pinorder
         FROM withpackage WHERE versionpin = $1 ORDER BY pinorder"
             .to_string();
@@ -145,8 +146,7 @@ impl<'a> FindAllWiths<'a> {
         let prepared_args: &[&(dyn ToSql + std::marker::Sync)] = &[&self.vpin_id];
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in self
-            .client
+        for row in client
             .query(qstr, prepared_args)
             .await
             .context(TokioPostgresError {

@@ -93,20 +93,19 @@ impl FindAllPackagesRow {
     }
 }
 /// Responsible for finding a distribution
-pub struct FindAllPackages<'a> {
-    client: &'a mut Client,
+pub struct FindAllPackages {
     //order_by: Vec<OrderPackageBy>,
-    // order_direction: Option<OrderDirection>,
-    // limit: Option<IdType>,
+// order_direction: Option<OrderDirection>,
+// limit: Option<IdType>,
 }
 
-impl fmt::Debug for FindAllPackages<'_> {
+impl fmt::Debug for FindAllPackages {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "FindAllPackages()")
     }
 }
 
-impl<'a> FindAllPackages<'a> {
+impl FindAllPackages {
     /// new up a FIndAllPackages instance.
     ///
     /// # Arguments
@@ -114,9 +113,8 @@ impl<'a> FindAllPackages<'a> {
     ///
     /// # Returns
     /// * An instance of FndAllPackages
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllPackages {
-            client,
             //order_by: Vec::new(),
             // order_direction: None,
             // limit: None,
@@ -144,7 +142,10 @@ impl<'a> FindAllPackages<'a> {
     ///
     /// # Returns
     /// * an Ok wrapped Vector of FindAllPackagesRow or an Error wrapped Box dyn Error
-    pub async fn query(&mut self) -> FindAllPackagesResult<Vec<FindAllPackagesRow>> {
+    pub async fn query(
+        &mut self,
+        client: &Client,
+    ) -> FindAllPackagesResult<Vec<FindAllPackagesRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 name
@@ -168,8 +169,7 @@ impl<'a> FindAllPackages<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Arguments\n{:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &[])
             .await
             .context(TokioPostgresError {

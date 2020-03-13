@@ -208,7 +208,6 @@ impl FindAllVersionPinsRow {
 /// Responsible for finding all VersionPins which meet certain criteria, which the
 /// struct tracks
 pub struct FindAllVersionPins<'a> {
-    client: &'a mut Client,
     package: Option<&'a str>,
     version: Option<&'a str>,
     level: Option<&'a str>,
@@ -227,14 +226,12 @@ impl<'a> FindAllVersionPins<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - a mutable reference to a Client instance
     ///
     /// # Returns
     ///
     /// * FindAllVersionPins instance
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllVersionPins {
-            client,
             package: None,
             version: None,
             level: None,
@@ -626,14 +623,17 @@ impl<'a> FindAllVersionPins<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * client
     ///
     /// # Returns
     ///
     /// * Result
     ///   * Ok  - Vector of FindAllVersionPinsRow
     ///   * Err - Box of dyn Error
-    pub async fn query(&mut self) -> Result<Vec<FindAllVersionPinsRow>, FindAllVersionPinsError> {
+    pub async fn query(
+        &mut self,
+        client: &Client,
+    ) -> Result<Vec<FindAllVersionPinsRow>, FindAllVersionPinsError> {
         let level = self.level.unwrap_or("facility").to_string();
         let role = self.role.unwrap_or("any").to_string();
         let platform = self.platform.unwrap_or("any").to_string();
@@ -699,13 +699,12 @@ impl<'a> FindAllVersionPins<'a> {
 
         log::info!("SQL\n{}", qstr);
         log::info!("Arguents\n{:?}", prepared_args);
-        for row in
-            self.client
-                .query(qstr, &prepared_args[..])
-                .await
-                .context(TokioPostgresError {
-                    msg: "problem with select from find_all_versionpins function",
-                })?
+        for row in client
+            .query(qstr, &prepared_args[..])
+            .await
+            .context(TokioPostgresError {
+                msg: "problem with select from find_all_versionpins function",
+            })?
         {
             let level_name: &str = row.get(4);
             // this should be done at the query level, but i have to switch this

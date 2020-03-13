@@ -100,7 +100,6 @@ impl FindAllSitesRow {
 /// Responsible for finding a distribution
 pub struct FindAllSites<'a> {
     /// The client is used to interface with the database
-    client: &'a mut Client,
     /// An optional name of the site to query for
     name: Option<&'a str>,
 }
@@ -117,8 +116,8 @@ impl<'a> FindAllSites<'a> {
     /// # Arguments
     ///
     /// * `client` - A mutable reference to a Client instance
-    pub fn new(client: &'a mut Client) -> Self {
-        FindAllSites { client, name: None }
+    pub fn new() -> Self {
+        FindAllSites { name: None }
     }
 
     /// Set teh name fo the site and return a mutable reference to Self
@@ -157,7 +156,7 @@ impl<'a> FindAllSites<'a> {
     ///
     /// * A future wrapping a Result returning a Vector of FindAllSitesRow if ok, or
     /// a FindAllSitesError if in error
-    pub async fn query(&mut self) -> FindAllSitesResult<Vec<FindAllSitesRow>> {
+    pub async fn query(&mut self, client: &Client) -> FindAllSitesResult<Vec<FindAllSitesRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut op = "=";
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
@@ -179,8 +178,7 @@ impl<'a> FindAllSites<'a> {
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments:\n{:?}", &params);
         let mut result = Vec::new();
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {

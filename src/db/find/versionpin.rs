@@ -30,8 +30,6 @@ pub enum FindVersionPinError {
 /// Contains the parameters used to search for the distribution and its
 /// with distributions.
 pub struct FindVersionPin<'a> {
-    /// The database client which is responsible for performing the query
-    client: &'a mut Client,
     /// The name of the package we are interested in searching for
     package: &'a str,
     /// The optional level we wish to start our search at
@@ -55,9 +53,8 @@ impl<'a> FindVersionPin<'a> {
     /// # Returns
     ///
     /// * FindVersionPin instance
-    pub fn new(client: &'a mut Client, package: &'a str) -> Self {
+    pub fn new(package: &'a str) -> Self {
         FindVersionPin {
-            client,
             package,
             level: None,
             role: None,
@@ -193,7 +190,7 @@ impl<'a> FindVersionPin<'a> {
     /// * Result
     ///   * `Ok`  - `FindVersionPinsRow` instance
     ///   * `Err` - `FindVersionPinError` instance
-    pub async fn query(&mut self) -> Result<FindVersionPinsRow, FindVersionPinError> {
+    pub async fn query(&self, client: &Client) -> Result<FindVersionPinsRow, FindVersionPinError> {
         let query_str = "SELECT 
             versionpin_id, 
             distribution, 
@@ -217,8 +214,7 @@ impl<'a> FindVersionPin<'a> {
             &[&self.package, &role, &platform, &level, &site];
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        let row = self
-            .client
+        let row = client
             .query(query_str, prepared_args)
             .await
             .context(TokioPostgresError {

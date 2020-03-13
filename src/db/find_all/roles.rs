@@ -130,7 +130,6 @@ impl FindAllRolesRow {
 }
 /// Responsible for finding a distribution
 pub struct FindAllRoles<'a> {
-    client: &'a mut Client,
     role: Option<&'a str>,
     category: Option<&'a str>,
     order_by: Option<Vec<OrderRoleBy>>,
@@ -154,9 +153,8 @@ impl<'a> FindAllRoles<'a> {
     /// # Returns
     ///
     /// * A FindAllRoles instance
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllRoles {
-            client,
             category: None,
             role: None,
             order_by: None,
@@ -273,7 +271,7 @@ impl<'a> FindAllRoles<'a> {
     ///
     /// * A future wrapping a Result returning a Vector of FindAllRolesRow if ok, or
     /// a FindAllRolesError if in error
-    pub async fn query(&mut self) -> FindAllRolesResult<Vec<FindAllRolesRow>> {
+    pub async fn query(&mut self, client: &Client) -> FindAllRolesResult<Vec<FindAllRolesRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name,
@@ -304,8 +302,7 @@ impl<'a> FindAllRoles<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         log::info!("Arguments\n{:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {

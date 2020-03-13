@@ -152,7 +152,6 @@ impl FindAllRevisionsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindAllRevisions<'a> {
-    client: &'a mut Client,
     id: Option<IdType>,
     transaction_id: Option<LongIdType>,
     author: Option<&'a str>,
@@ -170,9 +169,8 @@ impl fmt::Debug for FindAllRevisions<'_> {
 
 impl<'a> FindAllRevisions<'a> {
     /// new up a FIndAllRevisions instance, give a mutable reference to a Client instance.
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllRevisions {
-            client,
             id: None,
             transaction_id: None,
             author: None,
@@ -339,7 +337,10 @@ impl<'a> FindAllRevisions<'a> {
     ///
     /// * A future wrapping a Result returning a Vector of FindAllRevisionsRow if ok, or
     /// a FindAllRevisionsError if in error
-    pub async fn query(&mut self) -> FindAllRevisionsResult<Vec<FindAllRevisionsRow>> {
+    pub async fn query(
+        &mut self,
+        client: &Client,
+    ) -> FindAllRevisionsResult<Vec<FindAllRevisionsRow>> {
         let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT 
                 id, transaction_id, author, datetime, comment
@@ -387,8 +388,7 @@ impl<'a> FindAllRevisions<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Prepared: {:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {

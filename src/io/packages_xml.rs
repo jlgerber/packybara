@@ -11,7 +11,6 @@
 use simple_xml_serialize::XMLElement;
 use simple_xml_serialize_macro::xml_element;
 use std::mem;
-
 /// Determine if an XML element is closed (eg <foo />)
 pub trait IsClosed {
     /// Indicates whether or not a Xml Node has contents or not
@@ -573,6 +572,8 @@ pub mod xml {
     use snafu::{ResultExt, Snafu};
     use std::fs::File;
     use std::io::Write;
+    use tokio_postgres::Client;
+
     /// Error type returned from  FindAllPackagesError
     #[derive(Debug, Snafu)]
     pub enum PackagesXmlError {
@@ -598,6 +599,7 @@ pub mod xml {
 
     pub async fn write_xml<'a>(
         db: &'a mut PackratDb,
+        client: &Client,
         show: String,
         output: String,
     ) -> Result<(), PackagesXmlError> {
@@ -609,7 +611,7 @@ pub mod xml {
             .level(show.as_str())
             .search_mode(LtreeSearchMode::Descendant)
             .order_by(vec![SearchAttribute::Role, SearchAttribute::Package])
-            .query()
+            .query(&client)
             .await
             .context(PackybaraDbQueryError {
                 msg: "Unable to get version pins from db",

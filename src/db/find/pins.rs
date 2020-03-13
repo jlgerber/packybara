@@ -140,7 +140,6 @@ impl FindPinsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindPins<'a> {
-    client: &'a mut Client,
     role: Option<&'a str>,
     level: Option<&'a str>,
     platform: Option<&'a str>,
@@ -172,9 +171,8 @@ fn prep_query(extension: &str, op: &str, params_cnt: IdType, is_like: bool) -> S
 
 impl<'a> FindPins<'a> {
     /// new up a FIndAllPins instance.
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindPins {
-            client,
             level: None,
             role: None,
             platform: None,
@@ -260,15 +258,14 @@ impl<'a> FindPins<'a> {
         self
     }
 
-    async fn simple_query(&mut self) -> Result<Vec<FindPinsRow>, FindPinsError> {
+    async fn simple_query(&mut self, client: &Client) -> Result<Vec<FindPinsRow>, FindPinsError> {
         let query_str = "SELECT DISTINCT 
                 name
             FROM 
                 role_view ORDER BY name";
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str);
-        for row in self
-            .client
+        for row in client
             .query(query_str, &[])
             .await
             .context(TokioPostgresError {
@@ -285,7 +282,7 @@ impl<'a> FindPins<'a> {
 
     /// Initiate the query based on the current state of self and return a
     /// vector of results
-    pub async fn query(&mut self) -> Result<Vec<FindPinsRow>, FindPinsError> {
+    pub async fn query(&mut self, client: &Client) -> Result<Vec<FindPinsRow>, FindPinsError> {
         fn process_map(root: &str, value: &str) -> String {
             if value != root {
                 if !value.contains("%") {
@@ -298,7 +295,7 @@ impl<'a> FindPins<'a> {
             }
         }
         if self.simple {
-            return self.simple_query().await;
+            return self.simple_query(client).await;
         }
         let level = self
             .level
@@ -423,8 +420,7 @@ impl<'a> FindPins<'a> {
         let qstr = query_str.as_str();
         log::info!("SQL {}", qstr);
         log::info!("Prepared Arguments: {:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(qstr, &params[..])
             .await
             .context(TokioPostgresError {

@@ -96,7 +96,6 @@ impl FindAllPlatformsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindAllPlatforms<'a> {
-    client: &'a mut Client,
     name: Option<&'a str>,
     order_by: Option<Vec<OrderPlatformBy>>,
     order_direction: Option<OrderDirection>,
@@ -119,9 +118,8 @@ impl<'a> FindAllPlatforms<'a> {
     /// # Returns
     ///
     /// * A FindAllPlatforms instance
-    pub fn new(client: &'a mut Client) -> Self {
+    pub fn new() -> Self {
         FindAllPlatforms {
-            client,
             name: None,
             order_by: None,
             order_direction: None,
@@ -196,7 +194,10 @@ impl<'a> FindAllPlatforms<'a> {
     /// # Returns
     ///
     /// * Result wrapping a Vector of  FindAllPlatformsRow if Ok, or a FindAllPlatformsError otherwise
-    pub async fn query(&mut self) -> FindAllPlatformsResult<Vec<FindAllPlatformsRow>> {
+    pub async fn query(
+        &mut self,
+        client: &Client,
+    ) -> FindAllPlatformsResult<Vec<FindAllPlatformsRow>> {
         //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
         let mut query_str = "SELECT DISTINCT 
                 name
@@ -212,8 +213,7 @@ impl<'a> FindAllPlatforms<'a> {
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
         //log::info!("Prepared: {:?}", &params);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), &[])
             .await
             .context(TokioPostgresError {

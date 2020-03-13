@@ -25,14 +25,12 @@ pub enum PackratDbError {
     NoUpdatesError,
 }
 
-pub struct PackratDb {
-    client: Client,
-}
+pub struct PackratDb {}
 
 impl PackratDb {
     /// New up a PackratDb instance given a Client
-    pub fn new(client: Client) -> Self {
-        PackratDb { client }
+    pub fn new() -> Self {
+        PackratDb {}
     }
 
     /// Commit a transaction to the database, setting the author and comment along with
@@ -71,9 +69,10 @@ impl PackratDb {
         })?;
         Ok(commits)
     }
+
     /// Generate a transaction for updates and adds
-    pub async fn transaction<'a>(&'a mut self) -> Transaction<'a> {
-        self.client.transaction().await.unwrap()
+    pub async fn transaction<'a>(&'a self, client: &'a mut Client) -> Transaction<'a> {
+        client.transaction().await.unwrap()
     }
 }
 
@@ -108,66 +107,66 @@ impl PBFind for PackratDb {
     ///                     .query().unwrap();
     /// ```
     fn find_versionpin<'b>(&'b mut self, package: &'b str) -> find::versionpin::FindVersionPin {
-        find::versionpin::FindVersionPin::new(&mut self.client, package)
+        find::versionpin::FindVersionPin::new(package)
     }
 
     fn find_versionpins<'b>(&'b mut self, package: &'b str) -> find::versionpins::FindVersionPins {
-        find::versionpins::FindVersionPins::new(&mut self.client, package)
+        find::versionpins::FindVersionPins::new(package)
     }
 
     fn find_all_versionpins<'b>(&'b mut self) -> find_all::versionpins::FindAllVersionPins {
-        find_all::versionpins::FindAllVersionPins::new(&mut self.client)
+        find_all::versionpins::FindAllVersionPins::new()
     }
 
     fn find_all_roles<'b>(&'b mut self) -> find_all::roles::FindAllRoles {
-        find_all::roles::FindAllRoles::new(&mut self.client)
+        find_all::roles::FindAllRoles::new()
     }
 
     fn find_all_revisions<'b>(&'b mut self) -> find_all::revisions::FindAllRevisions {
-        find_all::revisions::FindAllRevisions::new(&mut self.client)
+        find_all::revisions::FindAllRevisions::new()
     }
 
     fn find_all_changes<'b>(&'b mut self) -> find_all::changes::FindAllChanges {
-        find_all::changes::FindAllChanges::new(&mut self.client)
+        find_all::changes::FindAllChanges::new()
     }
 
     fn find_all_platforms<'b>(&'b mut self) -> find_all::platforms::FindAllPlatforms {
-        find_all::platforms::FindAllPlatforms::new(&mut self.client)
+        find_all::platforms::FindAllPlatforms::new()
     }
 
     fn find_all_sites<'b>(&'b mut self) -> find_all::sites::FindAllSites {
-        find_all::sites::FindAllSites::new(&mut self.client)
+        find_all::sites::FindAllSites::new()
     }
 
     fn find_all_levels<'b>(&'b mut self) -> find_all::levels::FindAllLevels {
-        find_all::levels::FindAllLevels::new(&mut self.client)
+        find_all::levels::FindAllLevels::new()
     }
 
     fn find_all_packages<'b>(&'b mut self) -> find_all::packages::FindAllPackages {
-        find_all::packages::FindAllPackages::new(&mut self.client)
+        find_all::packages::FindAllPackages::new()
     }
     /// find withs for a particular versionpin
     fn find_all_versionpin_withs<'b>(
         &'b mut self,
         versionpin_id: IdType,
     ) -> find_all::versionpin_withs::FindAllWiths {
-        find_all::versionpin_withs::FindAllWiths::new(&mut self.client, versionpin_id)
+        find_all::versionpin_withs::FindAllWiths::new(versionpin_id)
     }
 
     fn find_all_distributions<'b>(&'b mut self) -> find_all::distributions::FindAllDistributions {
-        find_all::distributions::FindAllDistributions::new(&mut self.client)
+        find_all::distributions::FindAllDistributions::new()
     }
     /// Find pins that meet a specific criteria
     fn find_pins<'b>(&'b mut self) -> find::pins::FindPins {
-        find::pins::FindPins::new(&mut self.client)
+        find::pins::FindPins::new()
     }
     /// Find pkgcoords that meet a specific criteria
     fn find_pkgcoords<'b>(&'b mut self) -> find_all::pkgcoords::FindAllPkgCoords {
-        find_all::pkgcoords::FindAllPkgCoords::new(Some(&mut self.client))
+        find_all::pkgcoords::FindAllPkgCoords::new()
     }
     /// find withs of a
     fn find_withs<'b>(&'b mut self, package: &'b str) -> find::withs::FindWiths {
-        find::withs::FindWiths::new(&mut self.client, package)
+        find::withs::FindWiths::new(package)
     }
 }
 
@@ -224,9 +223,10 @@ impl<'a> PBExport<'a> for PackratDb {
 
     async fn export_packages(
         &'a mut self,
+        client: &Client,
         show: &'a str,
         path: &'a str,
     ) -> Result<(), Self::Error> {
-        write_xml(self, show.to_string(), path.to_string()).await
+        write_xml(self, client, show.to_string(), path.to_string()).await
     }
 }

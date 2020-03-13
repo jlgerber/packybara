@@ -1,6 +1,7 @@
 use crate::db::{add, find, find_all, update};
 use crate::types::IdType;
 use async_trait::async_trait;
+pub use tokio_postgres::Client;
 pub use tokio_postgres::Transaction;
 
 pub trait PBFind {
@@ -63,6 +64,10 @@ pub trait PBUpdate {
 pub trait PBExport<'a> {
     type Error;
 
-    async fn export_packages(&'a mut self, show: &'a str, path: &'a str)
-        -> Result<(), Self::Error>;
+    async fn export_packages(
+        &'a mut self,
+        client: &Client,
+        show: &'a str,
+        path: &'a str,
+    ) -> Result<(), Self::Error>;
 }

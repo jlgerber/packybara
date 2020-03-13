@@ -120,7 +120,6 @@ impl FindVersionPinsRow {
 }
 /// Responsible for finding a distribution
 pub struct FindVersionPins<'a> {
-    client: &'a mut Client,
     package: &'a str,
     level: Option<&'a str>,
     role: Option<&'a str>,
@@ -131,9 +130,8 @@ pub struct FindVersionPins<'a> {
 }
 
 impl<'a> FindVersionPins<'a> {
-    pub fn new(client: &'a mut Client, package: &'a str) -> Self {
+    pub fn new(package: &'a str) -> Self {
         FindVersionPins {
-            client,
             package,
             level: None,
             role: None,
@@ -193,7 +191,10 @@ impl<'a> FindVersionPins<'a> {
         self.order_direction = Some(direction);
         self
     }
-    pub async fn query(&mut self) -> Result<Vec<FindVersionPinsRow>, FindVersionPinsError> {
+    pub async fn query(
+        &self,
+        client: &Client,
+    ) -> Result<Vec<FindVersionPinsRow>, FindVersionPinsError> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
@@ -232,8 +233,7 @@ impl<'a> FindVersionPins<'a> {
         }
         log::info!("SQL\n{}", query_str);
         log::info!("Arguments\n{:?}", prepared_args);
-        for row in self
-            .client
+        for row in client
             .query(query_str.as_str(), prepared_args)
             .await
             .context(TokioPostgresError {
