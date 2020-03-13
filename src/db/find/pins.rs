@@ -282,6 +282,16 @@ impl<'a> FindPins<'a> {
 
     /// Initiate the query based on the current state of self and return a
     /// vector of results
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * Result
+    /// - Ok - Vector of FindPinRow instances
+    /// - Err - FindPinsError
     pub async fn query(&mut self, client: &Client) -> Result<Vec<FindPinsRow>, FindPinsError> {
         fn process_map(root: &str, value: &str) -> String {
             if value != root {

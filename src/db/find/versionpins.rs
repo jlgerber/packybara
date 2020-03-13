@@ -191,6 +191,19 @@ impl<'a> FindVersionPins<'a> {
         self.order_direction = Some(direction);
         self
     }
+
+    /// Query the database to retrieve the VersionPins matching the parameters supplied
+    /// earlier to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * Result
+    /// - Ok - Vector of FindVersionPinsRow instances
+    /// - Err - FindVersionPinsError
     pub async fn query(
         &self,
         client: &Client,

@@ -115,7 +115,7 @@ impl<'a> FindAllSites<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - A mutable reference to a Client instance
+    /// * None
     pub fn new() -> Self {
         FindAllSites { name: None }
     }
@@ -150,7 +150,7 @@ impl<'a> FindAllSites<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A reference to a Client instance
     ///
     /// # Returns
     ///

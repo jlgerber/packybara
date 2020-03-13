@@ -331,7 +331,7 @@ impl<'a> FindAllRevisions<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

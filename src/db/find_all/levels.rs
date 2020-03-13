@@ -247,7 +247,8 @@ impl<'a> FindAllLevels<'a> {
     /// Execute the query from the built up parameters
     ///
     /// # Arguments
-    /// * None
+    ///
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     /// * Ok wrapped Vector of FindAllLevelsRow or an Error wrapped Box dyn Error

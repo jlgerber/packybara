@@ -226,6 +226,7 @@ impl<'a> FindAllVersionPins<'a> {
     ///
     /// # Arguments
     ///
+    /// * None
     ///
     /// # Returns
     ///
@@ -623,7 +624,7 @@ impl<'a> FindAllVersionPins<'a> {
     ///
     /// # Arguments
     ///
-    /// * client
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

@@ -85,6 +85,7 @@ impl FindAllPlatformsRow {
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
     ///
     /// # Arguments
+    ///
     /// * `role`
     /// * `category`
     ///
@@ -189,7 +190,7 @@ impl<'a> FindAllPlatforms<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

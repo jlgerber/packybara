@@ -307,7 +307,7 @@ impl FindAllChanges {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

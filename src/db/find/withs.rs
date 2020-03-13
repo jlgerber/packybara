@@ -52,6 +52,7 @@ impl FindWithsRow {
     /// New up a FindDistributionsRow instance
     ///
     /// # Arguments
+    ///
     /// * `versionpin_id`: The id of the relevant row in the versionpin table
     /// * `distribution`: The distribution found
     /// * `coords`: The location in package space that the distribution resides at
@@ -116,6 +117,16 @@ pub struct FindWiths<'a> {
 }
 
 impl<'a> FindWiths<'a> {
+    /// New up an instance of FindWiths, used to, as the name implies, find with packages
+    /// given a set of search parameters (or relying on defaults)
+    ///
+    /// # Arguments
+    ///
+    /// * `package` - The name of the package to which the withs belong
+    ///
+    /// # Returns
+    ///
+    /// * FindWiths instance
     pub fn new(package: &'a str) -> Self {
         FindWiths {
             package,
@@ -183,6 +194,18 @@ impl<'a> FindWiths<'a> {
         self
     }
 
+    /// Query for with packages using a combination of default and supplied parameters
+    /// tracked by Self.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A mutable reference to a Client instance
+    ///
+    /// # Returns
+    ///
+    /// * Result
+    /// - Ok - Vector of FindWithsRow
+    /// - Err - FindWithsError
     pub async fn query(
         &mut self,
         client: &'a mut Client,

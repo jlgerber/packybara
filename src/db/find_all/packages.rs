@@ -84,6 +84,7 @@ impl FindAllPackagesRow {
     /// Infallible counterpart to try_from_parts. Will panic if there is a problem
     ///
     /// # Arguments
+    ///
     /// * `name`
     ///
     /// # Returns
@@ -109,7 +110,8 @@ impl FindAllPackages {
     /// new up a FIndAllPackages instance.
     ///
     /// # Arguments
-    /// * `client` - a reference to a mutable Client instance
+    ///
+    /// * None
     ///
     /// # Returns
     /// * An instance of FndAllPackages
@@ -138,7 +140,8 @@ impl FindAllPackages {
     /// Execute the query using previously set parameters
     ///
     /// # Arguments
-    /// * None
+    ///
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     /// * an Ok wrapped Vector of FindAllPackagesRow or an Error wrapped Box dyn Error

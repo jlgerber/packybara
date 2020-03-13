@@ -163,7 +163,7 @@ impl<'a> FindAllDistributions<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - A mutable reference to a Client instance
+    /// * None
     ///
     /// # Returns
     ///
@@ -272,7 +272,7 @@ impl<'a> FindAllDistributions<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

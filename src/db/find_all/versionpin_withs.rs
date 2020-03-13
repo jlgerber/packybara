@@ -128,7 +128,7 @@ impl FindAllWiths {
     ///
     /// # Arguments
     ///
-    /// * client
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

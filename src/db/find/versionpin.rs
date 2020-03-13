@@ -47,7 +47,6 @@ impl<'a> FindVersionPin<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - A mutable reference to a Client instance
     /// * `package` - The name of the package whose distribution we are interested in
     ///
     /// # Returns
@@ -183,7 +182,7 @@ impl<'a> FindVersionPin<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///

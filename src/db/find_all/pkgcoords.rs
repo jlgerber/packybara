@@ -190,7 +190,15 @@ impl<'a> FindAllPkgCoords<'a> {
     ///
     /// # Arguments
     ///
+    /// * `package` - optional package name
+    /// * `level` - optional level name
+    /// * `role` - optional role name
+    /// * `site` - optional site name
+    /// * `search_mode - SearchMode instance
+    /// * `order_by` - Optional vector of RderPkgCoordsBy instancxs
+    ///
     /// # Returns
+    ///
     /// * An instance of FindAllPkgCoords
     pub fn new() -> Self {
         FindAllPkgCoords {
@@ -457,7 +465,7 @@ impl<'a> FindAllPkgCoords<'a> {
     ///
     /// # Arguments
     ///
-    /// * None
+    /// * `client` - A mutable reference to a Client instance
     ///
     /// # Returns
     ///
