@@ -231,6 +231,19 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
+    /// Set the Optional column or columns to order the returned values by and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `attributes` - A vector of OrderRoleBy instances wrapped in Option
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
+    pub fn order_by_opt(&mut self, attributes: Option<Vec<OrderRoleBy>>) -> &mut Self {
+        self.order_by = attributes;
+        self
+    }
     /// Set the direction of the query sort. Used in conjunction with `order_by`. Returns
     /// a mutable reference to Self
     ///
@@ -246,6 +259,21 @@ impl<'a> FindAllRoles<'a> {
         self
     }
 
+    /// Set the optional direction of the query sort. Used in conjunction with `order_by`. Returns
+    /// a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - A variant of the `OrderDirection` enum wrapped in Option
+    ///
+    /// # Returns
+    ///
+    /// * Mutable reference to Self
+    pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
+        self.order_direction = direction;
+        self
+    }
+
     /// Set the maximum number of results that the query will return and return a
     /// mutable reference to Self
     ///
@@ -258,6 +286,21 @@ impl<'a> FindAllRoles<'a> {
     /// * A mutable reference to Self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
+        self
+    }
+
+    /// Set the optional maximum number of results that the query will return and return a
+    /// mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - The maximum number of returned roles wrapped in an Option
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
+    pub fn limit_opt(&mut self, limit: Option<IdType>) -> &mut Self {
+        self.limit = limit;
         self
     }
 
