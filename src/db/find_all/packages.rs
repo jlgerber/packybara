@@ -3,9 +3,9 @@ pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAtt
 pub use crate::Coords;
 pub use crate::Distribution;
 use log;
-//use tokio_postgres::types::ToSql;
 use snafu::{ResultExt, Snafu};
 use std::fmt;
+use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
 //use std::str::FromStr;
 //use crate::types::IdType;
@@ -94,19 +94,20 @@ impl FindAllPackagesRow {
     }
 }
 /// Responsible for finding a distribution
-pub struct FindAllPackages {
+pub struct FindAllPackages<'a> {
+    name: Option<&'a str>,
     //order_by: Vec<OrderPackageBy>,
-// order_direction: Option<OrderDirection>,
-// limit: Option<IdType>,
+    // order_direction: Option<OrderDirection>,
+    // limit: Option<IdType>,
 }
 
-impl fmt::Debug for FindAllPackages {
+impl<'a> fmt::Debug for FindAllPackages<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "FindAllPackages()")
     }
 }
 
-impl FindAllPackages {
+impl<'a> FindAllPackages<'a> {
     /// new up a FIndAllPackages instance.
     ///
     /// # Arguments
@@ -117,12 +118,38 @@ impl FindAllPackages {
     /// * An instance of FndAllPackages
     pub fn new() -> Self {
         FindAllPackages {
+            name: None
             //order_by: Vec::new(),
             // order_direction: None,
             // limit: None,
         }
     }
 
+    /// Set teh name fo the platform and return a mutable reference to Self
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the platform
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to Self
+    pub fn name(&mut self, name: &'a str) -> &mut Self {
+        self.name = Some(name);
+        self
+    }
+
+    /// Set an optional name for the platform.
+    ///
+    /// This is generally accomplished by calling
+    /// ```ignore
+    /// .as_ref().map(Deref::deref)
+    /// ```
+    /// on an `Option<String>` to convert it into an `Option<&str>`
+    pub fn name_opt(&mut self, name: Option<&'a str>) -> &mut Self {
+        self.name = name;
+        self
+    }
     // pub fn order_by(&mut self, attributes: Vec<OrderPackageBy>) -> &mut Self {
     //     self.order_by = attributes;
     //     self
@@ -149,13 +176,22 @@ impl FindAllPackages {
         &mut self,
         client: &Client,
     ) -> FindAllPackagesResult<Vec<FindAllPackagesRow>> {
-        //let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
+        let mut op = "=";
+        let mut params: Vec<&(dyn ToSql + Sync)> = Vec::new();
+        let name = self.name.unwrap_or("any");
+
         let mut query_str = "SELECT 
                 name
             FROM 
                 package"
             .to_string();
-
+        if self.name.is_some() {
+            if name.contains("%") {
+                op = "LIKE";
+            }
+            params.push(&name);
+            query_str = format!("{} WHERE name {} $1", query_str, op);
+        }
         // if self.order_by.len() > 0 {
         //     query_str = format!(
         //         "{} ORDER BY {}",
@@ -171,15 +207,14 @@ impl FindAllPackages {
         //}
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
-        //log::info!("Arguments\n{:?}", &params);
+        log::info!("Arguments\n{:?}", &params);
         for row in client
-            .query(query_str.as_str(), &[])
+            .query(query_str.as_str(), &params[..])
             .await
             .context(TokioPostgresError {
                 msg: "problem with select from package table",
             })?
         {
-            //&params[..])? {
             let name = row.get(0);
             result.push(FindAllPackagesRow::try_from_parts(name)?);
         }
