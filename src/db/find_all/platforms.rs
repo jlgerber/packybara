@@ -162,6 +162,18 @@ impl<'a> FindAllPlatforms<'a> {
         self.order_by = Some(attributes);
         self
     }
+    /// Set the Optional columsn to sort on
+    ///
+    /// # Arguments
+    /// * `attributes` - The name of column or columns to order the return by wrapped in an Option
+    /// as a Vector of OrderPlatformBy instances
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
+    pub fn order_by_opt(&mut self, attributes: Option<Vec<OrderPlatformBy>>) -> &mut Self {
+        self.order_by = attributes;
+        self
+    }
     /// Set the sort direction
     ///
     /// # Arguments
@@ -173,6 +185,17 @@ impl<'a> FindAllPlatforms<'a> {
         self.order_direction = Some(direction);
         self
     }
+    /// Set the sort direction
+    ///
+    /// # Arguments
+    /// * `direction` - The direction to sort in, represented as an instance of OrderDirection wrapped in an Option
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
+    pub fn order_direction_opt(&mut self, direction: Option<OrderDirection>) -> &mut Self {
+        self.order_direction = direction;
+        self
+    }
     /// Set the max number of elements returned by the query
     ///
     /// # Arguments
@@ -182,6 +205,17 @@ impl<'a> FindAllPlatforms<'a> {
     /// * A mutable reference to Self
     pub fn limit(&mut self, limit: IdType) -> &mut Self {
         self.limit = Some(limit);
+        self
+    }
+    /// Set the max number of elements returned by the query
+    ///
+    /// # Arguments
+    /// * `limit` - The max number of elements to return, as an IdType wrapped in an Option
+    ///
+    /// # Returns
+    /// * A mutable reference to Self
+    pub fn limit_opt(&mut self, limit: Option<IdType>) -> &mut Self {
+        self.limit = limit;
         self
     }
 
