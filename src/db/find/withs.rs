@@ -200,17 +200,14 @@ impl<'a> FindWiths<'a> {
     ///
     /// # Arguments
     ///
-    /// * `client` - A mutable reference to a Client instance
+    /// * `client` - A reference to a Client instance
     ///
     /// # Returns
     ///
     /// * Result
     /// - Ok - Vector of FindWithsRow
     /// - Err - FindWithsError
-    pub async fn query(
-        &mut self,
-        client: &'a mut Client,
-    ) -> Result<Vec<FindWithsRow>, FindWithsError> {
+    pub async fn query(&mut self, client: &Client) -> Result<Vec<FindWithsRow>, FindWithsError> {
         let level = self.level.unwrap_or("facility");
         let role = self.role.unwrap_or("any");
         let platform = self.platform.unwrap_or("any");
