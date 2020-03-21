@@ -386,10 +386,12 @@ impl<'a> FindAllRevisions<'a> {
                 query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
             }
         }
-
+        if let Some(limit) = self.limit {
+            query_str.push_str(format!(" LIMIT {}", limit).as_str());
+        }
         let mut result = Vec::new();
         log::info!("SQL\n{}", query_str.as_str());
-        //log::info!("Prepared: {:?}", &params);
+        log::info!("Prepared: {:?}", &params);
         for row in client
             .query(query_str.as_str(), &params[..])
             .await
