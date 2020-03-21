@@ -352,21 +352,21 @@ impl<'a> FindAllRevisions<'a> {
         let mut where_and = "WHERE";
         let mut prep_id = 1;
         if let Some(ref id) = self.id {
-            query_str = format!(" {} id = ${}", where_and, prep_id);
+            query_str = format!("{} {} id = ${}", query_str, where_and, prep_id);
             where_and = "AND";
             prep_id += 1;
             params.push(id);
         }
 
         if let Some(ref transaction_id) = self.transaction_id {
-            query_str = format!(" {} transaction_id = ${}", where_and, prep_id);
+            query_str = format!("{} {} transaction_id = ${}", query_str, where_and, prep_id);
             where_and = "AND";
             prep_id += 1;
             params.push(transaction_id);
         }
 
         if let Some(ref author) = self.author {
-            query_str = format!(" {} author = ${}", where_and, prep_id);
+            query_str = format!("{} {} author = ${}", query_str, where_and, prep_id);
             //where_and = "AND";
             //prep_id += 1;
             params.push(author);
