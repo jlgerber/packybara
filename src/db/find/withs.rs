@@ -1,6 +1,8 @@
 // TODO: add docstrings
 pub use crate::coords_error::{CoordsError, CoordsResult};
-pub use crate::db::search_attribute::{LtreeSearchMode, OrderDirection, SearchAttribute};
+pub use crate::db::search_attribute::{
+    LtreeSearchMode, OrderDirection, SearchAttribute, SearchMode,
+};
 use crate::types::IdType;
 pub use crate::Coords;
 pub use crate::Distribution;
@@ -113,6 +115,7 @@ pub struct FindWiths<'a> {
     role: Option<&'a str>,
     platform: Option<&'a str>,
     site: Option<&'a str>,
+    limit: Option<i32>,
     order_by: Option<Vec<SearchAttribute>>,
     order_direction: Option<OrderDirection>,
 }
@@ -135,6 +138,7 @@ impl<'a> FindWiths<'a> {
             role: None,
             platform: None,
             site: None,
+            limit: None,
             order_by: None,
             order_direction: None,
         }
@@ -175,6 +179,15 @@ impl<'a> FindWiths<'a> {
     }
     pub fn site_opt(&mut self, site_n: Option<&'a str>) -> &mut Self {
         self.site = site_n;
+        self
+    }
+
+    pub fn limit(&mut self, limit_n: i32) -> &mut Self {
+        self.limit = Some(limit_n);
+        self
+    }
+    pub fn limit_opt(&mut self, limit_n: Option<i32>) -> &mut Self {
+        self.limit = limit_n;
         self
     }
     pub fn order_by(&mut self, attributes: Vec<SearchAttribute>) -> &mut Self {
@@ -243,6 +256,9 @@ impl<'a> FindWiths<'a> {
                 .map(|x| from_attr_to_str(&x))
                 .collect::<Vec<_>>();
             query_str = format!("{} ORDER BY {}", query_str, orderby.join(","));
+        }
+        if let Some(limit) = self.limit {
+            query_str.push_str(format!(" LIMIT {}", limit).as_str());
         }
 
         let prep_vals: &[&(dyn ToSql + std::marker::Sync)] =
