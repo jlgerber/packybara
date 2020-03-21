@@ -193,7 +193,17 @@ impl<'a> FindAllRevisions<'a> {
         self.id = Some(id);
         self
     }
-
+    /// Set an optional id.
+    ///
+    /// # Arguments
+    /// * `id` - optional id
+    ///
+    /// # Returns
+    /// Mutable reference to Self
+    pub fn id_opt(&mut self, id: Option<IdType>) -> &mut Self {
+        self.id = id;
+        self
+    }
     /// Set the transaction id and return a mutable reference to Self
     ///
     /// # Arguments
@@ -208,6 +218,17 @@ impl<'a> FindAllRevisions<'a> {
         self
     }
 
+    /// Set an optional id.
+    ///
+    /// # Arguments
+    /// * `txid` - optional id
+    ///
+    /// # Returns
+    /// Mutable reference to Self
+    pub fn transaction_id_opt(&mut self, txid: Option<LongIdType>) -> &mut Self {
+        self.transaction_id = txid;
+        self
+    }
     /// Set the author.
     ///
     /// # Arguments
@@ -219,30 +240,6 @@ impl<'a> FindAllRevisions<'a> {
     /// * Mutable reference to Self
     pub fn author(&mut self, author: &'a str) -> &mut Self {
         self.author = Some(author);
-        self
-    }
-
-    /// Set an optional id.
-    ///
-    /// # Arguments
-    /// * `id` - optional id
-    ///
-    /// # Returns
-    /// Mutable reference to Self
-    pub fn id_opt(&mut self, id: Option<IdType>) -> &mut Self {
-        self.id = id;
-        self
-    }
-
-    /// Set an optional id.
-    ///
-    /// # Arguments
-    /// * `txid` - optional id
-    ///
-    /// # Returns
-    /// Mutable reference to Self
-    pub fn transaction_id_opt(&mut self, txid: Option<LongIdType>) -> &mut Self {
-        self.transaction_id = txid;
         self
     }
 
@@ -267,6 +264,11 @@ impl<'a> FindAllRevisions<'a> {
     /// Mutable reference to Self
     pub fn order_by(&mut self, attributes: Vec<OrderRevisionBy>) -> &mut Self {
         self.order_by = Some(attributes);
+        self
+    }
+
+    pub fn order_by_opt(&mut self, attributes: Option<Vec<OrderRevisionBy>>) -> &mut Self {
+        self.order_by = attributes;
         self
     }
     /// Set the sort order direction and return a mutable reference to Self.
