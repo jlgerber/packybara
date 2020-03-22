@@ -8,7 +8,8 @@ use async_trait::async_trait;
 use log;
 use snafu::{ResultExt, Snafu};
 use tokio_postgres::types::ToSql;
-use tokio_postgres::Transaction;
+//use tokio_postgres::Transaction;
+use deadpool_postgres::Transaction;
 
 /// Error type returned from FindVersionPinsError
 #[derive(Debug, Snafu)]

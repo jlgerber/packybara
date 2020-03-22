@@ -3,7 +3,8 @@ use itertools::Itertools;
 use log;
 use snafu::{ResultExt, Snafu};
 use tokio_postgres::types::ToSql;
-use tokio_postgres::Transaction;
+//use tokio_postgres::Transaction;
+use deadpool_postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidRoleKind {

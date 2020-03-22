@@ -573,7 +573,7 @@ pub mod xml {
     use std::fs::File;
     use std::io::Write;
     //use tokio_postgres::Client;
-    pub use deadpool_postgres::ClientWrapper;
+    pub use deadpool_postgres::{Client, PoolError};
 
     /// Error type returned from  FindAllPackagesError
     #[derive(Debug, Snafu)]
@@ -600,7 +600,7 @@ pub mod xml {
 
     pub async fn write_xml<'a>(
         db: &'a mut PackratDb,
-        client: &ClientWrapper,
+        client: &Client,
         show: String,
         output: String,
     ) -> Result<(), PackagesXmlError> {

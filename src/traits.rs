@@ -10,7 +10,8 @@
 pub use crate::db::traits::*;
 pub use crate::packrat::PackratDbError;
 use async_trait::async_trait;
-use tokio_postgres::Transaction;
+//use tokio_postgres::Transaction;
+use deadpool_postgres::Transaction;
 /// Transaction handler provides default implementation of commit trait, along
 /// with helper functions.
 #[async_trait]

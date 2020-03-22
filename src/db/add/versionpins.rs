@@ -6,7 +6,8 @@ use crate::traits::TransactionHandler;
 use crate::{Level, Platform, Role, Site};
 use log;
 use std::convert::TryInto;
-use tokio_postgres::Transaction;
+//use tokio_postgres::Transaction;
+use deadpool_postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidPlatformKind {

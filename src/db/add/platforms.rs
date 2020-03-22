@@ -4,7 +4,8 @@ use tokio_postgres::types::ToSql;
 //use std::fmt;
 use crate::traits::TransactionHandler;
 use log;
-use tokio_postgres::Transaction;
+//use tokio_postgres::Transaction;
+use deadpool_postgres::Transaction;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum InvalidPlatformKind {
