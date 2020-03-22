@@ -1,6 +1,6 @@
 [package]
 name = "packybara"
-version = "0.63.2"
+version = "0.64.0"
 authors = ["jgerber <jlgerber@gmail.com>"]
 edition = "2018"
 
@@ -24,6 +24,7 @@ whoami = "0.8.1"
 chrono = "0.4.11"
 serde = { version = "1.0", features = ["derive"] }
 async-trait = "0.1.24"
+deadpool-postgres = "0.5.5"
  
 
 [dependencies.tokio-postgres]

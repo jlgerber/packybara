@@ -572,7 +572,8 @@ pub mod xml {
     use snafu::{ResultExt, Snafu};
     use std::fs::File;
     use std::io::Write;
-    use tokio_postgres::Client;
+    //use tokio_postgres::Client;
+    pub use deadpool_postgres::ClientWrapper;
 
     /// Error type returned from  FindAllPackagesError
     #[derive(Debug, Snafu)]
@@ -599,7 +600,7 @@ pub mod xml {
 
     pub async fn write_xml<'a>(
         db: &'a mut PackratDb,
-        client: &Client,
+        client: &ClientWrapper,
         show: String,
         output: String,
     ) -> Result<(), PackagesXmlError> {

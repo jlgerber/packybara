@@ -1,8 +1,9 @@
 use crate::db::{add, find, find_all, update};
 use crate::types::IdType;
 use async_trait::async_trait;
-pub use tokio_postgres::Client;
-pub use tokio_postgres::Transaction;
+//pub use tokio_postgres::Client;
+//pub use tokio_postgres::Transaction;
+pub use deadpool_postgres::{ClientWrapper, Transaction};
 
 pub trait PBFind {
     fn find_versionpin<'b>(&'b mut self, package: &'b str) -> find::versionpin::FindVersionPin;
@@ -66,7 +67,7 @@ pub trait PBExport<'a> {
 
     async fn export_packages(
         &'a mut self,
-        client: &Client,
+        client: &ClientWrapper,
         show: &'a str,
         path: &'a str,
     ) -> Result<(), Self::Error>;

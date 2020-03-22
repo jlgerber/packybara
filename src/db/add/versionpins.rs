@@ -63,12 +63,10 @@ impl TransactionHandler for AddVersionPins {
 }
 
 impl AddVersionPins {
-    /// New up an AddVersionPins instance. This function takes a mutable
-    /// reference to the tokio_postgres::Client, which is responsible for holding
-    /// a connection to the database, as well as providing a crud interface.
+    /// New up an AddVersionPins instance. This function takes a package name and version
     ///
     /// # Arguments
-    /// * `client` a mutable reference to a postgress:Client
+    /// * `package`
     ///
     /// # Returns
     /// * an instance of AddVersionPins

@@ -10,9 +10,9 @@ use crate::db::traits::{PBAdd, PBExport, PBFind, PBUpdate};
 use crate::db::{add, find, find_all, update};
 use crate::io::packages_xml::xml::write_xml;
 use crate::types::IdType;
+pub use deadpool_postgres::{Client, ClientWrapper, Transaction};
 use snafu::{ResultExt, Snafu};
-pub use tokio_postgres::{Client, NoTls, Transaction};
-
+pub use tokio_postgres::NoTls;
 #[derive(Debug, Snafu)]
 pub enum PackratDbError {
     /// When constructing a query, postgres has thrown an error
@@ -71,7 +71,7 @@ impl PackratDb {
     }
 
     /// Generate a transaction for updates and adds
-    pub async fn transaction<'a>(&'a self, client: &'a mut Client) -> Transaction<'a> {
+    pub async fn transaction<'a>(&'a self, client: &'a mut ClientWrapper) -> Transaction<'a> {
         client.transaction().await.unwrap()
     }
 }
@@ -223,7 +223,7 @@ impl<'a> PBExport<'a> for PackratDb {
 
     async fn export_packages(
         &'a mut self,
-        client: &Client,
+        client: &ClientWrapper,
         show: &'a str,
         path: &'a str,
     ) -> Result<(), Self::Error> {
