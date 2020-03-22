@@ -76,7 +76,7 @@ impl Distribution {
             name: "".to_string(),
         }
     }
-    pub(crate) fn new_unchecked<T: Into<String>>(name: T) -> Self {
+    pub fn new_unchecked<T: Into<String>>(name: T) -> Self {
         let name = name.into();
         Distribution { name }
     }
