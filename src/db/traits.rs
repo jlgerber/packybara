@@ -49,6 +49,8 @@ pub trait PBAdd {
 
     fn add_platforms() -> add::platforms::AddPlatforms;
 
+    fn add_sites() -> add::sites::AddSites;
+
     fn add_withs() -> add::withs::AddWiths;
 
     fn add_versionpins<I>(package: I, version: I) -> add::versionpins::AddVersionPins

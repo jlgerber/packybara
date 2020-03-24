@@ -194,6 +194,11 @@ impl PBAdd for PackratDb {
         add::platforms::AddPlatforms::new()
     }
 
+    /// add sites
+    fn add_sites() -> add::sites::AddSites {
+        add::sites::AddSites::new()
+    }
+
     /// Add withs to the transaction
     fn add_withs() -> add::withs::AddWiths {
         add::withs::AddWiths::new()
