@@ -97,7 +97,7 @@ impl AddSites {
     // Validate the site name. Is it Invalid? If it is problematic
     // return true. Otherwise, return false
     fn site_is_invalid(&self, site: &str) -> bool {
-        site.matches(".").count() > 0
+        site.matches(".").count() > 1
             || site.matches(" ").count() > 0
             || site.matches("__").count() > 0
     }
