@@ -23,7 +23,7 @@ pub enum AddSitesError {
     },
     #[snafu(display("No site names supplied"))]
     NoSiteNamesError,
-    #[snafu(display("Invalid site {:?}: {}", kind, site))]
+    #[snafu(display("Invalid Site {:?}: {}", kind, site))]
     InvalidSite { site: String, kind: InvalidSiteKind },
 }
 
